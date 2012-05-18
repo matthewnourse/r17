@@ -1,4 +1,0 @@
-// Copyright 2012 Matthew Nourse and n plus 1 computing pty limited unless otherwise noted.
-// Please see LICENSE file for details.
-// Copyright 2012 Matthew Nourse and n plus 1 computing pty limited unless otherwise noted.
-// Please see LICENSE file for details.
