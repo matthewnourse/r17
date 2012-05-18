@@ -1,0 +1,30 @@
+curl is included as a static library.  It's _not_ automatically compiled
+as part of the build process because it relies on a "configure" script and
+because the source file needs modifications for 32-bit platforms.
+
+You'll need to modify these files:
+progress.c (progress meter- not normally used anyway and slated for removal from libcurl)
+mprintf.c
+transfer.c
+
+It's easiest to copy these lib/int64 protoypes into the problem source file, then just
+replace 64-bit integer divisions and mods with calls to these functions.
+
+int64_t np1_int64_divide(int64_t numerator, int64_t denominator);
+uint64_t np1_uint64_divide(uint64_t numerator, uint64_t denominator);
+int64_t np1_int64_modulus(int64_t numerator, int64_t denominator);
+uint64_t np1_uint64_modulus(uint64_t numerator, uint64_t denominator);
+
+
+
+To build:
+cd src/curl-[version]
+./configure --disable-shared --enable-static --disable-ares --disable-ldap \
+  --disable-crypto-auth --disable-tls-srp --without-ssl \
+  --with-zlib=/home/matthew/Projects/nplus1/git/src/lib/liberal/zlib/src/zlib-1.2.5 \
+  --without-gnutls --without-polarssl --without-nss --without-axtls \
+  --without-ca-bundle --without-ca-path --without-libssh2 --without-librtmp \
+  --without-libidn
+  
+make
+mv lib/.libs/libcurl.a ../../bin/libcurl-[arch].a

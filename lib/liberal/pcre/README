@@ -1,0 +1,11 @@
+PCRE is included as a static library.  It's _not_ automatically compiled
+as part of the build process because it relies on a "configure" script.
+
+
+To build:
+cd src/pcre-[version]
+./configure --disable-shared --enable-static --disable-cpp --enable-utf8  
+make
+mv .libs/libpcre.a ../../bin/libpcre-Linux-i686.a
+
+
