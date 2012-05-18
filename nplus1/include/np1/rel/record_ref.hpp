@@ -276,7 +276,7 @@ public:
   /// contains_record, but is faster.
   static const unsigned char *get_record_end(const unsigned char *start,
                                               size_t length) {
-    size_t byte_size;
+    size_t byte_size = 0;
     const unsigned char *p = detail::decompress_size<sizeof(size_t)>::f(start, start + length, byte_size);
     if (!p) {
       return 0;

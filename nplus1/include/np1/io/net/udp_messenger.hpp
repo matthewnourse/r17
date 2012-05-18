@@ -8,6 +8,15 @@
 #include "np1/consistent_hash_table.hpp"
 #include "np1/io/log.hpp"
 
+// A worker peer is allowed to have a proportionally higher number of queued messages than the expected average.
+// But when it exceeds this level then its workload will be given to other peers.
+//TODO: these defines are out here rather than being 'static const' inside the class because g++ 4.6 doesn't like
+// them in there without a 'constexpr' and g++ 4.4 doesn't like constexpr.  Move these back in when there's no need
+// to support g++ 4.4 any more.
+#define NP1_IO_NET_UDP_MESSENGER_ALLOWED_WORKER_Q_SIZE_PROPORTION_BEFORE_REDISTRIBUTION ((double)1.2)
+#define NP1_IO_NET_UDP_MESSENGER_MIN_Q_SIZE_TO_BE_CONSIDERED_OVERCOMMITTED ((double)5)
+
+
 namespace np1 {
 namespace io {
 namespace net {
@@ -28,12 +37,6 @@ public:
   static const uint64_t WAIT_FOR_ACK_TIMEOUT_USEC = 2 * 1000 * 1000;
   static const uint64_t MAX_NUMBER_PEER_RETRIES_BEFORE_SINBIN = 10;
   static const uint64_t PEER_SINBIN_TIMEOUT_USEC = WAIT_FOR_ACK_TIMEOUT_USEC * 10;
-
-  // A worker peer is allowed to have a proportionally higher number of queued messages than the expected average.
-  // But when it exceeds this level then its workload will be given to other peers.   
-  static const double ALLOWED_WORKER_Q_SIZE_PROPORTION_BEFORE_REDISTRIBUTION = 1.2;
-  static const double MIN_Q_SIZE_TO_BE_CONSIDERED_OVERCOMMITTED = 5;
-
 
   class message {
   public:
@@ -623,8 +626,9 @@ private:
   bool is_peer_overcommitted(const peer &p) const {
     double peer_q_size = (double)p.m_number_unacked_messages;
     double expected_q_size = ((double)m_messages_awaiting_ack.size())/((double)m_number_worker_peers);
-    if ((peer_q_size > MIN_Q_SIZE_TO_BE_CONSIDERED_OVERCOMMITTED)
-        && (expected_q_size * ALLOWED_WORKER_Q_SIZE_PROPORTION_BEFORE_REDISTRIBUTION < peer_q_size)) {
+    if ((peer_q_size > NP1_IO_NET_UDP_MESSENGER_MIN_Q_SIZE_TO_BE_CONSIDERED_OVERCOMMITTED)
+        && (expected_q_size
+              * NP1_IO_NET_UDP_MESSENGER_ALLOWED_WORKER_Q_SIZE_PROPORTION_BEFORE_REDISTRIBUTION < peer_q_size)) {
       log_info("Peer is overcommitted.", p, peer_q_size, expected_q_size);
       return true;
     }
