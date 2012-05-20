@@ -41,7 +41,7 @@ DLL_NAME_ARG_NAME=-soname
 DLL_NAME_EXT=.so.$(MAJOR_VERSION)
 USE_GCC=1
 # rt for clock_gettime, used by libcurl.
-EXTRA_LIBS=-lrt
+EXTRA_LIBS=-lrt -lm 
 EXTRA_DEFINES=-DNP1_NEED_FSTAT_AS_SYSCALL
 RM=rm -f
 EXTRA_RELEASE_LINKER_ARGS=
@@ -54,7 +54,7 @@ DLL_EXT=.$(FULL_VERSION).$dynlink
 DLL_NAME_ARG_NAME=-dynlib_install_name
 DLL_NAME_EXT=.$(MAJOR_VERSION).dynlink
 USE_GCC=1
-EXTRA_LIBS=
+EXTRA_LIBS=-lm 
 EXTRA_DEFINES=
 RM=rm -f
 EXTRA_RELEASE_LINKER_ARGS=-Xlinker -unexported_symbol -Xlinker "*"
@@ -67,7 +67,7 @@ DLL_EXT=.so.$(FULL_VERSION)
 DLL_NAME_ARG_NAME=-soname
 DLL_NAME_EXT=.so.$(MAJOR_VERSION)
 USE_GCC=1
-EXTRA_LIBS=-lexecinfo
+EXTRA_LIBS=-lexecinfo -lm 
 EXTRA_DEFINES=
 RM=rm -f
 EXTRA_RELEASE_LINKER_ARGS=
@@ -102,7 +102,7 @@ R17_EXE_FILE_NAME=r17$(EXE_EXT)
 # undefined reference problems.
 
 GCC_DEBUG_RELEASE_BASE=g++ -Wall -Werror -Wfatal-errors -fno-strict-aliasing -Wstrict-aliasing -std=c++0x -nostdinc++ -fno-rtti -fno-exceptions -fno-threadsafe-statics -I . -I $(ROOT_SRC_DIR) -I $(NPLUS1_SRC_DIR)/include -I $(NPLUS1_SRC_DIR)/include/std -I $(ZLIB_SRC_DIR) -I $(SNAPPY_SRC_DIR) -I $(LIBCURL_SRC_DIR)/include -I $(LIBPCRE_SRC_DIR) -DNP1_TRACE_ON=$(TRACE) -DNP1_VERSION_STRING=\"$(FULL_VERSION)\" $(EXTRA_DEFINES)
-GCC_DEBUG_RELEASE_LINK_BASE=g++ -nodefaultlibs -lc -lgcc -lm -L$(ZLIB_BIN_DIR) -L$(SNAPPY_BIN_DIR) -L$(LIBCURL_BIN_DIR) -L$(LIBPCRE_BIN_DIR) $(EXTRA_LIBS)
+GCC_DEBUG_RELEASE_LINK_BASE=g++ -nodefaultlibs -lc -lgcc -L$(ZLIB_BIN_DIR) -L$(SNAPPY_BIN_DIR) -L$(LIBCURL_BIN_DIR) -L$(LIBPCRE_BIN_DIR)
 MSVC_DEBUG_RELEASE_BASE=cl.exe -X /I"." -I"std" /Zi /nologo /W3 /WX- /Od /Oy- /D "_CRT_SECURE_NO_WARNINGS" /D "WIN32" /D "NP1_TRACE_ON=$(TRACE)" /Gm- /GS /fp:precise /Zc:forScope /Fd"vc100.pdb" /Gd /TP /analyze-
 MSVC_DEBUG_RELEASE_LINK_BASE=link.exe /NOLOGO "kernel32.lib" "Ws2_32.lib" /MANIFEST:NO /TLBID:1 /DYNAMICBASE /NXCOMPAT
 
@@ -190,12 +190,12 @@ clean:
 
 # Unit testing	
 test: $(OBJECT_FILES) $(TEST_OBJECT_FILES)
-	$(call EXE_LINK,$(R17_TEST_FILE_NAME)) $(OBJECT_FILES) $(TEST_OBJECT_FILES) $(ZLIB_ARCHIVE) $(SNAPPY_ARCHIVE) $(LIBCURL_ARCHIVE) $(LIBPCRE_ARCHIVE)
+	$(call EXE_LINK,$(R17_TEST_FILE_NAME)) $(OBJECT_FILES) $(TEST_OBJECT_FILES) $(ZLIB_ARCHIVE) $(SNAPPY_ARCHIVE) $(LIBCURL_ARCHIVE) $(LIBPCRE_ARCHIVE) $(EXTRA_LIBS)
 
 
 # The main executable.
 $(R17_EXE_FILE_NAME): $(OBJECT_FILES) r17.o 
-	$(call EXE_LINK,$(R17_EXE_FILE_NAME)) $(OBJECT_FILES) r17.o $(ZLIB_ARCHIVE) $(SNAPPY_ARCHIVE) $(LIBCURL_ARCHIVE) $(LIBPCRE_ARCHIVE)
+	$(call EXE_LINK,$(R17_EXE_FILE_NAME)) $(OBJECT_FILES) r17.o $(ZLIB_ARCHIVE) $(SNAPPY_ARCHIVE) $(LIBCURL_ARCHIVE) $(LIBPCRE_ARCHIVE) $(EXTRA_LIBS)
 
 
 # Compile and then run the unit tests.
