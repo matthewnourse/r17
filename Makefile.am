@@ -1,0 +1,2 @@
+bin_PROGRAMS = r17
+r17_SOURCES = r17.cpp
