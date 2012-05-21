@@ -79,13 +79,13 @@ void test_find_heading() {
 void test_fields() {
   const unsigned char *one_field_data = (const unsigned char *)"\x8e\x81\x84test\0\0\0\0\0\0\0\0";
   record_ref_type one_field(one_field_data, one_field_data + 15, 1);
-  std::vector<std::string> one_field_fields = one_field.fields();
+  rstd::vector<rstd::string> one_field_fields = one_field.fields();
   NP1_TEST_ASSERT(one_field_fields.size() == 1);
   NP1_TEST_ASSERT(::np1::str::cmp(one_field_fields[0], "test") == 0);
  
   const unsigned char *two_fields_data = (const unsigned char *)"\x95\x82\x85test1\x85test2\0\0\0\0\0\0\0\0";
   record_ref_type two_fields(two_fields_data, two_fields_data + 22, 1);
-  std::vector<std::string> two_fields_fields = two_fields.fields();
+  rstd::vector<rstd::string> two_fields_fields = two_fields.fields();
   NP1_TEST_ASSERT(two_fields_fields.size() == 2);
   NP1_TEST_ASSERT(::np1::str::cmp(two_fields_fields[0], "test1") == 0);
   NP1_TEST_ASSERT(::np1::str::cmp(two_fields_fields[1], "test2") == 0);
@@ -202,7 +202,7 @@ void test_write_two_records() {
   record_ref_type one_field(one_field_data, one_field_data + 15, 0);
   NP1_TEST_ASSERT(one_field.byte_size() == 15);
  
-  std::vector<std::string> two_fields;
+  rstd::vector<rstd::string> two_fields;
   two_fields.push_back("test1");
   two_fields.push_back("test2");
 

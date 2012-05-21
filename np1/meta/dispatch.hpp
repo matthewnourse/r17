@@ -24,7 +24,7 @@ public:
     int fake_argc = argc - 1;
     const char **fake_argv = &argv[1];
 
-    std::vector<std::string> args = str::argv_to_string_vector(fake_argc, fake_argv);
+    rstd::vector<rstd::string> args = str::argv_to_string_vector(fake_argc, fake_argv);
 
     io::file stdin_f;
     stdin_f.from_stdin();
@@ -39,8 +39,8 @@ public:
 
 
 private:
-  static std::string get_usage(const char *real_program_name) {
-    std::string result;
+  static rstd::string get_usage(const char *real_program_name) {
+    rstd::string result;
     io::string_output_stream sos(result);
     help::markdown::usage(sos);
     return result;
@@ -48,13 +48,13 @@ private:
     
   template <typename Input_Stream, typename Output_Stream>
   static void run_once(Input_Stream &input, Output_Stream &output,
-                        const std::vector<std::string> &args) {
-    std::string op_name = args[0];    
+                        const rstd::vector<rstd::string> &args) {
+    rstd::string op_name = args[0];    
 
     size_t stream_op_id = stream_op_table::find(op_name.c_str(), false);
     // If the operator name is not found maybe this is the file name of a script.
     if ((size_t)-1 == stream_op_id) {
-      std::vector<std::string> fake_args = args;
+      rstd::vector<rstd::string> fake_args = args;
       fake_args.push_front(NP1_META_SCRIPT_NAME);
       script::run(input, output, fake_args, false);
     } else {      

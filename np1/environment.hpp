@@ -20,15 +20,15 @@ namespace np1 {
 /// Environment variables.
 class environment {
 public:
-  static std::string reliable_storage_local_root() {
+  static rstd::string reliable_storage_local_root() {
     return mandatory_get_env(NP1_ENVIRONMENT_RELIABLE_STORAGE_LOCAL_ROOT_NAME);
   }
 
-  static std::string reliable_storage_remote_root() {
+  static rstd::string reliable_storage_remote_root() {
     return mandatory_get_env(NP1_ENVIRONMENT_RELIABLE_STORAGE_REMOTE_ROOT_NAME);
   }
 
-  static std::string distributed_script_ip_port_start() {
+  static rstd::string distributed_script_ip_port_start() {
     return mandatory_get_env(NP1_ENVIRONMENT_DISTRIBUTED_SCRIPT_IP_PORT_START_NAME);
   }
 
@@ -50,7 +50,7 @@ public:
 private:
   static const char *mandatory_get_env(const char *name) {
     const char *value = getenv(name);
-    NP1_ASSERT(value, "Environment variable not defined: " + std::string(name));
+    NP1_ASSERT(value, "Environment variable not defined: " + rstd::string(name));
     return value;
   }
 

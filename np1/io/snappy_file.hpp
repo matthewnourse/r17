@@ -128,7 +128,7 @@ public:
     return result;
   }
 
-  const std::string &name() const {
+  const rstd::string &name() const {
     return m_file.name();
   }
 

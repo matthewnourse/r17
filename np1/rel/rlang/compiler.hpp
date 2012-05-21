@@ -6,7 +6,7 @@
 
 #include "np1/rel/rlang/vm.hpp"
 #include "np1/rel/record.hpp"
-#include <pair>
+#include "rstd/pair.hpp"
 
 namespace np1 {
 namespace rel {
@@ -21,16 +21,16 @@ public:
   class vm_info {
   public:
     vm_info() {}
-    vm_info(const vm &vm, const std::string &typed_heading_name)
+    vm_info(const vm &vm, const rstd::string &typed_heading_name)
       : m_vm(vm), m_typed_heading_name(typed_heading_name) {}
 
     vm &get_vm() { return m_vm; }
     const vm &get_vm() const { return m_vm; }
-    const std::string &get_typed_heading_name() const { return m_typed_heading_name; }
+    const rstd::string &get_typed_heading_name() const { return m_typed_heading_name; }
 
   private:
     vm m_vm;
-    std::string m_typed_heading_name;
+    rstd::string m_typed_heading_name;
   };
 
 public:
@@ -39,12 +39,12 @@ public:
   static vm compile_single_expression(Source_Input_Stream &source,
                                       const record_ref &this_headings,
                                       const record_ref &other_headings) {
-    std::vector<token> expression;
+    rstd::vector<token> expression;
     compile_single_expression_to_prefix(source, expression);
     return do_compile_single_expression(expression, this_headings, other_headings);
   }    
 
-  static vm compile_single_expression(const std::vector<token> &expression,
+  static vm compile_single_expression(const rstd::vector<token> &expression,
                                       const record_ref &this_headings,
                                       const record_ref &other_headings) {
     return do_compile_single_expression(expression, this_headings, other_headings);
@@ -55,14 +55,14 @@ public:
   // the tokens are still in prefix notation.
   template <typename Source_Input_Stream>
   static void compile_single_expression_to_prefix(Source_Input_Stream &source,
-                                                  std::vector<token> &prefix) {
+                                                  rstd::vector<token> &prefix) {
     io::token_input_stream<Source_Input_Stream, fn::fn_table> token_input(source);
     read_all(token_input, prefix);  
   }
 
 
   // Is there a token in here that refers to the 'other' record?
-  static bool any_references_to_other_record(const std::vector<token> &prefix) {
+  static bool any_references_to_other_record(const rstd::vector<token> &prefix) {
     size_t i;
     for (i = 0; i < prefix.size(); ++i) {
       if ((prefix[i].type() == token::TYPE_IDENTIFIER_VARIABLE)
@@ -88,8 +88,8 @@ public:
   }
 
   // Compile a list of tokens in prefix order and then evaluate them as a string.
-  static std::pair<std::string, rlang::dt::data_type>
-  eval_to_string(const std::vector<rel::rlang::token> &tokens) {
+  static rstd::pair<rstd::string, rlang::dt::data_type>
+  eval_to_string(const rstd::vector<rel::rlang::token> &tokens) {
     NP1_ASSERT(
       tokens.size() > 0,
       "Unexpected empty stream operator argument list, expected string expression");
@@ -109,7 +109,7 @@ public:
       {
         str::ref s;
         stack.pop(s);
-        return std::make_pair(s.to_string(), vm.return_type());
+        return rstd::make_pair(s.to_string(), vm.return_type());
       }
       break;
 
@@ -117,7 +117,7 @@ public:
       {
         int64_t i;
         stack.pop(i);
-        return std::make_pair(str::to_dec_str(i), vm.return_type());
+        return rstd::make_pair(str::to_dec_str(i), vm.return_type());
       }
       break;
 
@@ -125,7 +125,7 @@ public:
       {
         uint64_t ui;
         stack.pop(ui);            
-        return std::make_pair(str::to_dec_str(ui), vm.return_type());
+        return rstd::make_pair(str::to_dec_str(ui), vm.return_type());
       }
       break;
 
@@ -133,7 +133,7 @@ public:
       {
         double d;
         stack.pop(d);            
-        return std::make_pair(str::to_dec_str(d), vm.return_type());
+        return rstd::make_pair(str::to_dec_str(d), vm.return_type());
       }
       break;
 
@@ -141,20 +141,20 @@ public:
       {
         bool b;
         stack.pop(b);
-        return std::make_pair(str::from_bool(b).to_string(), vm.return_type());
+        return rstd::make_pair(str::from_bool(b).to_string(), vm.return_type());
       }
       break;
     }
 
     NP1_ASSERT(false, "Unreachable: unknown type");
-    return std::make_pair(std::string(), rlang::dt::TYPE_STRING);
+    return rstd::make_pair(rstd::string(), rlang::dt::TYPE_STRING);
   }
 
 
   // Compile a list of tokens in prefix order and then evaluate them as a string.
   // Crashes is the result is not a string.
-  static std::string eval_to_string_only(const std::vector<rel::rlang::token> &tokens) {
-    std::pair<std::string, rlang::dt::data_type> result = eval_to_string(tokens);
+  static rstd::string eval_to_string_only(const rstd::vector<rel::rlang::token> &tokens) {
+    rstd::pair<rstd::string, rlang::dt::data_type> result = eval_to_string(tokens);
     tokens[0].assert(rlang::dt::TYPE_STRING == result.second, "Expression is not a string expression");
     return result.first;
   }
@@ -162,16 +162,16 @@ public:
 
   // Compile a comma-seperated list of expressions in prefix order and then
   // evaluate them as strings.
-  static std::vector<std::pair<std::string, rlang::dt::data_type> >
-  eval_to_strings(const std::vector<rel::rlang::token> &tokens) {
+  static rstd::vector<rstd::pair<rstd::string, rlang::dt::data_type> >
+  eval_to_strings(const rstd::vector<rel::rlang::token> &tokens) {
     NP1_ASSERT(
       tokens.size() > 0,
       "Unexpected empty stream operator argument list, expected string expressions");
 
-    std::vector<token> expression;
-    std::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
-    std::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
-    std::vector<std::pair<std::string, dt::data_type> > results;
+    rstd::vector<token> expression;
+    rstd::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
+    rstd::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
+    rstd::vector<rstd::pair<rstd::string, dt::data_type> > results;
 
     while (read_expression(token_i, token_end, expression)) {
       results.push_back(eval_to_string(expression));
@@ -181,11 +181,11 @@ public:
   }
 
 
-  static std::vector<std::string> eval_to_strings_only(const std::vector<rel::rlang::token> &tokens) {
-    std::vector<std::pair<std::string, rlang::dt::data_type> > expressions = eval_to_strings(tokens);
-    std::vector<std::pair<std::string, rlang::dt::data_type> >::const_iterator i = expressions.begin();
-    std::vector<std::pair<std::string, rlang::dt::data_type> >::const_iterator iz = expressions.end();
-    std::vector<std::string> results;
+  static rstd::vector<rstd::string> eval_to_strings_only(const rstd::vector<rel::rlang::token> &tokens) {
+    rstd::vector<rstd::pair<rstd::string, rlang::dt::data_type> > expressions = eval_to_strings(tokens);
+    rstd::vector<rstd::pair<rstd::string, rlang::dt::data_type> >::const_iterator i = expressions.begin();
+    rstd::vector<rstd::pair<rstd::string, rlang::dt::data_type> >::const_iterator iz = expressions.end();
+    rstd::vector<rstd::string> results;
     for (; i != iz; ++i) {
       tokens[0].assert(rlang::dt::TYPE_STRING == i->second, "Expression is not a string expression");
       results.push_back(i->first);
@@ -196,11 +196,11 @@ public:
   
 
   /// Split a comma-separated list of expressions into a vector of expressions.
-  static std::vector<std::vector<rel::rlang::token> > split_expressions(const std::vector<rel::rlang::token> &tokens) {
-    std::vector<token> expression;
-    std::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
-    std::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
-    std::vector<std::vector<rel::rlang::token> > results;
+  static rstd::vector<rstd::vector<rel::rlang::token> > split_expressions(const rstd::vector<rel::rlang::token> &tokens) {
+    rstd::vector<token> expression;
+    rstd::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
+    rstd::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
+    rstd::vector<rstd::vector<rel::rlang::token> > results;
 
     while (read_expression(token_i, token_end, expression)) {
       results.push_back(expression);
@@ -210,14 +210,14 @@ public:
   }
 
   /// Compile a comma-separated list of heading names.
-  static void compile_heading_name_list(const std::vector<rel::rlang::token> &tokens,
+  static void compile_heading_name_list(const rstd::vector<rel::rlang::token> &tokens,
                                         const record_ref &this_headings,
-                                        std::vector<std::string> &untyped_heading_names) {
+                                        rstd::vector<rstd::string> &untyped_heading_names) {
     untyped_heading_names.clear();
   
-    std::vector<token> expression;
-    std::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
-    std::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
+    rstd::vector<token> expression;
+    rstd::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
+    rstd::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
 
     while (read_expression(token_i, token_end, expression)) {
       token tok = expression[0];
@@ -243,33 +243,33 @@ public:
   template <typename Source_Stream>
   static void compile_select(Source_Stream &source,
                               const record_ref &this_headings,                              
-                              std::vector<vm_info> &vm_infos) {
-    std::vector<token> tokens;
+                              rstd::vector<vm_info> &vm_infos) {
+    rstd::vector<token> tokens;
     compile_single_expression_to_prefix(source, tokens);
     do_compile_select(tokens, this_headings, vm_infos);
   }
 
-  static void compile_select(const std::vector<token> &tokens,
+  static void compile_select(const rstd::vector<token> &tokens,
                                 const record_ref &this_headings,                              
-                                std::vector<vm_info> &vm_infos) {
+                                rstd::vector<vm_info> &vm_infos) {
     do_compile_select(tokens, this_headings, vm_infos);
   }
 
 private:
   // For use within compile_select.
   struct expression_info {
-    std::vector<shunting_yard::parsed_token_info> postfix;    
-    std::string heading_name;
+    rstd::vector<shunting_yard::parsed_token_info> postfix;    
+    rstd::string heading_name;
     bool is_complete;
   };
 
 private:
-  static void do_compile_select(const std::vector<token> &tokens,
+  static void do_compile_select(const rstd::vector<token> &tokens,
                                 const record_ref &this_headings,                              
-                                std::vector<vm_info> &vm_infos) {
+                                rstd::vector<vm_info> &vm_infos) {
     vm_infos.clear();
 
-    std::vector<expression_info> expression_infos;
+    rstd::vector<expression_info> expression_infos;
 
     // Figuring out the return type of the expressions can be a litle tricky
     // because the expressions are allowed to refer to the "previous" record
@@ -278,20 +278,20 @@ private:
     // as we learn more about the types of the output record.
 
     // First, read in all the expressions.
-    std::vector<token> expression;
-    std::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
-    std::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
+    rstd::vector<token> expression;
+    rstd::vector<rel::rlang::token>::const_iterator token_i = tokens.begin();
+    rstd::vector<rel::rlang::token>::const_iterator token_end = tokens.end();
 
     while (read_expression(token_i, token_end, expression)) {  
-      std::string heading_name = get_and_remove_result_heading_name(expression);
-      std::vector<shunting_yard::parsed_token_info> postfix;
+      rstd::string heading_name = get_and_remove_result_heading_name(expression);
+      rstd::vector<shunting_yard::parsed_token_info> postfix;
       infix_to_postfix(expression, postfix);
       expression_info exinfo = { postfix, heading_name, false };
       expression_infos.push_back(exinfo);
     }
 
     // We now know how many expressions there are so set up some other stuff.
-    std::vector<std::string> typed_output_heading_names;
+    rstd::vector<rstd::string> typed_output_heading_names;
     typed_output_heading_names.resize(expression_infos.size());
     vm_infos.resize(expression_infos.size());
 
@@ -299,7 +299,7 @@ private:
     // type tags that are explicitly provided.
     size_t i;
     for (i = 0; i < expression_infos.size(); ++i) {
-      const std::string &heading_name = expression_infos[i].heading_name;
+      const rstd::string &heading_name = expression_infos[i].heading_name;
 
       str::ref heading_type_tag =
         np1::rel::detail::helper::get_heading_type_tag(heading_name);
@@ -326,7 +326,7 @@ private:
 
       for (i = 0; i < expression_infos.size(); ++i) {
         if (!expression_infos[i].is_complete) {
-          const std::vector<shunting_yard::parsed_token_info> &postfix
+          const rstd::vector<shunting_yard::parsed_token_info> &postfix
             = expression_infos[i].postfix;
 
           // If the expression refers only to output headings for which a type
@@ -335,7 +335,7 @@ private:
             record temp_other_headings(typed_output_heading_names, 0);
             vm new_vm(do_compile_single_expression(postfix, this_headings,
                                                     temp_other_headings.ref()));
-            std::string typed_heading_name = typed_output_heading_names[i];
+            rstd::string typed_heading_name = typed_output_heading_names[i];
 
             // If we don't have a typed heading name for this expression already
             // then derive the expression's type.
@@ -365,10 +365,10 @@ private:
 
   // Does the postfix expression refer only to headings for which we have a type?
   static bool refers_only_to_known_output_headings(
-                  const std::vector<shunting_yard::parsed_token_info> &postfix,    
-                  const std::vector<std::string> &typed_output_headings) {
-    std::vector<shunting_yard::parsed_token_info>::const_iterator i = postfix.begin();        
-    std::vector<shunting_yard::parsed_token_info>::const_iterator iz = postfix.end();
+                  const rstd::vector<shunting_yard::parsed_token_info> &postfix,    
+                  const rstd::vector<rstd::string> &typed_output_headings) {
+    rstd::vector<shunting_yard::parsed_token_info>::const_iterator i = postfix.begin();        
+    rstd::vector<shunting_yard::parsed_token_info>::const_iterator iz = postfix.end();
     for (; i < iz; ++i) {
       if (i->tok().type() == token::TYPE_IDENTIFIER_VARIABLE) {
         str::ref heading_name_without_record_identifier;    
@@ -396,10 +396,10 @@ private:
 
   // Is the supplied untyped heading name in the list of typed output headings?
   static bool in_typed_output_headings(
-                  const std::vector<std::string> &typed_output_headings,
+                  const rstd::vector<rstd::string> &typed_output_headings,
                   const str::ref &untyped_name) {
-    std::vector<std::string>::const_iterator i = typed_output_headings.begin();
-    std::vector<std::string>::const_iterator iz = typed_output_headings.end();    
+    rstd::vector<rstd::string>::const_iterator i = typed_output_headings.begin();
+    rstd::vector<rstd::string>::const_iterator iz = typed_output_headings.end();    
     for (; i < iz; ++i) {
       if (str::cmp(rel::detail::helper::get_heading_without_type_tag(*i),
                     untyped_name) == 0) {
@@ -414,7 +414,7 @@ private:
   // Read the whole stream into the vector.
   template <typename Input_Stream>
   static void read_all(io::token_input_stream<Input_Stream, fn::fn_table> &token_input,
-                        std::vector<token> &output) {
+                        rstd::vector<token> &output) {
     token tok;
 
     output.clear();
@@ -430,7 +430,7 @@ private:
   // Update tokens in infix format with information that's not available to the
   // token parser.
   static void update_tokens_with_info_from_surrounding_tokens(
-                                                  std::vector<token> &infix) {
+                                                  rstd::vector<token> &infix) {
     size_t i;
     for (i = 0; i < infix.size(); ++i) {
       update_if_unary_minus(infix, i);
@@ -439,7 +439,7 @@ private:
   }
 
   // If the token is a minus and it's actually a unary minus, update it.
-  static void update_if_unary_minus(std::vector<token> &infix, size_t offset) {
+  static void update_if_unary_minus(rstd::vector<token> &infix, size_t offset) {
     if (is_unary_minus(infix, offset)) {
       infix[offset].first_matching_sym_op_fn_id(fn::fn_table::find_unary_minus());
     }
@@ -447,14 +447,14 @@ private:
 
   // If the token marked as being a variable identifier and it's actually a
   // function, update it.
-  static void update_if_function(std::vector<token> &infix, size_t offset) {
+  static void update_if_function(rstd::vector<token> &infix, size_t offset) {
     if (is_function(infix, offset)) {
       infix[offset].type(token::TYPE_IDENTIFIER_FUNCTION);
     }
   }
 
 
-  static bool is_unary_minus(const std::vector<token> &infix, size_t offset) {    
+  static bool is_unary_minus(const rstd::vector<token> &infix, size_t offset) {    
     if ((infix[offset].type() != token::TYPE_OPERATOR) || !infix[offset].is_minus()) {
       return false; 
     }
@@ -480,7 +480,7 @@ private:
     return true;
   }
 
-  static bool is_function(const std::vector<token> &infix, size_t offset) {    
+  static bool is_function(const rstd::vector<token> &infix, size_t offset) {    
     if (token::TYPE_IDENTIFIER_FUNCTION == infix[offset].type()) {
       return true;  
     }
@@ -495,9 +495,9 @@ private:
   // Read a single expression, returns false when the end of the token list is
   // reached and there is no more input.
   static bool read_expression(
-                    std::vector<rel::rlang::token>::const_iterator &token_i,
-                    std::vector<rel::rlang::token>::const_iterator &token_end,
-                    std::vector<token> &output) {
+                    rstd::vector<rel::rlang::token>::const_iterator &token_i,
+                    rstd::vector<rel::rlang::token>::const_iterator &token_end,
+                    rstd::vector<token> &output) {
     int paren_depth = 0;
 
     output.clear();
@@ -535,7 +535,7 @@ private:
   }  
 
   // May return a heading name without a type if none was specified yet.
-  static std::string get_and_remove_result_heading_name(std::vector<token> &expression) {    
+  static rstd::string get_and_remove_result_heading_name(rstd::vector<token> &expression) {    
     token last = expression[expression.size() -1];    
 
     // If there is an "as [name]" clause...
@@ -561,8 +561,8 @@ private:
   }
 
 
-  static void infix_to_postfix(const std::vector<token> &source,
-                                std::vector<shunting_yard::parsed_token_info> &target) {
+  static void infix_to_postfix(const rstd::vector<token> &source,
+                                rstd::vector<shunting_yard::parsed_token_info> &target) {
     // Parse infix input and convert it to postfix.
     shunting_yard::parse<fn::fn_table>(source, target);
 
@@ -572,10 +572,10 @@ private:
 
 
    // Compile a single expression from a collection of tokens.
-  static vm do_compile_single_expression(const std::vector<token> &source,
+  static vm do_compile_single_expression(const rstd::vector<token> &source,
                                           const record_ref &this_headings,
                                           const record_ref &other_headings) {
-    std::vector<shunting_yard::parsed_token_info> parsed_tokens;    
+    rstd::vector<shunting_yard::parsed_token_info> parsed_tokens;    
     infix_to_postfix(source, parsed_tokens);
     return do_compile_single_expression(parsed_tokens, this_headings, other_headings);
   }
@@ -584,15 +584,15 @@ private:
 
 
   static vm do_compile_single_expression(
-            const std::vector<shunting_yard::parsed_token_info> &parsed_tokens,
+            const rstd::vector<shunting_yard::parsed_token_info> &parsed_tokens,
             const record_ref &this_headings,
             const record_ref &other_headings) {
     simulated_stack sim_stack;
     vm_function_call_list<MAX_NUMBER_FUNCTION_CALLS_PER_VM> function_calls;
     vm_literals literals;
     bool refers_to_other_record = false;
-    std::vector<shunting_yard::parsed_token_info>::const_iterator i = parsed_tokens.begin();
-    std::vector<shunting_yard::parsed_token_info>::const_iterator iz = parsed_tokens.end();
+    rstd::vector<shunting_yard::parsed_token_info>::const_iterator i = parsed_tokens.begin();
+    rstd::vector<shunting_yard::parsed_token_info>::const_iterator iz = parsed_tokens.end();
     do_compile_single_expression(
       i, iz, this_headings, other_headings, sim_stack, function_calls, literals, refers_to_other_record);
 
@@ -601,8 +601,8 @@ private:
 
 
   static void do_compile_single_expression(
-                std::vector<shunting_yard::parsed_token_info>::const_iterator i,
-                std::vector<shunting_yard::parsed_token_info>::const_iterator iz,
+                rstd::vector<shunting_yard::parsed_token_info>::const_iterator i,
+                rstd::vector<shunting_yard::parsed_token_info>::const_iterator iz,
                 const record_ref &this_headings,
                 const record_ref &other_headings,
                 simulated_stack &sim_stack,
@@ -627,10 +627,10 @@ private:
 
         // Look for the matching "then" and "else" and check that they have
         // one argument each.
-        std::vector<shunting_yard::parsed_token_info>::const_iterator then_i =
+        rstd::vector<shunting_yard::parsed_token_info>::const_iterator then_i =
           mandatory_find_function_starting_at(i->function_end_postfix_offset()+1, i+1, iz, "then");
 
-        std::vector<shunting_yard::parsed_token_info>::const_iterator else_i =
+        rstd::vector<shunting_yard::parsed_token_info>::const_iterator else_i =
           mandatory_find_function_starting_at(then_i->function_end_postfix_offset()+1, then_i+1, iz, "else");
 
         then_i->tok().assert(then_i->function_arg_count() == 1, "Multiple arguments supplied to 'then'.");
@@ -760,10 +760,10 @@ private:
 
       // We can find the operator or function but the overloads for it aren't
       // correct.  Get the list of overloads and show it to the user.
-      std::string overloads;
+      rstd::string overloads;
       np1::io::string_output_stream sos(overloads);
       help::markdown::function_or_operator_overloads(sos, tok.text());
-      std::string error_text =
+      rstd::string error_text =
         "Function or operator is known but overload is not supported.  Supported overloads:\n"
         + overloads;
 
@@ -883,13 +883,13 @@ private:
   }    
 
   // Find the function that starts at the supplied position.
-  static std::vector<shunting_yard::parsed_token_info>::const_iterator
+  static rstd::vector<shunting_yard::parsed_token_info>::const_iterator
   mandatory_find_function_starting_at(
         size_t pos,
-        std::vector<shunting_yard::parsed_token_info>::const_iterator start_i,
-        std::vector<shunting_yard::parsed_token_info>::const_iterator end_i,
+        rstd::vector<shunting_yard::parsed_token_info>::const_iterator start_i,
+        rstd::vector<shunting_yard::parsed_token_info>::const_iterator end_i,
         const char *name) {
-    std::vector<shunting_yard::parsed_token_info>::const_iterator i = start_i;
+    rstd::vector<shunting_yard::parsed_token_info>::const_iterator i = start_i;
     for (; i < end_i; ++i) {
       if ((i->function_start_postfix_offset() == pos)
           && (str::cmp(i->text(), name) == 0)) {
@@ -897,7 +897,7 @@ private:
       }
     }
 
-    NP1_ASSERT(false, "Unable to find matching '" + std::string(name) + "'");
+    NP1_ASSERT(false, "Unable to find matching '" + rstd::string(name) + "'");
     return 0;
   }
  

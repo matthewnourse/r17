@@ -3,7 +3,7 @@
 #ifndef NP1_IO_MANDATORY_MAPPED_RECORD_INPUT_FILE_HPP
 #define NP1_IO_MANDATORY_MAPPED_RECORD_INPUT_FILE_HPP
 
-#include <string>
+#include "rstd/string.hpp"
 #include "np1/io/file_mapping.hpp"
 #include "np1/assert.hpp"
 

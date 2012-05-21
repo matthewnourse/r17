@@ -55,9 +55,9 @@ private:
 
 private:
   void add_chunk(size_t size_requirement) {
-    std::vector<char> empty;
+    rstd::vector<char> empty;
     m_chunks.push_back(empty);
-    std::vector<char> chunk;
+    rstd::vector<char> chunk;
     chunk.resize(size_requirement > DEFAULT_CHUNK_SIZE
                   ? size_requirement : DEFAULT_CHUNK_SIZE);
 
@@ -70,8 +70,8 @@ private:
   }
 
 private:
-  std::list<std::vector<char> > m_chunks;
-  std::list<std::vector<char> >::iterator m_chunk_iter;
+  rstd::list<rstd::vector<char> > m_chunks;
+  rstd::list<rstd::vector<char> >::iterator m_chunk_iter;
   char *m_unused_p;
   char *m_chunk_end;
 };

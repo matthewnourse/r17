@@ -21,7 +21,7 @@ public:
 private:
   struct stream_op_call {  
     size_t stream_op_id;
-    std::vector<rel::rlang::token> arguments;
+    rstd::vector<rel::rlang::token> arguments;
     bool output_is_recordset_stream;
     size_t script_line_number;
   };
@@ -45,10 +45,10 @@ private:
                             && (next_stream_op_input_type == STREAM_OP_TABLE_IO_TYPE_ANY));
         if (!valid) {
           tok.assert(false,
-                      ("Incompatible stream I/O types.  "  + std::string(pline_last_name) + "'s output ("
-                        + std::string(stream_op_table_io_type_to_text(pline_output_type)) + ") is not compatible with "
-                        + std::string(next_stream_op_name) + "'s input ("
-                        + std::string(stream_op_table_io_type_to_text(next_stream_op_input_type)) + ")").c_str());
+                      ("Incompatible stream I/O types.  "  + rstd::string(pline_last_name) + "'s output ("
+                        + rstd::string(stream_op_table_io_type_to_text(pline_output_type)) + ") is not compatible with "
+                        + rstd::string(next_stream_op_name) + "'s input ("
+                        + rstd::string(stream_op_table_io_type_to_text(next_stream_op_input_type)) + ")").c_str());
         }
       }
 
@@ -64,7 +64,7 @@ private:
     }
 #else
     void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output, bool is_worker,
-             const std::string &script_file_name) {
+             const rstd::string &script_file_name) {
       NP1_ASSERT(m_calls.size() > 0, "Attempt to run an empty pipeline!");
 
       // If there is only one thing in the pipeline then there is no need
@@ -76,13 +76,13 @@ private:
         return;
       } 
 
-      std::vector<stream_op_call>::const_iterator last_i = m_calls.end() - 1;
-      std::vector<stream_op_call>::const_iterator i = last_i;
-      std::vector<stream_op_call>::const_iterator first_i = m_calls.begin();
+      rstd::vector<stream_op_call>::const_iterator last_i = m_calls.end() - 1;
+      rstd::vector<stream_op_call>::const_iterator i = last_i;
+      rstd::vector<stream_op_call>::const_iterator first_i = m_calls.begin();
 
       int prev_in_pipeline_stdout = -1;      
       size_t child_counter = 0;
-      std::vector<pid_t> child_pids;
+      rstd::vector<pid_t> child_pids;
 
       for (; i >= first_i; --i, ++child_counter) {
         int pipe_fds[2];
@@ -145,8 +145,8 @@ private:
       }
 
       // Wait for all the child processes that we started.
-      std::vector<pid_t>::const_iterator child_i = child_pids.begin();
-      std::vector<pid_t>::const_iterator child_iz = child_pids.end();
+      rstd::vector<pid_t>::const_iterator child_i = child_pids.begin();
+      rstd::vector<pid_t>::const_iterator child_iz = child_pids.end();
       for (; child_i != child_iz; ++child_i) {
         process::mandatory_wait_for_child(*child_i);
       }
@@ -155,10 +155,10 @@ private:
 
 
     bool get_output_is_recordset_stream() {
-      std::vector<stream_op_call>::const_iterator i = m_calls.begin();
-      std::vector<stream_op_call>::const_iterator iz = m_calls.end();
+      rstd::vector<stream_op_call>::const_iterator i = m_calls.begin();
+      rstd::vector<stream_op_call>::const_iterator iz = m_calls.end();
       bool prev_output_is_recordset_stream = false;
-      std::string prev_op_name;
+      rstd::string prev_op_name;
   
       for (; i < iz; ++i) {
         prev_output_is_recordset_stream = 
@@ -172,19 +172,19 @@ private:
 
 
   private:
-    std::vector<stream_op_call> m_calls;
+    rstd::vector<stream_op_call> m_calls;
   };
 
 
 public:
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                  const std::vector<std::string> &args, bool is_worker) {
+                  const rstd::vector<rstd::string> &args, bool is_worker) {
     NP1_ASSERT(args.size() == 2, "Usage: " + args[0] + " file_name_or_inline_script");
     run(input, output, args[1], is_worker);
   }
 
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                  const std::string &file_name_or_inline_script, bool is_worker) {
+                  const rstd::string &file_name_or_inline_script, bool is_worker) {
     NP1_ASSERT(str::is_valid_utf8(file_name_or_inline_script),
                 "File name or script '" + file_name_or_inline_script + "' is not valid UTF-8");
 
@@ -202,13 +202,13 @@ public:
                               io::unbuffered_stream_base &output,
                               Script_Input_Stream &script_file,
                               bool is_worker,
-                              const std::string &script_file_name) {
+                              const rstd::string &script_file_name) {
     //TODO: should the script file be checked for valid UTF-8?
-    std::vector<pipeline> pipelines;
+    rstd::vector<pipeline> pipelines;
     compile(script_file, pipelines, is_worker);
 
-    std::vector<pipeline>::iterator pipeline_i = pipelines.begin();
-    std::vector<pipeline>::iterator pipeline_iz = pipelines.end();
+    rstd::vector<pipeline>::iterator pipeline_i = pipelines.begin();
+    rstd::vector<pipeline>::iterator pipeline_iz = pipelines.end();
     
     for (; pipeline_i < pipeline_iz; ++pipeline_i) {
       pipeline_i->run(input, output, is_worker, script_file_name);
@@ -219,9 +219,9 @@ public:
 private:
   // Do a basic compile step, crashes on error.
   template <typename Script_Input_Stream>
-  static void compile(Script_Input_Stream &script_file, std::vector<pipeline> &pipelines,
+  static void compile(Script_Input_Stream &script_file, rstd::vector<pipeline> &pipelines,
                       bool is_worker) {
-    std::vector<rel::rlang::token> tokens;
+    rstd::vector<rel::rlang::token> tokens;
 
     // Use the rlang compiler to get a list of tokens, still in prefix format.
     // We only use symbols that the rlang compiler knows about, even if they
@@ -230,14 +230,14 @@ private:
     
     // Now break up the list of tokens into pipelines.
     pipeline pline;
-    std::vector<rel::rlang::token>::const_iterator tok_i = tokens.begin();
-    std::vector<rel::rlang::token>::const_iterator tok_end = tokens.end();
+    rstd::vector<rel::rlang::token>::const_iterator tok_i = tokens.begin();
+    rstd::vector<rel::rlang::token>::const_iterator tok_end = tokens.end();
 
     while (tok_i < tok_end) {
       // Get the stream operator.
       tok_i->assert(tok_i->type() == rel::rlang::token::TYPE_IDENTIFIER_FUNCTION,
                     "Expected identifier but found non-identifier token");
-      std::vector<rel::rlang::token>::const_iterator stream_op_tok_i = tok_i;
+      rstd::vector<rel::rlang::token>::const_iterator stream_op_tok_i = tok_i;
 
       size_t stream_op_id = stream_op_table_find(stream_op_tok_i->text(), is_worker);
       tok_i->assert(stream_op_id != (size_t)-1, "Unknown stream operator");
@@ -251,7 +251,7 @@ private:
 
       // Get the arguments to the stream operator call.
       size_t paren_stack_depth = 1;
-      std::vector<rel::rlang::token> arguments;
+      rstd::vector<rel::rlang::token> arguments;
       for (; (tok_i < tok_end) && paren_stack_depth > 0; ++tok_i) {
         if (tok_i->type() == rel::rlang::token::TYPE_CLOSE_PAREN) {
           --paren_stack_depth;
@@ -312,7 +312,7 @@ private:
 
   static void append_recordset_stream_to_data_stream_translator(pipeline &pline, bool is_worker,
                                                                 const rel::rlang::token &tok) {
-    std::vector<rel::rlang::token> empty_arguments;
+    rstd::vector<rel::rlang::token> empty_arguments;
     stream_op_call so_call = { stream_op_table_find(NP1_REL_RECORDSET_TRANSLATE_NAME, is_worker),
                                empty_arguments,
                                false,
@@ -323,7 +323,7 @@ private:
 
 /// Helper function to avoid circular #includes.
 void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                const std::string &file_name, bool is_worker) {
+                const rstd::string &file_name, bool is_worker) {
   script::run(input, output, file_name, is_worker);
 }
 

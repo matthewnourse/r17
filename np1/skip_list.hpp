@@ -19,11 +19,11 @@ struct skip_list_less_than {
 
 struct skip_list_default_heap {
   void *alloc(size_t sz) {
-    return std::detail::mem::alloc(sz);
+    return rstd::detail::mem::alloc(sz);
   }
   
   void free(void *p) {
-    return std::detail::mem::free(p);
+    return rstd::detail::mem::free(p);
   }
 };
 
@@ -40,7 +40,7 @@ public:
   }
   
   void destruct_and_free(T *p) {
-    std::detail::mem::destruct(p);
+    rstd::detail::mem::destruct(p);
     m_heap.free(p);
   }
   

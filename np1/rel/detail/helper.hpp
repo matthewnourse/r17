@@ -334,7 +334,7 @@ int ipaddress_or_ipnumber_compare(const char *f1, size_t f1_length,
     uint64_t f1_number;
     const char *end_p = ipnumber_to_number(f1_number, f1, f1 + f1_length);
     if (end_p != f1 + f1_length) {
-      NP1_ASSERT(false, "Invalid IP number: " + std::string(f1, f1_length));
+      NP1_ASSERT(false, "Invalid IP number: " + rstd::string(f1, f1_length));
     }
     
     unsigned int f2_number = ipaddress_to_number(f2, f2_length);
@@ -347,7 +347,7 @@ int ipaddress_or_ipnumber_compare(const char *f1, size_t f1_length,
     uint64_t f2_number;
     const char *end_p = ipnumber_to_number(f2_number, f2, f2 + f2_length);
     if (end_p != f2 + f2_length) {
-      NP1_ASSERT(false, "Invalid IP number: " + std::string(f2, f2_length));
+      NP1_ASSERT(false, "Invalid IP number: " + rstd::string(f2, f2_length));
     }
     
     unsigned int f1_number = ipaddress_to_number(f1, f1_length);
@@ -409,10 +409,10 @@ record_identifier_type get_heading_record_identifier(
       heading_name_p += PREV_STRING_LENGTH + 1;
     } else {
       NP1_ASSERT(false, "Invalid record identifier prefix in "
-                        + std::string(heading_name.ptr()) + "  Valid values are:\n"
-                        + std::string(THIS_STRING) + "\n"
-                        + std::string(OTHER_STRING) + "\n"
-                        + std::string(PREV_STRING) + "\n");
+                        + rstd::string(heading_name.ptr()) + "  Valid values are:\n"
+                        + rstd::string(THIS_STRING) + "\n"
+                        + rstd::string(OTHER_STRING) + "\n"
+                        + rstd::string(PREV_STRING) + "\n");
     }
 
     heading_name_without_record_identifier =
@@ -438,7 +438,7 @@ str::ref get_heading_without_type_tag(const str::ref &heading_name) {
 }
 
 
-str::ref get_heading_without_type_tag(const std::string &heading_name) {
+str::ref get_heading_without_type_tag(const rstd::string &heading_name) {
   return get_heading_without_type_tag(str::ref(heading_name));
 }
 
@@ -468,7 +468,7 @@ str::ref get_heading_type_tag(const char *heading_name) {
   return get_heading_type_tag(str::ref(heading_name));
 }
 
-str::ref get_heading_type_tag(const std::string &heading_name) {
+str::ref get_heading_type_tag(const rstd::string &heading_name) {
   return get_heading_type_tag(str::ref(heading_name));
 }
 
@@ -482,19 +482,19 @@ str::ref mandatory_get_heading_type_tag(const str::ref &heading_name) {
 }
   
 
-str::ref mandatory_get_heading_type_tag(const std::string &heading_name) {
+str::ref mandatory_get_heading_type_tag(const rstd::string &heading_name) {
   return mandatory_get_heading_type_tag(str::ref(heading_name));
 }
 
 
 
-std::string make_typed_heading_name(const std::string &type_name, const std::string &name) {
+rstd::string make_typed_heading_name(const rstd::string &type_name, const rstd::string &name) {
   return type_name + ":" + name;
 }
 
 
-std::string convert_to_valid_header_name(const str::ref &s) {
-  std::string result;
+rstd::string convert_to_valid_header_name(const str::ref &s) {
+  rstd::string result;
   const char *p = s.ptr();
   const char *end = p + s.length();
   for (; p < end; ++p) {

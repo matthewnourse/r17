@@ -20,9 +20,9 @@ public:
     size_t block_size_in_block_header_units = bytes_to_block_header_units(block_size_bytes);
     m_heap.resize(number_blocks * block_size_in_block_header_units);
     m_free_list = m_heap.begin();
-    std::vector<block_header>::iterator ii = m_heap.begin();
-    std::vector<block_header>::iterator iz = m_heap.end();
-    std::vector<block_header>::iterator next = 0;
+    rstd::vector<block_header>::iterator ii = m_heap.begin();
+    rstd::vector<block_header>::iterator iz = m_heap.end();
+    rstd::vector<block_header>::iterator next = 0;
     for (; ii != iz; ii = next) {
       next = ii + block_size_in_block_header_units;
       if (next >= m_heap.end()) {
@@ -62,10 +62,10 @@ private:
   }
   
 private:
-  std::vector<block_header> m_heap;
+  rstd::vector<block_header> m_heap;
   size_t m_block_size;
   size_t m_number_blocks;
-  std::vector<block_header>::iterator m_free_list;
+  rstd::vector<block_header>::iterator m_free_list;
 };
   
 } // namespace

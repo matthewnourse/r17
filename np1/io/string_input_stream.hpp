@@ -18,7 +18,7 @@ public:
   struct is_unbuffered {};
 
 public:
-  explicit string_input_stream(const std::string &s)
+  explicit string_input_stream(const rstd::string &s)
     : detail::stream_helper<string_input_stream>(*this), m_stream((const unsigned char *)s.c_str(), s.length()) {}
 
   /**
@@ -33,8 +33,8 @@ public:
 
   bool rewind() { return m_stream.rewind(); }
 
-  const std::string &name() const {
-    static std::string n("[string input]");
+  const rstd::string &name() const {
+    static rstd::string n("[string input]");
     return n;
   }
 

@@ -17,11 +17,11 @@ namespace rel {
 class distributed_str_split {
 public:
   template <typename Input_Stream, typename Output_Stream>
-  void operator()(const std::string &reliable_storage_local_root,
-                  const std::string &reliable_storage_remote_root,
-                  const std::string &listen_endpoint,                  
+  void operator()(const rstd::string &reliable_storage_local_root,
+                  const rstd::string &reliable_storage_remote_root,
+                  const rstd::string &listen_endpoint,                  
                   Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     log_info("Reading headers and parsing arguments against headers.");
 
     /* Get the headers. */
@@ -42,9 +42,9 @@ public:
                                       NP1_REL_DISTRIBUTED_RESOURCE_ID_FIELD_NAME);
 
     // Get the recordset stream headings so the next distributed operator can do its thing.
-    std::vector<str::ref> input_heading_strings_no_resource_id;  
+    rstd::vector<str::ref> input_heading_strings_no_resource_id;  
     distributed::get_fields_except(input_headings.ref(), resource_id_field_id, input_heading_strings_no_resource_id);
-    std::vector<std::string> output_heading_strings =
+    rstd::vector<rstd::string> output_heading_strings =
       str_split::make_output_headings(input_heading_strings_no_resource_id);
 
     output_heading_strings.push_back(input_headings.mandatory_field(resource_id_field_id).to_string());

@@ -22,10 +22,10 @@ private:
 public:
   /// Create from a stream of chunk file names.
   template <typename Input_Stream, typename Output_Stream>
-  void from_recordset_stream(const std::string &reliable_storage_local_root,
-                              const std::string &reliable_storage_remote_root,
+  void from_recordset_stream(const rstd::string &reliable_storage_local_root,
+                              const rstd::string &reliable_storage_remote_root,
                               Input_Stream &input, Output_Stream &output,
-                              const std::vector<rel::rlang::token> &tokens) {
+                              const rstd::vector<rel::rlang::token> &tokens) {
     /* Get the headers. */
     record headings(input.parse_headings());
 
@@ -35,7 +35,7 @@ public:
                                       NP1_REL_DISTRIBUTED_RESOURCE_ID_FIELD_NAME);
 
     // Create the target recordset.
-    std::string target_recordset_name(rel::rlang::compiler::eval_to_string_only(tokens));
+    rstd::string target_recordset_name(rel::rlang::compiler::eval_to_string_only(tokens));
     np1::io::reliable_storage::id target_recordset_resource_id(target_recordset_name);
 
     np1::io::reliable_storage rs(reliable_storage_local_root, reliable_storage_remote_root);
@@ -56,19 +56,19 @@ public:
 
   /// Create from a stream of data.
   template <typename Input_Stream, typename Output_Stream>
-  void from_data_stream(const std::string &reliable_storage_local_root,
-                          const std::string &reliable_storage_remote_root,
+  void from_data_stream(const rstd::string &reliable_storage_local_root,
+                          const rstd::string &reliable_storage_remote_root,
                           Input_Stream &input, Output_Stream &output,
-                          const std::vector<rel::rlang::token> &tokens) {
+                          const rstd::vector<rel::rlang::token> &tokens) {
     /* Get the headers. */
     record headings(input.parse_headings());
 
     // Interpret the arguments.
-    std::vector<std::pair<std::string, rlang::dt::data_type> > args = rel::rlang::compiler::eval_to_strings(tokens);
+    rstd::vector<rstd::pair<rstd::string, rlang::dt::data_type> > args = rel::rlang::compiler::eval_to_strings(tokens);
     NP1_ASSERT((args.size() > 0) && (args.size() <= 2), "Incorrect number of arguments to rel.recordset.create");
     tokens[0].assert(rlang::dt::data_type::TYPE_STRING == args[0].second,
                       "First argument to rel.recordset.create is not a string");
-    std::string target_recordset_name = args[0].first;
+    rstd::string target_recordset_name = args[0].first;
 
     uint64_t approx_max_chunk_size = DEFAULT_APPROX_MAX_CHUNK_SIZE_BYTES;
     if (args.size() > 1) {

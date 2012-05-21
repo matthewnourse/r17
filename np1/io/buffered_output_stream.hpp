@@ -74,7 +74,7 @@ public:
 
   bool is_open() const { return m_stream.is_open(); }
 
-  const std::string &name() const { return m_stream.name(); }
+  const rstd::string &name() const { return m_stream.name(); }
 
 
 private:

@@ -20,7 +20,7 @@ typedef ::np1::io::ordered_work_distributor ordered_work_distributor_type;
 
 
 void create_reliable_storage_file(const reliable_storage_type::id &id,
-                                    const std::string &data) {
+                                    const rstd::string &data) {
   reliable_storage_type rs(NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_LOCAL_ROOT,
                             NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_REMOTE_ROOT);
   reliable_storage_type::stream rs_stream(rs);
@@ -31,8 +31,8 @@ void create_reliable_storage_file(const reliable_storage_type::id &id,
 
 
 void create_reliable_storage_file(const reliable_storage_type::id &id,
-                                  const std::vector<std::string> &data) {
-  std::string file_data;
+                                  const rstd::vector<rstd::string> &data) {
+  rstd::string file_data;
   
   size_t i;
   for (i = 0; i < data.size(); ++i) {
@@ -44,10 +44,10 @@ void create_reliable_storage_file(const reliable_storage_type::id &id,
 }
 
 
-std::string read_reliable_storage_file(const reliable_storage_type::id &id) {
+rstd::string read_reliable_storage_file(const reliable_storage_type::id &id) {
   reliable_storage_type rs(NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_LOCAL_ROOT,
                             NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_REMOTE_ROOT);
-  std::vector<char> data;
+  rstd::vector<char> data;
   data.resize(1024 * 1024);
   reliable_storage_type::stream rs_stream(rs);
   NP1_TEST_ASSERT(rs.open_ro(id, NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_TIMEOUT, rs_stream));
@@ -55,12 +55,12 @@ std::string read_reliable_storage_file(const reliable_storage_type::id &id) {
   NP1_TEST_ASSERT(rs_stream.read(&data[0], data.size(), &bytes_read));
   NP1_TEST_ASSERT(rs_stream.close());
 
-  return std::string(&data[0], bytes_read);
+  return rstd::string(&data[0], bytes_read);
 }
 
 
-std::string write_client_peer_strings_list() {
-  std::vector<std::string> client_peers;
+rstd::string write_client_peer_strings_list() {
+  rstd::vector<rstd::string> client_peers;
 
   client_peers.push_back("127.0.0.1:22222");
   client_peers.push_back("127.0.0.1:22223");
@@ -94,9 +94,9 @@ std::string write_client_peer_strings_list() {
 
 
 
-std::vector<std::string> write_worker_peer_strings_list() {
+rstd::vector<rstd::string> write_worker_peer_strings_list() {
 
-  std::vector<std::string> worker_peer_strings;
+  rstd::vector<rstd::string> worker_peer_strings;
 
   worker_peer_strings.push_back("127.0.0.1:32223");  // Workers
   worker_peer_strings.push_back("127.0.0.1:32224");  
@@ -138,9 +138,9 @@ std::vector<std::string> write_worker_peer_strings_list() {
 
 
 template <typename Worker_F>
-std::vector<pid_t> fork_distributed_workers(const std::vector<std::string> &worker_peer_strings,
+rstd::vector<pid_t> fork_distributed_workers(const rstd::vector<rstd::string> &worker_peer_strings,
                                             Worker_F worker_f) {
-  std::vector<pid_t> children;
+  rstd::vector<pid_t> children;
 
   size_t i;
   for (i = 0; i < worker_peer_strings.size(); ++i) {
@@ -165,11 +165,11 @@ std::vector<pid_t> fork_distributed_workers(const std::vector<std::string> &work
 }
 
 
-void kill_distributed_workers(const std::vector<pid_t> &worker_pids) {
+void kill_distributed_workers(const rstd::vector<pid_t> &worker_pids) {
   printf("  Waiting for children to exit\n");
   // Kill all the child processes.
-  std::vector<pid_t>::const_iterator child_i = worker_pids.begin();
-  std::vector<pid_t>::const_iterator child_iz = worker_pids.end();
+  rstd::vector<pid_t>::const_iterator child_i = worker_pids.begin();
+  rstd::vector<pid_t>::const_iterator child_iz = worker_pids.end();
   for (; child_i != child_iz; ++child_i) {
     kill(*child_i, SIGTERM);
     int status;
@@ -178,7 +178,7 @@ void kill_distributed_workers(const std::vector<pid_t> &worker_pids) {
 }
 
 
-void make_test_data_record_string(std::string &test_data, size_t number_records) {
+void make_test_data_record_string(rstd::string &test_data, size_t number_records) {
   test_data.clear();
 
   test_data.append("string:mul1_str\tint:mul1_int\tstring:mul7_str\tint:mul7_int\n");
@@ -205,11 +205,11 @@ void make_test_data_record_string(std::string &test_data, size_t number_records)
 }
 
 
-void make_large_test_data_record_string(std::string &test_data) {
+void make_large_test_data_record_string(rstd::string &test_data) {
   make_test_data_record_string(test_data, 1000000);  
 }
 
-void make_very_large_test_data_record_string(std::string &test_data) {
+void make_very_large_test_data_record_string(rstd::string &test_data) {
   make_test_data_record_string(test_data, 10000000);  
 }
 

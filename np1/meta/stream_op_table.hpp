@@ -3,12 +3,13 @@
 #ifndef NP1_META_STREAM_OP_TABLE_HPP
 #define NP1_META_STREAM_OP_TABLE_HPP
 
+#include "config.h"
 #include "np1/simple_types.hpp"
 
-#include <swap>
-#include <list>
-#include <vector>
-#include <stack>
+#include "rstd/swap.hpp"
+#include "rstd/list.hpp"
+#include "rstd/vector.hpp"
+#include "rstd/stack.hpp"
 #include "np1/io/mandatory_output_stream.hpp"
 #include "np1/io/mandatory_record_input_stream.hpp"
 #include "np1/io/file.hpp"
@@ -66,12 +67,12 @@ static const char *stream_op_table_io_type_to_text(stream_op_table_io_type_type 
 
 
 size_t stream_op_table_find(const char *name, bool is_worker);
-bool stream_op_table_accepts_recordset_stream(size_t n, const std::vector<rel::rlang::token> &tokens);
-bool stream_op_table_outputs_recordset_stream(size_t n, const std::vector<rel::rlang::token> &tokens,
+bool stream_op_table_accepts_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens);
+bool stream_op_table_outputs_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens,
                                               bool input_is_recordset_stream);
 
 void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                const std::string &args, bool is_worker);
+                const rstd::string &args, bool is_worker);
 
 
 
@@ -144,21 +145,21 @@ struct stream_op_wrap_base {
   }
 
   virtual stream_op_table_io_type_type input_type() const {
-    NP1_ASSERT(false, "Stream operator " + std::string(name()) + " has no input_type method!");
+    NP1_ASSERT(false, "Stream operator " + rstd::string(name()) + " has no input_type method!");
     return STREAM_OP_TABLE_IO_TYPE_ANY;
   }
 
   virtual stream_op_table_io_type_type output_type() const {
-    NP1_ASSERT(false, "Stream operator " + std::string(name()) + " has no output_type method!");
+    NP1_ASSERT(false, "Stream operator " + rstd::string(name()) + " has no output_type method!");
     return STREAM_OP_TABLE_IO_TYPE_ANY;
   }
 
-  virtual bool outputs_recordset_stream(const std::vector<rel::rlang::token> &tokens,
+  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
                                         bool is_input_recordset_stream) const {
     return false;
   }
 
-  virtual bool accepts_recordset_stream(const std::vector<rel::rlang::token> &tokens) const {
+  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
     return false;
   }
 
@@ -166,7 +167,7 @@ struct stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     mandatory_delimited_input_type mandatory_delimited_input(input);
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
@@ -176,7 +177,7 @@ struct stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(false, "Stream operator wrapper has no call(rs_root, is_recordset_stream, delimited, mandatory, tokens) method!");
   }
 };
@@ -199,11 +200,11 @@ struct rel_group_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual bool is_usable_in_distributed_operation() const { return true; }
 
-  virtual bool accepts_recordset_stream(const std::vector<rel::rlang::token> &tokens) const {
+  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
     return true;
   }
 
-  virtual bool outputs_recordset_stream(const std::vector<rel::rlang::token> &tokens,
+  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
                                         bool is_input_recordset_stream) const {
     return false;
   }
@@ -211,7 +212,7 @@ struct rel_group_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     if (is_recordset_stream) {
       rel::distributed_group op;
       op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
@@ -233,7 +234,7 @@ struct rel_join_natural_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_natural op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
@@ -249,7 +250,7 @@ struct rel_join_left_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_left op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
@@ -266,7 +267,7 @@ struct rel_join_anti_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_anti op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
@@ -282,7 +283,7 @@ struct rel_join_consistent_hash : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_consistent_hash op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
@@ -307,7 +308,7 @@ struct rel_order_by_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
@@ -326,7 +327,7 @@ struct rel_order_by_desc_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
@@ -361,7 +362,7 @@ struct rel_order_by_quicksort_wrap : public rel_order_by_wrap {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
@@ -379,7 +380,7 @@ struct rel_order_by_quicksort_desc_wrap : public rel_order_by_wrap {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
@@ -404,11 +405,11 @@ struct rel_select_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool accepts_recordset_stream(const std::vector<rel::rlang::token> &tokens) const {
+  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
     return !rel::rlang::compiler::any_references_to_other_record(tokens);
   }
 
-  virtual bool outputs_recordset_stream(const std::vector<rel::rlang::token> &tokens,
+  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
                                         bool is_input_recordset_stream) const {
     // select is only distributed-safe if it doesn't refer to the previous
     // record.
@@ -420,7 +421,7 @@ struct rel_select_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     if (outputs_recordset_stream(tokens, is_recordset_stream)) {
       rel::distributed_select op;
       op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
@@ -446,7 +447,7 @@ struct rel_record_count_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::record_count op;
     op(mandatory_delimited_input, mandatory_output, tokens);
@@ -468,7 +469,7 @@ struct rel_record_split_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::record_split op;
     op(mandatory_delimited_input, mandatory_output, tokens);
@@ -487,12 +488,12 @@ struct rel_where_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool outputs_recordset_stream(const std::vector<rel::rlang::token> &tokens,
+  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
                                         bool is_input_recordset_stream) const {
     return is_input_recordset_stream;
   }
 
-  virtual bool accepts_recordset_stream(const std::vector<rel::rlang::token> &tokens) const {
+  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
     return true;
   }
   
@@ -500,7 +501,7 @@ struct rel_where_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     if (is_recordset_stream) {
       rel::distributed_where op;
       op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
@@ -527,7 +528,7 @@ struct rel_unique_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::unique op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
@@ -547,12 +548,12 @@ struct rel_str_split : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool outputs_recordset_stream(const std::vector<rel::rlang::token> &tokens,
+  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
                                         bool is_input_recordset_stream) const {
     return is_input_recordset_stream;
   }
 
-  virtual bool accepts_recordset_stream(const std::vector<rel::rlang::token> &tokens) const {
+  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
     return true;
   }
 
@@ -561,7 +562,7 @@ struct rel_str_split : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     if (is_recordset_stream) {
       rel::distributed_str_split op;
       op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
@@ -589,7 +590,7 @@ struct rel_assert_empty_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::assert op;
     op(mandatory_delimited_input, mandatory_output, tokens, true);    
@@ -613,7 +614,7 @@ struct rel_assert_nonempty_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::assert op;
     op(mandatory_delimited_input, mandatory_output, tokens, false);    
@@ -637,7 +638,7 @@ struct rel_from_tsv_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
@@ -660,7 +661,7 @@ struct rel_to_tsv_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::tsv_translate translator;
     translator.to_tsv(mandatory_delimited_input, mandatory_output, tokens);
@@ -683,7 +684,7 @@ struct rel_from_usv_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
@@ -706,7 +707,7 @@ struct rel_to_usv_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::usv_translate translator;
     translator.to_usv(mandatory_delimited_input, mandatory_output, tokens);
@@ -728,7 +729,7 @@ struct rel_from_text_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
@@ -753,7 +754,7 @@ struct rel_from_text_ignore_non_matching_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
@@ -778,7 +779,7 @@ struct rel_generate_sequence_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     rel::generate_sequence op;
     op(mandatory_delimited_input, mandatory_output, tokens);
   }
@@ -801,14 +802,14 @@ struct rel_recordset_create_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
 
-  virtual bool accepts_recordset_stream(const std::vector<rel::rlang::token> &tokens) const {
+  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
     return true;
   }
 
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     rel::recordset::create op;
 
     if (is_recordset_stream) {
@@ -834,7 +835,7 @@ struct rel_recordset_read_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool outputs_recordset_stream(const std::vector<rel::rlang::token> &tokens,
+  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
                                         bool is_input_recordset_stream) const {
     return true;
   }
@@ -842,7 +843,7 @@ struct rel_recordset_read_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream input stream not supported");
     rel::recordset::read op;
     op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(), mandatory_delimited_input,
@@ -861,7 +862,7 @@ struct rel_recordset_translate_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool accepts_recordset_stream(const std::vector<rel::rlang::token> &tokens) const {
+  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
     return true;
   }
 
@@ -869,7 +870,7 @@ struct rel_recordset_translate_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     rel::recordset::translate op;
 
     if (is_recordset_stream) {
@@ -900,7 +901,7 @@ struct text_utf16_to_utf8_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
@@ -924,7 +925,7 @@ struct text_strip_cr_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
@@ -955,11 +956,11 @@ struct io_file_read_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
 
     io::mandatory_output_stream<io::unbuffered_stream_base> mandatory_output(output);
-    std::vector<std::string> file_names(rel::rlang::compiler::eval_to_strings_only(tokens));
+    rstd::vector<rstd::string> file_names(rel::rlang::compiler::eval_to_strings_only(tokens));
     NP1_ASSERT(file_names.size() > 0, "io.file.read expects at least one file name argument.");
     if (is_r17_native_file(file_names[0])) {
       NP1_ASSERT(are_all_r17_native_files(file_names),
@@ -973,13 +974,13 @@ struct io_file_read_wrap : public stream_op_wrap_base {
     }
   }
 
-  static void copy_native_files(const std::vector<std::string> &file_names,
+  static void copy_native_files(const rstd::vector<rstd::string> &file_names,
                                 io::mandatory_output_stream<io::unbuffered_stream_base> &mandatory_output) {
     bool written_first_file = false;
-    std::vector<std::string>::const_iterator i = file_names.begin();
-    std::vector<std::string>::const_iterator iz = file_names.end();
+    rstd::vector<rstd::string>::const_iterator i = file_names.begin();
+    rstd::vector<rstd::string>::const_iterator iz = file_names.end();
     for (; i != iz; ++i) {
-      std::string file_name = *i;
+      rstd::string file_name = *i;
       if (io::gzfile::is_gzfile(file_name.c_str())) {
         io::gzfile file;
         NP1_ASSERT(file.open_ro(file_name.c_str()), "Unable to open & map compressed input file " + file_name);
@@ -1017,12 +1018,12 @@ struct io_file_read_wrap : public stream_op_wrap_base {
   };
 
 
-  static void copy_non_native_files(const std::vector<std::string> &file_names,
+  static void copy_non_native_files(const rstd::vector<rstd::string> &file_names,
                                     io::mandatory_output_stream<io::unbuffered_stream_base> &mandatory_output) {      
-    std::vector<std::string>::const_iterator i = file_names.begin();
-    std::vector<std::string>::const_iterator iz = file_names.end();
+    rstd::vector<rstd::string>::const_iterator i = file_names.begin();
+    rstd::vector<rstd::string>::const_iterator iz = file_names.end();
     for (; i != iz; ++i) {
-      std::string file_name = *i;
+      rstd::string file_name = *i;
       if (io::gzfile::is_gzfile(file_name.c_str())) {
         io::gzfile file;
         NP1_ASSERT(file.open_ro(file_name.c_str()), "Unable to open & map compressed input file " + file_name);
@@ -1037,8 +1038,8 @@ struct io_file_read_wrap : public stream_op_wrap_base {
     }
   }
 
-  static bool is_r17_native_file(const std::string &file_name) {
-    std::vector<unsigned char> buffer;
+  static bool is_r17_native_file(const rstd::string &file_name) {
+    rstd::vector<unsigned char> buffer;
     buffer.resize(MAX_HEADERS_SNIFF_LENGTH);
     io::gzfile file;
     open_for_sniffing(file, file_name);
@@ -1049,9 +1050,9 @@ struct io_file_read_wrap : public stream_op_wrap_base {
   }
 
 
-  static bool are_all_r17_native_files(const std::vector<std::string> &file_names) {
-    std::vector<std::string>::const_iterator i = file_names.begin();
-    std::vector<std::string>::const_iterator iz = file_names.end();
+  static bool are_all_r17_native_files(const rstd::vector<rstd::string> &file_names) {
+    rstd::vector<rstd::string>::const_iterator i = file_names.begin();
+    rstd::vector<rstd::string>::const_iterator iz = file_names.end();
     for (; i != iz; ++i) {
       if (!is_r17_native_file(*i)) {
         return false;
@@ -1061,16 +1062,16 @@ struct io_file_read_wrap : public stream_op_wrap_base {
     return true;
   }
 
-  static rel::record parse_headings(const std::string &file_name) {
+  static rel::record parse_headings(const rstd::string &file_name) {
     io::gzfile file;
     open_for_sniffing(file, file_name);
     io::mandatory_record_input_stream<io::gzfile, rel::record, rel::record_ref> record_input(file);
     return record_input.parse_headings();    
   }
 
-  static bool are_all_headings_equal(const std::vector<std::string> &file_names) {
-    std::vector<std::string>::const_iterator i = file_names.begin();
-    std::vector<std::string>::const_iterator iz = file_names.end();
+  static bool are_all_headings_equal(const rstd::vector<rstd::string> &file_names) {
+    rstd::vector<rstd::string>::const_iterator i = file_names.begin();
+    rstd::vector<rstd::string>::const_iterator iz = file_names.end();
     rel::record first_file_headings;
     bool has_first_file_headings = false;
 
@@ -1089,7 +1090,7 @@ struct io_file_read_wrap : public stream_op_wrap_base {
     return true;
   }
 
-  static void open_for_sniffing(io::gzfile &file, const std::string &file_name) {
+  static void open_for_sniffing(io::gzfile &file, const rstd::string &file_name) {
     NP1_ASSERT(file.open_ro(file_name.c_str(), MAX_HEADERS_SNIFF_LENGTH), "Unable to open input file " + file_name);
   }
 } io_file_read_instance;
@@ -1107,10 +1108,10 @@ struct io_file_append_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     io::mandatory_input_stream<io::unbuffered_stream_base> mandatory_input(input);
-    std::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
+    rstd::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
     mandatory_input.copy_append(file_name);
   }
 } io_file_append_instance;
@@ -1127,10 +1128,10 @@ struct io_file_overwrite_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     io::mandatory_input_stream<io::unbuffered_stream_base> mandatory_input(input);
-    std::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
+    rstd::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
     mandatory_input.copy_overwrite(file_name);
   }
 } io_file_overwrite_instance;
@@ -1152,8 +1153,8 @@ struct io_directory_list_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
-    std::string directory_name(rel::rlang::compiler::eval_to_string_only(tokens));
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    rstd::string directory_name(rel::rlang::compiler::eval_to_string_only(tokens));
     write_headings(mandatory_output);
     io::directory::mandatory_iterate(directory_name, entry_iterator(mandatory_output));
   }  
@@ -1206,8 +1207,8 @@ struct io_directory_list_recurse_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
-    std::string directory_name(rel::rlang::compiler::eval_to_string_only(tokens));
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    rstd::string directory_name(rel::rlang::compiler::eval_to_string_only(tokens));
     io_directory_list_wrap::write_headings(mandatory_output);
     io::directory::mandatory_iterate(directory_name, entry_iterator(mandatory_output));
   }  
@@ -1248,7 +1249,7 @@ struct help_markdown_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     help::markdown::all(mandatory_output);    
   }  
 } help_markdown_instance;
@@ -1264,8 +1265,8 @@ struct help_version_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
-    mandatory_output.write(NP1_VERSION_STRING "\n");    
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    mandatory_output.write(PACKAGE_VERSION "\n");    
   }  
 } help_version_instance;
 
@@ -1284,8 +1285,8 @@ struct meta_script_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
-    std::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    rstd::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
     script_run(input, output, file_name, false);    
   }  
 } meta_script_instance;
@@ -1307,7 +1308,7 @@ struct meta_remote_wrap : public stream_op_wrap_base {
   //NOTE that currently the only input and output supported are stdin and stdout.
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     remote::run(input, output, tokens);
   }  
@@ -1329,7 +1330,7 @@ struct meta_shell_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     shell::run(input, output, tokens);
   }
@@ -1353,7 +1354,7 @@ struct meta_parallel_explicit_mapping_wrap : public stream_op_wrap_base {
   virtual void call(bool is_recordset_stream,
                     mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
-                    const std::vector<rel::rlang::token> &tokens) const {
+                    const rstd::vector<rel::rlang::token> &tokens) const {
     NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     parallel_explicit_mapping<mandatory_delimited_input_type, mandatory_buffered_output_type>::run(
       mandatory_delimited_input, mandatory_output, tokens);
@@ -1362,8 +1363,8 @@ struct meta_parallel_explicit_mapping_wrap : public stream_op_wrap_base {
 
 
 // Helper function to avoid circular #includes.
-void worker_run(const std::string &reliable_storage_local_root, const std::string &reliable_storage_remote_root,
-                const std::string &listen_endpoint);
+void worker_run(const rstd::string &reliable_storage_local_root, const rstd::string &reliable_storage_remote_root,
+                const rstd::string &listen_endpoint);
 
 //TODO: This is not really a stream operator, but where should it go?
 struct meta_worker_wrap : public stream_op_wrap_base {
@@ -1377,8 +1378,8 @@ struct meta_worker_wrap : public stream_op_wrap_base {
 
   virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens) const {
-    std::string listen_address(rel::rlang::compiler::eval_to_string_only(tokens));
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    rstd::string listen_address(rel::rlang::compiler::eval_to_string_only(tokens));
     worker_run(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(), listen_address);    
   }  
 } meta_worker_instance;
@@ -1412,11 +1413,11 @@ public:
     return at(n)->output_type();  
   }
 
-  static bool accepts_recordset_stream(size_t n, const std::vector<rel::rlang::token> &tokens) {
+  static bool accepts_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens) {
     return at(n)->accepts_recordset_stream(tokens);
   }
 
-  static bool outputs_recordset_stream(size_t n, const std::vector<rel::rlang::token> &tokens,
+  static bool outputs_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens,
                                         bool input_is_recordset_stream) {
     return at(n)->outputs_recordset_stream(tokens, input_is_recordset_stream);
   }
@@ -1424,17 +1425,17 @@ public:
 
   static void call(size_t n, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<std::string> &args,
+                    const rstd::vector<rstd::string> &args,
                     bool input_is_recordset_stream,
                     bool is_worker,
-                    const std::string &script_file_name,
+                    const rstd::string &script_file_name,
                     size_t script_line_number) {
     global_info::stream_op_details(at(n)->name(), script_file_name.c_str(), script_line_number);
-    std::vector<std::string> args_without_program_name = args;
+    rstd::vector<rstd::string> args_without_program_name = args;
     args_without_program_name.pop_front();
-    std::string useful_args = str::implode(args_without_program_name, " ");
+    rstd::string useful_args = str::implode(args_without_program_name, " ");
     io::string_input_stream args_stream(useful_args);
-    std::vector<rel::rlang::token> tokens;
+    rstd::vector<rel::rlang::token> tokens;
     np1::rel::rlang::compiler::compile_single_expression_to_prefix(args_stream, tokens);
     call(n, input, output, tokens, input_is_recordset_stream, is_worker, script_file_name, script_line_number);
     global_info::stream_op_details_reset();
@@ -1442,10 +1443,10 @@ public:
 
   static void call(size_t n, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
-                    const std::vector<rel::rlang::token> &tokens,
+                    const rstd::vector<rel::rlang::token> &tokens,
                     bool input_is_recordset_stream,
                     bool is_worker,
-                    const std::string &script_file_name,
+                    const rstd::string &script_file_name,
                     size_t script_line_number) {
     const stream_op_wrap_base *op = at(n);
     global_info::stream_op_details(op->name(), script_file_name.c_str(), script_line_number);
@@ -1471,7 +1472,7 @@ public:
 private:
   static void validate_distributability(const stream_op_wrap_base *op, bool is_worker) {
     NP1_ASSERT(!is_worker || op->is_usable_in_distributed_operation(),
-                op->name() + std::string(" is not usable in a distributed operation."));
+                op->name() + rstd::string(" is not usable in a distributed operation."));
   }
   
   static const stream_op_wrap_base *at(size_t n) {
@@ -1545,11 +1546,11 @@ stream_op_table_io_type_type stream_op_table_input_type(size_t n) { return strea
 stream_op_table_io_type_type stream_op_table_output_type(size_t n) { return stream_op_table::output_type(n); }
 
 size_t stream_op_table_find(const char *name, bool is_worker) { return stream_op_table::find(name, is_worker); }
-bool stream_op_table_accepts_recordset_stream(size_t n, const std::vector<rel::rlang::token> &tokens) {
+bool stream_op_table_accepts_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens) {
   return stream_op_table::accepts_recordset_stream(n, tokens);
 }
 
-bool stream_op_table_outputs_recordset_stream(size_t n, const std::vector<rel::rlang::token> &tokens,
+bool stream_op_table_outputs_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens,
                                               bool input_is_recordset_stream) {
   return stream_op_table::outputs_recordset_stream(n, tokens, input_is_recordset_stream);
 }

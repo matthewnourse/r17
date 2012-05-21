@@ -10,7 +10,7 @@
 #include <errno.h>
 #endif
 
-#include <list>
+#include "rstd/list.hpp"
 #include "np1/io/log.hpp"
 #include "np1/skip_list.hpp"
 
@@ -68,7 +68,7 @@ bool mandatory_wait_for_child(pid_t child_pid, bool hang = true) {
   }
 
   if (!WIFEXITED(status) || (WEXITSTATUS(status) != 0)) {
-    std::string detail = WIFEXITED(status) ? str::to_dec_str(WEXITSTATUS(status)) : "Abnormal termination";
+    rstd::string detail = WIFEXITED(status) ? str::to_dec_str(WEXITSTATUS(status)) : "Abnormal termination";
     np1::assert::write_pre_crash_message(
           "WIFEXITED(status) && (WEXITSTATUS(status) == 0)",
           ("Terminating- error in child process " + str::to_dec_str(child_pid) + ": " + detail).c_str());
@@ -97,13 +97,13 @@ void mandatory_wait_for_children(Container c) {
 
 // Exec- start a program, overwriting this process's address space.
 // args[0] is the name of the program.
-void mandatory_execvp(const std::vector<std::string> &args, int stdin_fd, int stdout_fd, int stderr_fd) {
+void mandatory_execvp(const rstd::vector<rstd::string> &args, int stdin_fd, int stdout_fd, int stderr_fd) {
   NP1_ASSERT(args.size() > 0, "mandatory_execvp on empty args");
   
   // Get the arguments into the right format.
   char *argv[args.size() + 1];
-  std::vector<std::string>::const_iterator i = args.begin();
-  std::vector<std::string>::const_iterator iz = args.end();
+  rstd::vector<rstd::string>::const_iterator i = args.begin();
+  rstd::vector<rstd::string>::const_iterator iz = args.end();
   char **argv_p = argv;
   for (; i < iz; ++i, ++argv_p) {
     *argv_p = (char *)i->c_str();
@@ -173,8 +173,8 @@ public:
       return false;
     }
   
-    typename std::list<process_info>::iterator i = m_process_infos.begin();
-    typename std::list<process_info>::iterator iz = m_process_infos.end();
+    typename rstd::list<process_info>::iterator i = m_process_infos.begin();
+    typename rstd::list<process_info>::iterator iz = m_process_infos.end();
     for (; i != iz; ++i) {
       if (mandatory_try_wait_for_child(i->m_pid)) {
         update_process_times(*i);
@@ -193,8 +193,8 @@ public:
 
   size_t size() const { return m_process_infos.size(); }
   size_t max_size() const { return m_max_size; }
-  const std::string &name() const { return m_name; }
-  void name(const std::string &n) { m_name = n; }
+  const rstd::string &name() const { return m_name; }
+  void name(const rstd::string &n) { m_name = n; }
   
 
 private:
@@ -301,9 +301,9 @@ private:
   size_t m_max_size;
   size_t m_prev_max_size;
   double m_prev_throughput;
-  std::list<process_info> m_process_infos;
-  std::vector<uint64_t> m_recent_process_start_times;
-  std::string m_name;
+  rstd::list<process_info> m_process_infos;
+  rstd::vector<uint64_t> m_recent_process_start_times;
+  rstd::string m_name;
 };
 
 
@@ -318,7 +318,7 @@ public:
 
   void add(const F &f, const On_Exit &on_exit) {
     if (m_pool.size() >= m_pool.max_size()) {
-      m_queue.push_back(std::make_pair(f, on_exit));
+      m_queue.push_back(rstd::make_pair(f, on_exit));
     } else {
       m_pool.add(f, on_exit);
     }
@@ -338,7 +338,7 @@ public:
   }
 
   size_t size() const { return m_pool.size() + m_queue.size(); }
-  void name(const std::string &n) { m_pool.name(n); }
+  void name(const rstd::string &n) { m_pool.name(n); }
 
 private:
   void deque_one_to_pool() {
@@ -361,7 +361,7 @@ private:
 
 private:
   pool<On_Exit> m_pool;
-  std::list<std::pair<F, On_Exit> > m_queue;
+  rstd::list<rstd::pair<F, On_Exit> > m_queue;
 };
 
 
@@ -378,11 +378,11 @@ public:
     typename skip_list<entry>::iterator i = m_entries.begin();
     typename skip_list<entry>::iterator iz = m_entries.end();
     for (; i != iz; ++i) {
-      std::detail::mem::destruct_and_free(i->m_pool_p);
+      rstd::detail::mem::destruct_and_free(i->m_pool_p);
     }
   }
 
-  void add(const std::string &key, const F &f, const On_Exit &on_exit) {
+  void add(const rstd::string &key, const F &f, const On_Exit &on_exit) {
     typename skip_list<entry>::iterator iter = m_entries.find(entry(key));
     if (iter == m_entries.end()) {
       NP1_ASSERT(add_queued_pool(key), "Queued pool " + key + " not found and can't add it either");
@@ -423,12 +423,12 @@ private:
   queued_pool_map &operator = (const queued_pool_map &);
 
 private:
-  bool add_queued_pool(const std::string &key) {
+  bool add_queued_pool(const rstd::string &key) {
     queued_pool<F, On_Exit> *pool_p =
-      std::detail::mem::alloc_construct<queued_pool<F, On_Exit> >((size_t)DEFAULT_INITIAL_MAX_POOL_SIZE);
+      rstd::detail::mem::alloc_construct<queued_pool<F, On_Exit> >((size_t)DEFAULT_INITIAL_MAX_POOL_SIZE);
     pool_p->name(key);
     if (!m_entries.insert(entry(key, pool_p))) {
-      std::detail::mem::destruct_and_free(pool_p);
+      rstd::detail::mem::destruct_and_free(pool_p);
       return false;
     }
 
@@ -439,12 +439,12 @@ private:
 private:
   struct entry {
     entry() : m_pool_p(0) {}
-    explicit entry(const std::string &k) : m_key(k), m_pool_p(0) {}
-    entry(const std::string &k, queued_pool<F, On_Exit> *pool_p) : m_key(k), m_pool_p(pool_p) {}
+    explicit entry(const rstd::string &k) : m_key(k), m_pool_p(0) {}
+    entry(const rstd::string &k, queued_pool<F, On_Exit> *pool_p) : m_key(k), m_pool_p(pool_p) {}
 
     bool operator < (const entry &other) const { return m_key < other.m_key; }
 
-    std::string m_key;
+    rstd::string m_key;
     queued_pool<F, On_Exit> *m_pool_p;
   };
 

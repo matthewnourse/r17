@@ -6,7 +6,7 @@
 
 
 #define NP1_TEST_ASSERT(assertion__) \
-NP1_ASSERT(assertion__, std::string(__FILE__) + ": " + ::np1::str::to_dec_str(__LINE__))
+NP1_ASSERT(assertion__, rstd::string(__FILE__) + ": " + ::np1::str::to_dec_str(__LINE__))
 
 #define NP1_TEST_RUN_TEST(test__) \
 do { printf("%s\n", #test__); fflush(stdout); test__(); } while (0)

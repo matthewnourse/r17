@@ -17,7 +17,7 @@ class parallel_explicit_mapping {
 private:
   // Called in the child process.
   struct child_process_f {
-    child_process_f(FILE *child_output_fp, const std::vector<rel::rlang::token> &remote_tokens)
+    child_process_f(FILE *child_output_fp, const rstd::vector<rel::rlang::token> &remote_tokens)
       : m_child_output_fp(child_output_fp), m_remote_tokens(remote_tokens) {}
 
     void operator()() {
@@ -33,7 +33,7 @@ private:
     }
 
     FILE *m_child_output_fp;
-    std::vector<rel::rlang::token> m_remote_tokens;    
+    rstd::vector<rel::rlang::token> m_remote_tokens;    
   };
 
 
@@ -74,7 +74,7 @@ private:
 
 public:
   static void run(Input_Stream &input, Final_Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     /* Get the headers and the interesting fields out of them. */
     rel::record input_headings(input.parse_headings());
     size_t file_name_field_id =
@@ -98,18 +98,18 @@ public:
 private:
   struct input_record_callback {
     input_record_callback(size_t file_name_field_id, size_t host_name_field_id,
-                          const std::vector<rel::rlang::token> &tokens, process_pool_map_type &process_pool_map,
+                          const rstd::vector<rel::rlang::token> &tokens, process_pool_map_type &process_pool_map,
                           Final_Output_Stream &final_output, bool &output_headings_written)
       : m_file_name_field_id(file_name_field_id), m_host_name_field_id(host_name_field_id),
         m_tokens(tokens), m_process_pool_map(process_pool_map), m_final_output(final_output),
         m_output_headings_written(output_headings_written) {}
 
     bool operator()(const rel::record_ref &r) const {
-      std::string file_name = r.mandatory_field(m_file_name_field_id).to_string();
-      std::string host_name = r.mandatory_field(m_host_name_field_id).to_string();
+      rstd::string file_name = r.mandatory_field(m_file_name_field_id).to_string();
+      rstd::string host_name = r.mandatory_field(m_host_name_field_id).to_string();
 
       // Prefix the tokens with the host name and a command to read the file.
-      std::vector<rel::rlang::token> file_read_tokens;
+      rstd::vector<rel::rlang::token> file_read_tokens;
       file_read_tokens.push_back(rel::rlang::token(host_name.c_str(), rel::rlang::token::TYPE_STRING));
       file_read_tokens.push_back(rel::rlang::token(",", rel::rlang::token::TYPE_COMMA));
       file_read_tokens.push_back(rel::rlang::token("io.file.read", rel::rlang::token::TYPE_IDENTIFIER_VARIABLE));
@@ -118,7 +118,7 @@ private:
       file_read_tokens.push_back(rel::rlang::token(")", rel::rlang::token::TYPE_CLOSE_PAREN));
       file_read_tokens.push_back(rel::rlang::token("|", rel::rlang::token::TYPE_OPERATOR));
 
-      std::vector<rel::rlang::token> remote_tokens(file_read_tokens);
+      rstd::vector<rel::rlang::token> remote_tokens(file_read_tokens);
       remote_tokens.append(m_tokens);
       
       // Create a temporary file for the use of the child.      
@@ -136,7 +136,7 @@ private:
 
     size_t m_file_name_field_id;
     size_t m_host_name_field_id;
-    const std::vector<rel::rlang::token> &m_tokens;
+    const rstd::vector<rel::rlang::token> &m_tokens;
     process_pool_map_type &m_process_pool_map;
     Final_Output_Stream &m_final_output;
     bool &m_output_headings_written;

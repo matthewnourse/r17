@@ -24,7 +24,7 @@ typedef ::np1::rel::rlang::fn::fn_table fn_table_type;
 
 
 template <typename Input_Stream>
-void read_source(Input_Stream &input, std::vector<token_type> &output) {
+void read_source(Input_Stream &input, rstd::vector<token_type> &output) {
   ::np1::rel::rlang::io::token_input_stream<Input_Stream, fn_table_type> token_input(input);
 
   token_type tok;
@@ -37,13 +37,13 @@ void read_source(Input_Stream &input, std::vector<token_type> &output) {
 }
 
 #define NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(name__, str__) \
-std::string name__##_string(str__); \
+rstd::string name__##_string(str__); \
 string_stream_type name__(name__##_string)
 
 
 #define NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(name__, str__) \
 NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(name__##_string_stream, str__); \
-std::vector<token_type> name__; \
+rstd::vector<token_type> name__; \
 read_source(name__##_string_stream, name__)
 
 
@@ -102,7 +102,7 @@ void run_and_check_return_type(vm_type &vm, const record_type &this_r,
   ::np1::str::ref actual_value;
   stack.pop(actual_value);
 //  fprintf(stderr, "Expected: %s  Actual: %s\n", expected_value,
-//            std::string(actual_value.ptr(), actual_value.length()).c_str()); 
+//            rstd::string(actual_value.ptr(), actual_value.length()).c_str()); 
   NP1_TEST_ASSERT(::np1::str::cmp(actual_value, expected_value) == 0);
 }
 

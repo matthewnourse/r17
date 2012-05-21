@@ -11,7 +11,7 @@ class unique {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     // Read the headings from stdin.
     record headings(input.parse_headings());
     

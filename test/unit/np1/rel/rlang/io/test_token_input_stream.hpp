@@ -19,7 +19,7 @@ typedef ::np1::rel::rlang::io::token_input_stream<
 typedef ::np1::rel::rlang::token token_type;
 
 #define NP1_TEST_UNIT_REL_RLANG_IO_DEFINE_INPUT_STREAM(name__, str__) \
-std::string name__##_string_token(str__); \
+rstd::string name__##_string_token(str__); \
 string_stream_type name__##_string_stream(name__##_string_token); \
 input_stream_type name__(name__##_string_stream)
 
@@ -32,10 +32,10 @@ struct token_expected_results_definition {
 };
 
 
-std::string make_test_string(const token_expected_results_definition *definition_p,
+rstd::string make_test_string(const token_expected_results_definition *definition_p,
                               const token_expected_results_definition *definition_end,
-                              const std::string &in_between) {
-  std::string all_tokens;
+                              const rstd::string &in_between) {
+  rstd::string all_tokens;
   for (; definition_p < definition_end; ++definition_p) {
     all_tokens.append(definition_p->m_text);
     all_tokens.append(in_between);
@@ -45,7 +45,7 @@ std::string make_test_string(const token_expected_results_definition *definition
 }
 
 
-void check_results(const std::string &input_string,
+void check_results(const rstd::string &input_string,
                     const token_expected_results_definition *definition_p,
                     const token_expected_results_definition *definition_end) {
   NP1_TEST_UNIT_REL_RLANG_IO_DEFINE_INPUT_STREAM(input, input_string);

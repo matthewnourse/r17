@@ -20,10 +20,10 @@ typedef struct empty_struct {} empty_type;
 
 // Figure out the common and non-common headings between two heading records.
 void find_common_and_non_common_headings(const record &file1_headers, const record &file2_headers,
-                                          std::vector<std::string> &common_heading_names,
-                                          std::vector<size_t> &file2_non_common_field_numbers) {
-  std::vector<size_t> file1_common_field_numbers;
-  std::vector<size_t> file2_common_field_numbers;
+                                          rstd::vector<rstd::string> &common_heading_names,
+                                          rstd::vector<size_t> &file2_non_common_field_numbers) {
+  rstd::vector<size_t> file1_common_field_numbers;
+  rstd::vector<size_t> file2_common_field_numbers;
 
   // Find the common headings.
   size_t number_file1_columns = file1_headers.number_fields(); 
@@ -72,8 +72,8 @@ void record_merge_write(
               Output &output,
               const record_ref &r1, 
               const record_ref &r2, 
-              const std::vector<size_t> &r2_non_common_field_numbers,
-              std::vector<str::ref> &r2_non_common_field_refs_storage) {
+              const rstd::vector<size_t> &r2_non_common_field_numbers,
+              rstd::vector<str::ref> &r2_non_common_field_refs_storage) {
   /* If the first record is empty, then we can just write out the
    * second record. */
   if (r1.is_empty()) {
@@ -85,10 +85,10 @@ void record_merge_write(
     // Get the non-matching columns from the second record.    
     r2_non_common_field_refs_storage.resize(r2_non_common_field_numbers.size());
 
-    std::vector<size_t>::const_iterator n_i = r2_non_common_field_numbers.begin();
-    std::vector<size_t>::const_iterator n_iz = r2_non_common_field_numbers.end();
+    rstd::vector<size_t>::const_iterator n_i = r2_non_common_field_numbers.begin();
+    rstd::vector<size_t>::const_iterator n_iz = r2_non_common_field_numbers.end();
   
-    std::vector<str::ref>::iterator r_i = r2_non_common_field_refs_storage.begin();
+    rstd::vector<str::ref>::iterator r_i = r2_non_common_field_refs_storage.begin();
 
     for (; n_i != n_iz; ++n_i, ++r_i) {
       *r_i = r2.field(*n_i);
@@ -106,8 +106,8 @@ template <typename Output>
 struct matching_record_callback {
   matching_record_callback(
     Output &output, 
-    const std::vector<size_t> &file2_non_common_field_numbers,
-    std::vector<str::ref> &file2_non_common_field_refs_storage,
+    const rstd::vector<size_t> &file2_non_common_field_numbers,
+    rstd::vector<str::ref> &file2_non_common_field_refs_storage,
     const record_ref &ref1,
     bool &called)
   : m_output(output)
@@ -127,8 +127,8 @@ struct matching_record_callback {
   }
   
   Output &m_output;
-  const std::vector<size_t> &m_file2_non_common_field_numbers;
-  std::vector<str::ref> &m_file2_non_common_field_refs_storage;
+  const rstd::vector<size_t> &m_file2_non_common_field_numbers;
+  rstd::vector<str::ref> &m_file2_non_common_field_refs_storage;
   const record_ref &m_ref1;
   bool &m_called;
 };

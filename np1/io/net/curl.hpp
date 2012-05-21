@@ -6,7 +6,7 @@
 
 #include "np1/str.hpp"
 #include "np1/io/ext_heap_buffer_output_stream.hpp"
-#include "curl/curl.h"
+#include <curl/curl.h>
 
 
 namespace np1 {
@@ -23,7 +23,7 @@ public:
   ~curl() { curl_easy_cleanup(m_handle); }
 
   template <typename Output>
-  bool get(const std::string &url, Output &output) {
+  bool get(const rstd::string &url, Output &output) {
     curl_easy_setopt(m_handle, CURLOPT_URL, url.c_str()); 
     curl_easy_setopt(m_handle, CURLOPT_NOPROGRESS, 1L);
     curl_easy_setopt(m_handle, CURLOPT_NOSIGNAL, 1L);
@@ -38,7 +38,7 @@ public:
   }
 
   template <typename Heap>
-  bool get_utf8_safe(Heap &h, const std::string &url, char replacement_char, char **result_str,
+  bool get_utf8_safe(Heap &h, const rstd::string &url, char replacement_char, char **result_str,
                       size_t *result_str_length_p) {
     ext_heap_buffer_output_stream<Heap> output(h, EXPECTED_MAX_CONTENT_SIZE);
     if (!get(url, output)) {
@@ -55,7 +55,7 @@ public:
 
   // Returns false for HTTP status other than 200.
   template <typename Output>
-  bool get_no_headers(const std::string &url, Output &output, long &http_status) {
+  bool get_no_headers(const rstd::string &url, Output &output, long &http_status) {
     curl_easy_setopt(m_handle, CURLOPT_URL, url.c_str()); 
     curl_easy_setopt(m_handle, CURLOPT_NOPROGRESS, 1L);
     curl_easy_setopt(m_handle, CURLOPT_NOSIGNAL, 1L);
@@ -78,7 +78,7 @@ public:
   
 
   template <typename Input>
-  bool put_no_headers(const std::string &url, Input &input, long &http_status) {
+  bool put_no_headers(const rstd::string &url, Input &input, long &http_status) {
     curl_easy_setopt(m_handle, CURLOPT_UPLOAD, 1L);
     
     single_entry_curl_slist header_list("Transfer-Encoding: chunked");
@@ -107,7 +107,7 @@ public:
   }
 
 
-  bool delete_no_headers(const std::string &url, long &http_status) {
+  bool delete_no_headers(const rstd::string &url, long &http_status) {
     curl_easy_setopt(m_handle, CURLOPT_URL, url.c_str()); 
     curl_easy_setopt(m_handle, CURLOPT_CUSTOMREQUEST, "DELETE"); 
     curl_easy_setopt(m_handle, CURLOPT_NOPROGRESS, 1L);
@@ -130,7 +130,7 @@ public:
   }
 
 
-  bool mkcol_no_headers(const std::string &url, long &http_status) {
+  bool mkcol_no_headers(const rstd::string &url, long &http_status) {
     curl_easy_setopt(m_handle, CURLOPT_URL, url.c_str()); 
     curl_easy_setopt(m_handle, CURLOPT_CUSTOMREQUEST, "MKCOL"); 
     curl_easy_setopt(m_handle, CURLOPT_NOPROGRESS, 1L);
@@ -152,7 +152,7 @@ public:
     return ((0 == result) && (http_status >= 200) && (http_status < 300));
   }
 
-  bool exists(const std::string &url, long &http_status) {
+  bool exists(const rstd::string &url, long &http_status) {
     curl_easy_setopt(m_handle, CURLOPT_URL, url.c_str()); 
     curl_easy_setopt(m_handle, CURLOPT_NOBODY, 1L); 
     curl_easy_setopt(m_handle, CURLOPT_NOPROGRESS, 1L);

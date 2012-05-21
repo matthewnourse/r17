@@ -1,0 +1,25 @@
+// Copyright 2012 Matthew Nourse and n plus 1 computing pty limited unless otherwise noted.
+// Please see LICENSE file for details.
+#ifndef NP1_RSTD_PAIR
+#define NP1_RSTD_PAIR
+
+
+namespace rstd {
+
+/// A replacement for std::pair.
+template <typename F, typename S>
+struct pair {
+  pair(const F &f, const S &s) : first(f), second(s) {}
+  F first;
+  S second;
+};
+
+
+template <typename F, typename S>
+pair<F, S> make_pair(const F &f, const S &s) { return pair<F, S>(f, s); }
+
+
+} // namespaces
+
+
+#endif

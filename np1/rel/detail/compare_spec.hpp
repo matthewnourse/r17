@@ -57,13 +57,13 @@ public:
   bool is_double() const { return (m_compare_function == helper::double_compare); }  
   
   //TODO: this shouldn't go here, but where should it go?
-  static std::string untyped_heading(const char *heading, size_t len) {
+  static rstd::string untyped_heading(const char *heading, size_t len) {
     const char *heading_end = heading + len;
     const char *colon = (const char *)memchr(heading, ':', len);
     NP1_ASSERT(colon && (colon+1 < heading_end),
-                "Heading is not a typed heading: " + std::string(heading, len));
+                "Heading is not a typed heading: " + rstd::string(heading, len));
 
-    return std::string(colon+1, heading_end - colon - 1);
+    return rstd::string(colon+1, heading_end - colon - 1);
   }
   
 private:

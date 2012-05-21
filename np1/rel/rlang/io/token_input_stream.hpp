@@ -57,16 +57,16 @@ public:
 
 private:
   // Add line number information to the error message.
-  std::string error_message(const std::string &message) {
+  rstd::string error_message(const rstd::string &message) {
     return error_message(m_stream.line_number(), message);
   }
 
-  static std::string error_message(size_t line_number, const std::string &message) {
+  static rstd::string error_message(size_t line_number, const rstd::string &message) {
     return "line " + str::to_dec_str(line_number) + ": " + message;
   }
 
-  static std::string error_message(size_t line_number, const std::string &message,
-                                    const std::string &tok) {
+  static rstd::string error_message(size_t line_number, const rstd::string &message,
+                                    const rstd::string &tok) {
     return "line " + str::to_dec_str(line_number) + ": " + message
             + "  token: " + tok;
   }
@@ -227,7 +227,7 @@ private:
       char *endptr = NULL;
       str::partial_dec_to_double(tok.text(), token_p, &endptr);
       NP1_ASSERT((endptr == token_p),
-                 error_message("Invalid floating-point number.  Token: " + std::string(tok.text())));
+                 error_message("Invalid floating-point number.  Token: " + rstd::string(tok.text())));
       tok.type(token::TYPE_DOUBLE);      
     }
   
@@ -239,8 +239,8 @@ private:
 
     NP1_ASSERT(
       !isalpha(c),  // Even floating point numbers can't end with an alpha char.
-      error_message("Invalid number: '" + std::string(1, (char)c)
-                    + "'.  Token: " + std::string(tok.text())));    
+      error_message("Invalid number: '" + rstd::string(1, (char)c)
+                    + "'.  Token: " + rstd::string(tok.text())));    
     m_stream.unget(c);
   }
 

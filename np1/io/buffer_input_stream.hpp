@@ -42,8 +42,8 @@ public:
     return true;
   }
 
-  const std::string &name() const {
-    static std::string n("[buffer input]");
+  const rstd::string &name() const {
+    static rstd::string n("[buffer input]");
     return n;
   }
 

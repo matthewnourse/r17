@@ -18,8 +18,8 @@ class generate_sequence {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
-    std::vector<std::pair<std::string, rlang::dt::data_type> > arguments = rlang::compiler::eval_to_strings(tokens);
+                  const rstd::vector<rel::rlang::token> &tokens) {
+    rstd::vector<rstd::pair<rstd::string, rlang::dt::data_type> > arguments = rlang::compiler::eval_to_strings(tokens);
 
     NP1_ASSERT((arguments.size() == 2)
                   && (rlang::dt::TYPE_INT == arguments[0].second)

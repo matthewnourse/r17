@@ -711,7 +711,7 @@ struct time_format : public base {
     char prev_end_format_char = *end_format_ptr;
     *end_format_ptr = '\0';
 
-    time_t time_sec = lib::int64::divide(time_epoch, 1000000);
+    time_t time_sec = time_epoch/1000000;
     struct tm *tm_p = localtime(&time_sec);
     const size_t size_to_alloc = 1024;
     char *formatted_buf = h.alloc(size_to_alloc);
@@ -760,7 +760,7 @@ struct io_file_read : public base {
   }
 
   inline static dt::string call(vm_heap &heap, const dt::string &file_name) {
-    std::string file_name_string(file_name.to_string());
+    rstd::string file_name_string(file_name.to_string());
     
     ::np1::io::gzfile f;
     if (!f.open_ro(file_name_string.c_str())) {

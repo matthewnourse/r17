@@ -3,6 +3,7 @@
 #ifndef NP1_HELP_MARKDOWN_HPP
 #define NP1_HELP_MARKDOWN_HPP
 
+#include "config.h"
 
 namespace np1 {
 namespace help {
@@ -13,7 +14,7 @@ public:
   template <typename Mandatory_Output_Stream>
   static void all(Mandatory_Output_Stream &output) {
     output.write(
-      "### r17 v" NP1_VERSION_STRING " ###\n\n"
+      "### r17 v" PACKAGE_VERSION " ###\n\n"
       "R17 is a language for heterogeneous data querying and manipulation.  \n\n"
       "It's a syntactic cross between UNIX shell scripting and SQL.  "
       "Data flows along a pipeline of stream operators just like it does in UNIX pipelines.  "
@@ -296,7 +297,7 @@ private:
       m_previous_name = name;
     }
 
-    std::string m_previous_name;
+    rstd::string m_previous_name;
     Mandatory_Output_Stream &m_output;
     bool m_is_operator;
   };

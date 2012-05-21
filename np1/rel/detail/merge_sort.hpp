@@ -5,7 +5,7 @@
 
 
 #include "np1/rel/record_ref.hpp"
-#include <vector>
+#include "rstd/vector.hpp"
 
 
 namespace np1 {
@@ -150,9 +150,9 @@ private:
       return false;
     }
 
-    std::vector<list_element>::iterator i = m_list.begin();
-    std::vector<list_element>::iterator iz = m_list.end();
-    std::vector<list_element>::iterator next_i;
+    rstd::vector<list_element>::iterator i = m_list.begin();
+    rstd::vector<list_element>::iterator iz = m_list.end();
+    rstd::vector<list_element>::iterator next_i;
 
     m_head = i;
 
@@ -173,7 +173,7 @@ private:
 
 private:
   list_element *m_head;
-  std::vector<list_element> m_list; 
+  rstd::vector<list_element> m_list; 
 };
 
 } // namespaces

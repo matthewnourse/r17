@@ -45,12 +45,12 @@ public:
 public:
   /// Parse the vector of infix expressions and return the postfix.
   template <typename Function_Table>
-  static void parse(const std::vector<token> &infix,
-                    std::vector<parsed_token_info> &postfix) {
+  static void parse(const rstd::vector<token> &infix,
+                    rstd::vector<parsed_token_info> &postfix) {
     size_t infix_offset = 0;
     const token *tok = infix.begin();
     const token *tok_end = infix.end();
-    std::stack<parsed_token_info> tok_stack;
+    rstd::stack<parsed_token_info> tok_stack;
 
     for (infix_offset = 0; tok < tok_end; ++tok, ++infix_offset) {
       switch (tok->type()) {

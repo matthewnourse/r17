@@ -25,7 +25,7 @@ void check_token_is(const parsed_token_info_type &parsed_token,
 
 void test_single_expression() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "2");
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 
@@ -35,7 +35,7 @@ void test_single_expression() {
 
 void test_binary_operation() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "this.fred+2");
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 
@@ -48,7 +48,7 @@ void test_binary_operation() {
 
 void test_arithmetic_precedence() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "this.fred+2*3");
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 
@@ -63,7 +63,7 @@ void test_arithmetic_precedence() {
 
 void test_arithmetic_precedence_with_parentheses() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "(this.fred+2)*3");
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 
@@ -79,7 +79,7 @@ void test_arithmetic_precedence_with_parentheses() {
 void test_function_call_zero_arguments() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "fcall()");
   input[0].type(token_type::TYPE_IDENTIFIER_FUNCTION);
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
   
@@ -91,7 +91,7 @@ void test_function_call_zero_arguments() {
 void test_function_call_one_argument() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "fcall(1)");
   input[0].type(token_type::TYPE_IDENTIFIER_FUNCTION);
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 
@@ -104,7 +104,7 @@ void test_function_call_one_argument() {
 void test_function_call_two_arguments() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "fcall(1, 2)");
   input[0].type(token_type::TYPE_IDENTIFIER_FUNCTION);
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 
@@ -119,7 +119,7 @@ void test_unary_minus() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "1+-2");
   input[2].first_matching_sym_op_fn_id(fn_table_type::find_unary_minus());
 
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 
@@ -134,7 +134,7 @@ void test_unary_minus_on_complex_expression() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_TOKEN_VECTOR(input, "2+3*4/2--1");
   input[8].first_matching_sym_op_fn_id(fn_table_type::find_unary_minus());
 
-  std::vector<parsed_token_info_type> postfix;
+  rstd::vector<parsed_token_info_type> postfix;
 
   shunting_yard_type::parse<fn_table_type>(input, postfix);
 

@@ -16,7 +16,7 @@ class where {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     /* Get the headers. */
     record headings(input.parse_headings());
 

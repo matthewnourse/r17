@@ -21,7 +21,7 @@ public:
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens,
+                  const rstd::vector<rel::rlang::token> &tokens,
                   sort_type_type sort_type,
                   sort_order_type sort_order) {
     NP1_ASSERT(tokens.size() > 0, "Unexpected empty stream operator argument list");
@@ -29,7 +29,7 @@ public:
     // Read the first line of input, we need it to add meaning to the arguments.
     record headings(input.parse_headings()); 
 
-    std::vector<std::string> arg_headings;
+    rstd::vector<rstd::string> arg_headings;
 
     rlang::compiler::compile_heading_name_list(
                       tokens, headings.ref(), arg_headings);

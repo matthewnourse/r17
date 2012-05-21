@@ -21,20 +21,20 @@ private:
 
 public:
   template <typename Input_Stream, typename Output_Stream>
-  void operator()(Input_Stream &input, Output_Stream &output, const std::vector<rlang::token> &args,
+  void operator()(Input_Stream &input, Output_Stream &output, const rstd::vector<rlang::token> &args,
                   on_non_matching_action_type on_non_matching_action) {
     // Sort out the arguments.
-    std::vector<std::string> compiled_args = rlang::compiler::eval_to_strings_only(args);
+    rstd::vector<rstd::string> compiled_args = rlang::compiler::eval_to_strings_only(args);
     NP1_ASSERT(compiled_args.size() > 1,
                 "rel.from_text's arguments are a regular expression then at least one header name.");
 
-    std::string regular_expression = compiled_args[0];
+    rstd::string regular_expression = compiled_args[0];
     compiled_args.pop_front();
 
     // compiled_args now contains a list of heading names.  If the headings don't have a type then set the
     // type to string.
-    std::vector<std::string>::iterator ii = compiled_args.begin();
-    std::vector<std::string>::iterator iz = compiled_args.end();
+    rstd::vector<rstd::string>::iterator ii = compiled_args.begin();
+    rstd::vector<rstd::string>::iterator iz = compiled_args.end();
     for (ii = compiled_args.begin(); ii != iz; ++ii) {
       str::ref type_tag = detail::helper::get_heading_type_tag(str::ref(*ii));
       if (!type_tag.is_null()) {
@@ -55,7 +55,7 @@ public:
     NP1_ASSERT(compiled_pattern.capture_count() <= 9, "Too many regex captures, currently-supported max is 9.");
 
     // Make the replacement string.
-    std::string replacement_string;
+    rstd::string replacement_string;
     size_t n;
     for (ii = compiled_args.begin(), n = 1; ii != iz; ++ii, ++n) {
       replacement_string.push_back('\\');
@@ -76,7 +76,7 @@ public:
 private:
   template <typename Output>
   struct line_callback {
-    line_callback(regex::pattern &compiled_pattern, const std::string &replacement_string, rlang::vm_heap &heap,
+    line_callback(regex::pattern &compiled_pattern, const rstd::string &replacement_string, rlang::vm_heap &heap,
                   Output &output, on_non_matching_action_type on_non_matching_action)
       : m_compiled_pattern(compiled_pattern),
         m_replacement_string(replacement_string),
@@ -111,11 +111,11 @@ private:
     }
 
     regex::pattern &m_compiled_pattern;
-    std::string m_replacement_string;
+    rstd::string m_replacement_string;
     size_t m_replacement_string_length;
     rlang::vm_heap &m_heap;    
     Output &m_output;
-    std::vector<str::ref> m_fields;
+    rstd::vector<str::ref> m_fields;
     on_non_matching_action_type m_on_non_matching_action;
   };
 };

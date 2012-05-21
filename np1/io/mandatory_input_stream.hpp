@@ -53,15 +53,15 @@ public:
     }
   }
 
-  void copy_overwrite(const std::string &file_name) {
+  void copy_overwrite(const rstd::string &file_name) {
     copy(file_name, true);
   }
 
-  void copy_append(const std::string &file_name) {
+  void copy_append(const rstd::string &file_name) {
     copy(file_name, false);
   }
 
-  const std::string &name() const { return m_stream.name(); }
+  const rstd::string &name() const { return m_stream.name(); }
 
 private:
   /// Disable copy.
@@ -69,7 +69,7 @@ private:
   mandatory_input_stream &operator = (const mandatory_input_stream &);
 
 private:
-  void copy(const std::string &file_name, bool overwrite) {
+  void copy(const rstd::string &file_name, bool overwrite) {
     io::file file;    
     const char *name = file_name.c_str();
     bool open_result =

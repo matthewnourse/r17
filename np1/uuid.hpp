@@ -59,7 +59,7 @@ public:
     str::to_hex_str_pad_12(p, m_fields.m_node);
   }
 
-  std::string to_string() const {
+  rstd::string to_string() const {
     char s[39];
     to_str(s);
     return s;

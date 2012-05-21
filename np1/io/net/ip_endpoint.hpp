@@ -25,10 +25,10 @@ public:
   }
 
   /// Construct from a string in the format address:port, crash on error.
-  explicit ip_endpoint(const std::string &str) { initialize(str.c_str()); }
+  explicit ip_endpoint(const rstd::string &str) { initialize(str.c_str()); }
 
   /// Construct from a string and a port, crash on error.
-  ip_endpoint(const std::string &str, int port) {
+  ip_endpoint(const rstd::string &str, int port) {
     initialize(str.c_str(), port);
   }
 
@@ -58,7 +58,7 @@ public:
   }
 
   // Convert to a string, crash on error.
-  std::string to_string() const {
+  rstd::string to_string() const {
     char temp[256];
     memset(temp, 0, sizeof(temp));
 
@@ -112,9 +112,9 @@ public:
 private:
   void initialize(const char *str) {
     const char *colon_p = strchr(str, ':');
-    NP1_ASSERT(colon_p, "Malformed IP endpoint string: " + std::string(str));
+    NP1_ASSERT(colon_p, "Malformed IP endpoint string: " + rstd::string(str));
     int64_t i64 = str::dec_to_int64(colon_p + 1);
-    NP1_ASSERT((i64 > 0) && (i64 < MAX_PORT), "Malformed IP endpoint string: " + std::string(str));
+    NP1_ASSERT((i64 > 0) && (i64 < MAX_PORT), "Malformed IP endpoint string: " + rstd::string(str));
     *((char *)colon_p) = '\0';
     initialize(str, (int)i64);
     *((char *)colon_p) = ':';
@@ -124,7 +124,7 @@ private:
     memset(&m_addr, 0, sizeof(m_addr));
     unsigned long ip_addr_num = inet_addr(str);
     NP1_ASSERT(INADDR_NONE != ip_addr_num,
-                "Unable to convert IP address string '" + std::string(str) + "' to IP address");
+                "Unable to convert IP address string '" + rstd::string(str) + "' to IP address");
   
     initialize(ip_addr_num, port);
   }

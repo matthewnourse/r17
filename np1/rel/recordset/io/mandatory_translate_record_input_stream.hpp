@@ -16,8 +16,8 @@ public:
   enum { RELIABLE_STORAGE_TIMEOUT_SECONDS = ::np1::io::work_distributor::RELIABLE_STORAGE_TIMEOUT_SECONDS };
 
 public:
-  mandatory_translate_record_input_stream(Inner_Stream &s, const std::string &reliable_storage_local_root,
-                                          const std::string &reliable_storage_remote_root)
+  mandatory_translate_record_input_stream(Inner_Stream &s, const rstd::string &reliable_storage_local_root,
+                                          const rstd::string &reliable_storage_remote_root)
     : m_recordset_stream(s),
       m_rs(reliable_storage_local_root, reliable_storage_remote_root),
       m_resource_id_field_id(-1) {}
@@ -34,7 +34,7 @@ public:
     m_resource_id_field_id = recordset_stream_headings.mandatory_find_field(
                                       NP1_REL_DISTRIBUTED_RESOURCE_ID_FIELD_NAME);
 
-    std::vector<str::ref> heading_fields;
+    rstd::vector<str::ref> heading_fields;
     distributed::get_fields_except(recordset_stream_headings.ref(), m_resource_id_field_id, heading_fields);
     record temp(heading_fields, 0);
     m_headings.swap(temp);

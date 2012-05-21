@@ -13,7 +13,7 @@ class usv_translate {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void from_usv(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rlang::token> &args) {
+                  const rstd::vector<rlang::token> &args) {
     NP1_ASSERT(args.size() == 0, "rel.from_usv expects no arguments.");
     io::mandatory_record_input_stream<Input_Stream, usv_record, usv_record_ref> mandatory_input(input);
     mandatory_input.parse_records(from_usv_record_callback<Output_Stream>(output));
@@ -22,7 +22,7 @@ public:
 
   template <typename Input_Stream, typename Output_Stream>
   void to_usv(Input_Stream &input, Output_Stream &output,
-              const std::vector<rlang::token> &args) {
+              const rstd::vector<rlang::token> &args) {
     input.parse_records(to_usv_record_callback<Output_Stream>(output));
   }
 
@@ -59,7 +59,7 @@ private:
       return (char *)get_record_end((unsigned char *)start, length);
     }
 
-    void field_refs(std::vector<str::ref> &fields) const {
+    void field_refs(rstd::vector<str::ref> &fields) const {
       fields.clear();
 
       const unsigned char *field = m_start;
@@ -118,7 +118,7 @@ private:
     }  
 
     Output &m_output;
-    std::vector<str::ref> m_field_refs;
+    rstd::vector<str::ref> m_field_refs;
   };
 
   template <typename Output>

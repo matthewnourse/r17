@@ -16,7 +16,7 @@ typedef ::np1::io::gzfile gzfile_type;
 void test_gzfile_lifecycle() {
   static const char *FILE_NAME = "/tmp/gzfile_test.gz";
   ::np1::io::file::erase(FILE_NAME);
-  std::string test_data = make_alphabet_test_data_string();
+  rstd::string test_data = make_alphabet_test_data_string();
 
   // Create & write.
   {
@@ -33,7 +33,7 @@ void test_gzfile_lifecycle() {
     NP1_TEST_ASSERT(f.open_ro(FILE_NAME));
     char buffer[256 * 1024];
     size_t bytes_read = 1;
-    std::string result;
+    rstd::string result;
 
     while (bytes_read > 0) {
       NP1_TEST_ASSERT(f.read(buffer, sizeof(buffer), &bytes_read));

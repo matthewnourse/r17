@@ -17,11 +17,11 @@ namespace rel {
 class distributed_select {
 public:
   template <typename Input_Stream, typename Output_Stream>
-  void operator()(const std::string &reliable_storage_local_root,
-                  const std::string &reliable_storage_remote_root,
-                  const std::string &listen_endpoint,                  
+  void operator()(const rstd::string &reliable_storage_local_root,
+                  const rstd::string &reliable_storage_remote_root,
+                  const rstd::string &listen_endpoint,                  
                   Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     log_info("Reading headers and compiling expression against headers.");
 
     /* Get the headers. */
@@ -29,7 +29,7 @@ public:
 
     // Compile to check that the headings & tokens are likely to work
     // when we distribute.  Also we need to write out the correct set of headings.
-    std::vector<rlang::compiler::vm_info> vm_infos;
+    rstd::vector<rlang::compiler::vm_info> vm_infos;
     rlang::vm_heap heap;
     rlang::compiler::compile_select(tokens, input_headings.ref(), vm_infos);
 
@@ -41,7 +41,7 @@ public:
                                       NP1_REL_DISTRIBUTED_RESOURCE_ID_FIELD_NAME);
 
     // Get the recordset stream headings so the next distributed operator can do its thing.
-    std::vector<std::string> output_heading_strings = select::make_output_headings(vm_infos);
+    rstd::vector<rstd::string> output_heading_strings = select::make_output_headings(vm_infos);
     output_heading_strings.push_back(input_headings.mandatory_field(resource_id_field_id).to_string());
     record output_headings(output_heading_strings, 0);
 

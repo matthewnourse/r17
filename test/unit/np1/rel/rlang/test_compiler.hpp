@@ -25,7 +25,7 @@ void check_vm_info(compiler_type::vm_info &vm_info,
                     dt::data_type expected_vm_return_type,
                     bool expected_refers_to_other_record,
                     Expected_Result expected_result) {
-  std::string heading_name = vm_info.get_typed_heading_name();
+  rstd::string heading_name = vm_info.get_typed_heading_name();
 
   NP1_TEST_ASSERT(
     dt::mandatory_from_string(
@@ -748,9 +748,9 @@ void test_io_net_url_get() {
 void test_io_file_read() {
   //TODO: test with more & larger files etc.
   ::np1::io::file f;
-  std::string test_file_name = "/tmp/np1_test_compiler_test_io_file_read.txt";
+  rstd::string test_file_name = "/tmp/np1_test_compiler_test_io_file_read.txt";
   f.create_or_open_wo_trunc(test_file_name.c_str());
-  std::string test_string = "hi mum";
+  rstd::string test_string = "hi mum";
   NP1_TEST_ASSERT(f.write(test_string.c_str(), test_string.length()));
   f.close();
   
@@ -761,9 +761,9 @@ void test_io_file_read() {
 
 void test_io_file_erase() {
   ::np1::io::file f;
-  std::string test_file_name = "/tmp/np1_test_compiler_test_io_file_erase.txt";
+  rstd::string test_file_name = "/tmp/np1_test_compiler_test_io_file_erase.txt";
   f.create_or_open_wo_trunc(test_file_name.c_str());
-  std::string test_string = "hi mum";
+  rstd::string test_string = "hi mum";
   NP1_TEST_ASSERT(f.write(test_string.c_str(), test_string.length()));
   f.close();
   
@@ -778,9 +778,9 @@ void test_io_file_erase() {
 void test_meta_shell() {
   //TODO: test with larger command outputs.
   ::np1::io::file f;
-  std::string test_file_name = "/tmp/np1_test_compiler_test_meta_shell.txt";
+  rstd::string test_file_name = "/tmp/np1_test_compiler_test_meta_shell.txt";
   f.create_or_open_wo_trunc(test_file_name.c_str());
-  std::string test_string = "hi mum";
+  rstd::string test_string = "hi mum";
   NP1_TEST_ASSERT(f.write(test_string.c_str(), test_string.length()));
   f.close();
   
@@ -791,9 +791,9 @@ void test_meta_shell() {
 
 void test_eval_to_string() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(input, "1+1");  
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   compiler_type::compile_single_expression_to_prefix(input, tokens);
-  std::pair<std::string, data_type> result = compiler_type::eval_to_string(tokens);
+  rstd::pair<rstd::string, data_type> result = compiler_type::eval_to_string(tokens);
   NP1_TEST_ASSERT(data_type::TYPE_INT == result.second);
   NP1_TEST_ASSERT(::np1::str::cmp(result.first, "2") == 0);  
 }
@@ -801,18 +801,18 @@ void test_eval_to_string() {
 
 void test_eval_to_string_only() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(input, "'fred'");  
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   compiler_type::compile_single_expression_to_prefix(input, tokens);
-  std::string result = compiler_type::eval_to_string_only(tokens);
+  rstd::string result = compiler_type::eval_to_string_only(tokens);
   NP1_TEST_ASSERT(::np1::str::cmp(result, "fred") == 0);  
 }
 
 
 void test_eval_to_strings() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(input, "1+1, 'cedric'");
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   compiler_type::compile_single_expression_to_prefix(input, tokens);
-  std::vector<std::pair<std::string, data_type> > result = compiler_type::eval_to_strings(tokens);
+  rstd::vector<rstd::pair<rstd::string, data_type> > result = compiler_type::eval_to_strings(tokens);
   NP1_TEST_ASSERT(result.size() == 2);
   NP1_TEST_ASSERT(data_type::TYPE_INT == result[0].second);
   NP1_TEST_ASSERT(data_type::TYPE_STRING == result[1].second);
@@ -823,9 +823,9 @@ void test_eval_to_strings() {
 
 void test_eval_to_strings_only() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(input, "'fred', 'cedric'");
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   compiler_type::compile_single_expression_to_prefix(input, tokens);
-  std::vector<std::string> result = compiler_type::eval_to_strings_only(tokens);
+  rstd::vector<rstd::string> result = compiler_type::eval_to_strings_only(tokens);
   NP1_TEST_ASSERT(result.size() == 2);
   NP1_TEST_ASSERT(::np1::str::cmp(result[0], "fred") == 0);  
   NP1_TEST_ASSERT(::np1::str::cmp(result[1], "cedric") == 0);  
@@ -837,7 +837,7 @@ void test_compile_select_no_type_tag() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(input, "1+2+3 as output");
 
   record_type empty_record;
-  std::vector<compiler_type::vm_info> vm_infos;
+  rstd::vector<compiler_type::vm_info> vm_infos;
   compiler_type::compile_select(input, empty_record.ref(), vm_infos);
 
   NP1_TEST_ASSERT(vm_infos.size() == 1);
@@ -845,7 +845,7 @@ void test_compile_select_no_type_tag() {
   check_vm_info(vm_infos[0], empty_record, empty_record, dt::TYPE_INT, "output",
                 dt::TYPE_INT, false, 6);
 
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   input.rewind();
   compiler_type::compile_single_expression_to_prefix(input, tokens);
   NP1_TEST_ASSERT(tokens.size() > 0);
@@ -857,7 +857,7 @@ void test_compile_select_with_type_tag() {
   NP1_TEST_UNIT_REL_RLANG_DEFINE_INPUT_STREAM(input, "1+2+3 as string:output");
 
   record_type empty_record;
-  std::vector<compiler_type::vm_info> vm_infos;
+  rstd::vector<compiler_type::vm_info> vm_infos;
   compiler_type::compile_select(input, empty_record.ref(), vm_infos);
 
   NP1_TEST_ASSERT(vm_infos.size() == 1);
@@ -865,7 +865,7 @@ void test_compile_select_with_type_tag() {
   check_vm_info(vm_infos[0], empty_record, empty_record, dt::TYPE_STRING,
                 "output", dt::TYPE_INT, false, 6);
 
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   input.rewind();
   compiler_type::compile_single_expression_to_prefix(input, tokens);
   NP1_TEST_ASSERT(tokens.size() > 0);
@@ -880,13 +880,13 @@ void test_compile_select_heading_only_no_type_tag() {
   record_type empty_record;
   record_type headings("string:output", 0);
   record_type value("fred", 1);
-  std::vector<compiler_type::vm_info> vm_infos;
+  rstd::vector<compiler_type::vm_info> vm_infos;
   compiler_type::compile_select(input, headings.ref(), vm_infos);
 
   check_vm_info(vm_infos[0], value, empty_record, dt::TYPE_STRING, "output",
                 dt::TYPE_STRING, false, "fred");
 
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   input.rewind();
   compiler_type::compile_single_expression_to_prefix(input, tokens);
   NP1_TEST_ASSERT(tokens.size() > 0);
@@ -900,7 +900,7 @@ void test_compile_select_heading_only_with_type_tag() {
   record_type empty_record;
   record_type headings("istring:output", 0);
   record_type value("fred", 1);
-  std::vector<compiler_type::vm_info> vm_infos;
+  rstd::vector<compiler_type::vm_info> vm_infos;
   compiler_type::compile_select(input, headings.ref(), vm_infos);
 
   NP1_TEST_ASSERT(vm_infos.size() == 1);
@@ -908,7 +908,7 @@ void test_compile_select_heading_only_with_type_tag() {
   check_vm_info(vm_infos[0], value, empty_record, dt::TYPE_ISTRING, "output",
                 dt::TYPE_ISTRING, false, "fred");
 
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   input.rewind();
   compiler_type::compile_single_expression_to_prefix(input, tokens);
   NP1_TEST_ASSERT(tokens.size() > 0);
@@ -923,7 +923,7 @@ void test_compile_select_mixture() {
   record_type empty_record;
   record_type headings("istring:output", 0);
   record_type value("fred", 1);
-  std::vector<compiler_type::vm_info> vm_infos;
+  rstd::vector<compiler_type::vm_info> vm_infos;
   compiler_type::compile_select(input, headings.ref(), vm_infos);
 
   NP1_TEST_ASSERT(vm_infos.size() == 3);
@@ -937,7 +937,7 @@ void test_compile_select_mixture() {
   check_vm_info(vm_infos[2], value, empty_record, dt::TYPE_INT, "num2",
                 dt::TYPE_INT, false, 15);
 
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   input.rewind();
   compiler_type::compile_single_expression_to_prefix(input, tokens);
   NP1_TEST_ASSERT(tokens.size() > 0);
@@ -955,7 +955,7 @@ void test_compile_select_mixture_with_other_record() {
   record_type headings("istring:output", 0);
   record_type value("fred", 1);
   record_type other_value("5", "", "0", "0", "0", 0);  // This will serve as the initial "prev" values.
-  std::vector<compiler_type::vm_info> vm_infos;
+  rstd::vector<compiler_type::vm_info> vm_infos;
   compiler_type::compile_select(input, headings.ref(), vm_infos);
 
   NP1_TEST_ASSERT(vm_infos.size() == 5);
@@ -975,7 +975,7 @@ void test_compile_select_mixture_with_other_record() {
   check_vm_info(vm_infos[4], value, other_value, dt::TYPE_UINT, "num4",
                 dt::TYPE_UINT, true, 0);
 
-  std::vector<token_type> tokens;
+  rstd::vector<token_type> tokens;
   input.rewind();
   compiler_type::compile_single_expression_to_prefix(input, tokens);
   NP1_TEST_ASSERT(tokens.size() > 0);

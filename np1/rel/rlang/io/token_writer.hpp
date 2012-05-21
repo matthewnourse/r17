@@ -17,9 +17,9 @@ public:
   // Write out the list of tokens to the output stream, crashes on error.
   template <typename Mandatory_Output_Stream>
   static void mandatory_write(Mandatory_Output_Stream &os,
-                              const std::vector<token> &tokens) {
-    std::vector<token>::const_iterator token_i = tokens.begin();
-    std::vector<token>::const_iterator token_iz = tokens.end();
+                              const rstd::vector<token> &tokens) {
+    rstd::vector<token>::const_iterator token_i = tokens.begin();
+    rstd::vector<token>::const_iterator token_iz = tokens.end();
 
     size_t prev_line_number;
 

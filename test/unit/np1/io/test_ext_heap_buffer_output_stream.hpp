@@ -14,7 +14,7 @@ typedef ::np1::rel::rlang::vm_heap vm_heap_type;
 
 
 void test_ext_heap_buffer_output_stream_many_sizes() {
-  std::string test_data = make_alphabet_test_data_string(100000);
+  rstd::string test_data = make_alphabet_test_data_string(100000);
 
   size_t allocation_size;
   size_t write_size;

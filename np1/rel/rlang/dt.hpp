@@ -27,7 +27,7 @@ typedef enum {
 struct string : public str::ref {
   string() {}
   explicit string(const char *p) : str::ref(p) {}
-  explicit string(const std::string &s) : str::ref(s) {}
+  explicit string(const rstd::string &s) : str::ref(s) {}
   string(const char *p, size_t n) : str::ref(p, n) {}
   string(const str::ref &s) : str::ref(s) {}
 };
@@ -35,7 +35,7 @@ struct string : public str::ref {
 struct istring : public str::ref {
   istring() {}
   explicit istring(const char *p) : str::ref(p) {}
-  explicit istring(const std::string &s) : str::ref(s) {}
+  explicit istring(const rstd::string &s) : str::ref(s) {}
   istring(const char *p, size_t n) : str::ref(p, n) {}
   istring(const str::ref &s) : str::ref(s) {}
 };

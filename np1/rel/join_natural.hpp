@@ -18,9 +18,9 @@ class join_natural {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {  
+                  const rstd::vector<rel::rlang::token> &tokens) {  
     /* Get the arguments. */
-    std::string file_name2(rel::rlang::compiler::eval_to_string_only(tokens));
+    rstd::string file_name2(rel::rlang::compiler::eval_to_string_only(tokens));
           
     /* Get the list of headers from the first file. */
     record file1_headers(input.parse_headings());                
@@ -35,8 +35,8 @@ public:
     record file2_headers(file2_stream.parse_headings());              
                 
     /* Figure out which headings are common and not common. */
-    std::vector<std::string> common_heading_names;  
-    std::vector<size_t> file2_non_common_field_numbers;  
+    rstd::vector<rstd::string> common_heading_names;  
+    rstd::vector<size_t> file2_non_common_field_numbers;  
 
     detail::join_helper::find_common_and_non_common_headings(
       file1_headers, file2_headers, common_heading_names, file2_non_common_field_numbers);
@@ -56,7 +56,7 @@ public:
     detail::join_helper::validate_compare_specs(compare_specs1);
     detail::join_helper::validate_compare_specs(compare_specs2);
 
-    std::vector<str::ref> file2_non_common_field_refs_storage;
+    rstd::vector<str::ref> file2_non_common_field_refs_storage;
                       
     // Write out the headings.
     detail::join_helper::record_merge_write(
@@ -76,7 +76,7 @@ private:
     natural_merge_record_callback(
         Output &output, detail::record_multihashmap<detail::join_helper::empty_type> &map2,
         const detail::compare_specs &specs1,
-        const std::vector<size_t> &file2_non_common_field_numbers)
+        const rstd::vector<size_t> &file2_non_common_field_numbers)
     : m_output(output)
     , m_map2(map2)
     , m_specs1(specs1)
@@ -95,8 +95,8 @@ private:
     Output &m_output;
     detail::record_multihashmap<detail::join_helper::empty_type> &m_map2;
     detail::compare_specs m_specs1;
-    std::vector<size_t> m_file2_non_common_field_numbers;
-    std::vector<str::ref> m_file2_non_common_field_refs_storage;
+    rstd::vector<size_t> m_file2_non_common_field_numbers;
+    rstd::vector<str::ref> m_file2_non_common_field_refs_storage;
   };
 };
 

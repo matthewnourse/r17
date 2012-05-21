@@ -9,10 +9,10 @@
 
 // Special asserts that print out information available in the token.
 #define NP1_TOKEN_ASSERT(cond__, tok__, message__) \
-NP1_ASSERT((cond__), "line " + str::to_dec_str((tok__).line_number()) + ": " + std::string(message__) + "  token: '" + std::string((tok__).text()) + "'")
+NP1_ASSERT((cond__), "line " + str::to_dec_str((tok__).line_number()) + ": " + rstd::string(message__) + "  token: '" + rstd::string((tok__).text()) + "'")
 
 #define NP1_TOKEN_ASSERT_NO_TOKEN_TEXT(cond__, tok__, message__) \
-NP1_ASSERT((cond__), "line " + str::to_dec_str((tok__).line_number()) + ": " + std::string(message__))
+NP1_ASSERT((cond__), "line " + str::to_dec_str((tok__).line_number()) + ": " + rstd::string(message__))
 
 
 namespace np1 {
@@ -48,7 +48,7 @@ public:
 
   token(const char *text, type_type type) : m_line_number(0), m_type(type), m_first_matching_sym_op_fn_id(-1) {
     size_t text_length = strlen(text);
-    NP1_ASSERT(text_length <= MAX_TOKEN_LENGTH, "Text '" + std::string(text) + "' is too long to be a token");
+    NP1_ASSERT(text_length <= MAX_TOKEN_LENGTH, "Text '" + rstd::string(text) + "' is too long to be a token");
     memcpy(m_text, text, text_length);
     m_text[text_length] = '\0';
   }

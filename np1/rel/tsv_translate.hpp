@@ -14,10 +14,10 @@ class tsv_translate {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void from_tsv(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rlang::token> &args) {
+                  const rstd::vector<rlang::token> &args) {
     // If there are any arguments then treat them as heading names.
-    std::vector<std::string> heading_names =
-      (args.size() > 0) ? rlang::compiler::eval_to_strings_only(args) : std::vector<std::string>();
+    rstd::vector<rstd::string> heading_names =
+      (args.size() > 0) ? rlang::compiler::eval_to_strings_only(args) : rstd::vector<rstd::string>();
     if (heading_names.size() > 0) {
       write_headings(heading_names, output);
     }
@@ -29,7 +29,7 @@ public:
 
   template <typename Input_Stream, typename Output_Stream>
   void to_tsv(Input_Stream &input, Output_Stream &output,
-              const std::vector<rlang::token> &args) {
+              const rstd::vector<rlang::token> &args) {
     NP1_ASSERT(args.size() == 0, "rel.to_tsv expects no arguments.");
     input.parse_records(to_tsv_record_callback<Output_Stream>(output));
   }
@@ -37,10 +37,10 @@ public:
 
 private:
   template <typename T, typename Output>
-  static void write_headings(const std::vector<T> &headings, Output &output) {
-    std::vector<std::string> safe_header_fields;
-    typename std::vector<T>::const_iterator heading_i = headings.begin();
-    typename std::vector<T>::const_iterator heading_iz = headings.end();
+  static void write_headings(const rstd::vector<T> &headings, Output &output) {
+    rstd::vector<rstd::string> safe_header_fields;
+    typename rstd::vector<T>::const_iterator heading_i = headings.begin();
+    typename rstd::vector<T>::const_iterator heading_iz = headings.end();
     for (; heading_i != heading_iz; ++heading_i) {
       safe_header_fields.push_back(detail::helper::convert_to_valid_header_name(to_str_ref(*heading_i)));
     }
@@ -48,7 +48,7 @@ private:
     record_ref::write_headings(output, safe_header_fields, rlang::dt::TYPE_STRING);    
   }
   
-  static str::ref to_str_ref(const std::string &s) { return str::ref(s); }
+  static str::ref to_str_ref(const rstd::string &s) { return str::ref(s); }
   static str::ref to_str_ref(const str::ref &s) { return s; }
   
   template <typename Output>
@@ -100,7 +100,7 @@ private:
         return str::ref(field, field_length);
       }
 
-      std::string parsed_field;
+      rstd::string parsed_field;
       bool seen_slash = false;
     
       const char *p = field;
@@ -166,8 +166,8 @@ private:
     Output &m_output;
     size_t m_number_fields;
     bool m_headings_written;
-    std::vector<str::ref> m_fields;
-    std::list<std::string> m_parsed_field_data;   
+    rstd::vector<str::ref> m_fields;
+    rstd::list<rstd::string> m_parsed_field_data;   
   };
 
 

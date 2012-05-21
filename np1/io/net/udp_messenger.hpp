@@ -240,9 +240,9 @@ private:
   
 public:
   /// Crashes on error.
-  explicit udp_messenger(const std::vector<std::string> &client_peer_strings,
-                          const std::vector<std::string> &worker_peer_strings,
-                          const std::string &start_endpoint_info,
+  explicit udp_messenger(const rstd::vector<rstd::string> &client_peer_strings,
+                          const rstd::vector<rstd::string> &worker_peer_strings,
+                          const rstd::string &start_endpoint_info,
                           bool ok_to_search_for_available_endpoint)
     : m_number_worker_peers(0)
     , m_worker_peer_table(CONSISTENT_HASH_TABLE_SERVER_DUPLICATES)
@@ -289,8 +289,8 @@ public:
 
 
   /// Update this object's understanding of the world around it.
-  void set_peer_list(const std::vector<std::string> &client_peer_strings,
-                      const std::vector<std::string> &worker_peer_strings) {
+  void set_peer_list(const rstd::vector<rstd::string> &client_peer_strings,
+                      const rstd::vector<rstd::string> &worker_peer_strings) {
     m_worker_peer_table.clear();
     m_peers.clear();
     m_number_worker_peers = 0;
@@ -301,8 +301,8 @@ public:
        
     // Insert all the worker peers into our peer list.
     // Don't insert our own endpoint :).
-    std::vector<std::string>::const_iterator si = worker_peer_strings.begin();
-    std::vector<std::string>::const_iterator siz = worker_peer_strings.end();
+    rstd::vector<rstd::string>::const_iterator si = worker_peer_strings.begin();
+    rstd::vector<rstd::string>::const_iterator siz = worker_peer_strings.end();
     for (; si < siz; ++si) {
       ip_endpoint ep(*si);
       if (ep != m_socket_endpoint) {
@@ -669,10 +669,10 @@ private:
   }
 
 
-  bool is_peer_in(const std::vector<std::string> &lst, const ip_endpoint &ep) {
-    std::string ep_str = ep.to_string();
-    std::vector<std::string>::const_iterator i = lst.begin();
-    std::vector<std::string>::const_iterator iz = lst.end();
+  bool is_peer_in(const rstd::vector<rstd::string> &lst, const ip_endpoint &ep) {
+    rstd::string ep_str = ep.to_string();
+    rstd::vector<rstd::string>::const_iterator i = lst.begin();
+    rstd::vector<rstd::string>::const_iterator iz = lst.end();
     for (; i < iz; ++i) {
       if (*i == ep_str) {
         return true;

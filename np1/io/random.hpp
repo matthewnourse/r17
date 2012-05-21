@@ -52,8 +52,8 @@ public:
 #endif
   }
 
-  const std::string &name() const {
-    static std::string n("[random]");
+  const rstd::string &name() const {
+    static rstd::string n("[random]");
     return n;
   }
 

@@ -32,7 +32,7 @@ public:
       initialize(s.ptr(), s.length());
     }
 
-    explicit id(const std::string &s) {
+    explicit id(const rstd::string &s) {
       initialize(s.c_str(), s.length());
     }
 
@@ -70,7 +70,7 @@ public:
     const char *ptr() const { return m_data; }
 
     str::ref to_str_ref() const { return str::ref(m_data, (m_data[0] ? LENGTH : 0)); }
-    std::string to_string() const { return to_str_ref().to_string(); }
+    rstd::string to_string() const { return to_str_ref().to_string(); }
 
     bool operator == (const id &other) const {
       return (memcmp(m_data, other.m_data, LENGTH) == 0);
@@ -94,7 +94,7 @@ public:
 
   private:
     void initialize(const char *s, size_t len) {
-      NP1_ASSERT(len == LENGTH, "Invalid reliable_storage::id: " + std::string(s));
+      NP1_ASSERT(len == LENGTH, "Invalid reliable_storage::id: " + rstd::string(s));
       memcpy(m_data, s, len);
       m_data[LENGTH] = '\0';
     }
@@ -191,7 +191,7 @@ public:
       return result;
     }
 
-    const std::string &name() const { return m_file.name(); }
+    const rstd::string &name() const { return m_file.name(); }
 
   private:
     /// Disable copy.
@@ -215,7 +215,7 @@ public:
   enum { SLEEP_INTERVAL_USEC = 1000000 };
 
 public:
-  reliable_storage(const std::string &local_root, const std::string &remote_root)
+  reliable_storage(const rstd::string &local_root, const rstd::string &remote_root)
     : m_local_root(local_root), m_remote_root(remote_root) {}
 
   // Keep trying to open the object identified by 'id' until timeout_seconds
@@ -223,7 +223,7 @@ public:
   bool open_ro(const id &i, uint32_t timeout_seconds, stream &s) {
     uint64_t start_time = time::now_epoch_usec();
     m_stats.m_number_open_ro++;
-    std::string local_path = make_local_path(i, in_between_dirs_noop());
+    rstd::string local_path = make_local_path(i, in_between_dirs_noop());
     if (!s.open_ro(local_path.c_str(), i)) {
       // File not in local copy of the reliable storage, go get it from server.
       if (!http_get_with_retry(i, timeout_seconds)) {
@@ -253,7 +253,7 @@ public:
   bool create_wo(const id &i, stream &s) {
     uint64_t start_time = time::now_epoch_usec();
     m_stats.m_number_create_wo++;
-    std::string path = make_local_path(i, in_between_dirs_mkdir());
+    rstd::string path = make_local_path(i, in_between_dirs_mkdir());
 
     bool result = s.create_wo(path.c_str(), i);
     
@@ -273,7 +273,7 @@ public:
   bool erase(const id &i) {
     uint64_t start_time = time::now_epoch_usec();
     m_stats.m_number_erase++;
-    std::string path = make_local_path(i, in_between_dirs_noop());
+    rstd::string path = make_local_path(i, in_between_dirs_noop());
 
     bool result = http_delete(i);
     if (result) {
@@ -296,7 +296,7 @@ public:
   bool get_mtime_usec(const id &i, uint64_t &mtime) {
     uint64_t start_time = time::now_epoch_usec();
     m_stats.m_number_mtime++;
-    std::string path = make_local_path(i, in_between_dirs_noop());
+    rstd::string path = make_local_path(i, in_between_dirs_noop());
 
     bool result = file::get_mtime_usec(path.c_str(), mtime);
     
@@ -316,7 +316,7 @@ public:
   bool exists(const id &i) {
     uint64_t start_time = time::now_epoch_usec();
     m_stats.m_number_exists++;
-    std::string path = make_local_path(i, in_between_dirs_noop());
+    rstd::string path = make_local_path(i, in_between_dirs_noop());
     bool result = false;
     uint64_t elapsed_time = 0;
 
@@ -340,7 +340,7 @@ private:
     return "reliable_storage";
   }
 
-  void log_final(const char *description, const std::string &path, uint64_t elapsed_time) const {
+  void log_final(const char *description, const rstd::string &path, uint64_t elapsed_time) const {
     log::info(log_id(), description, " path=", path.c_str(), " elapsed_time=", elapsed_time);
   }
 
@@ -351,32 +351,32 @@ private:
 
 
   template <typename F>
-  std::string make_local_path(const id &i, const F &in_between_dirs_f) const {
+  rstd::string make_local_path(const id &i, const F &in_between_dirs_f) const {
     return make_path(m_local_root, i, in_between_dirs_f);
   }
 
-  std::string make_local_path(const id &i) const {
+  rstd::string make_local_path(const id &i) const {
     return make_path(m_local_root, i, in_between_dirs_noop());
   }
 
-  std::string make_remote_path(const id &i) {
+  rstd::string make_remote_path(const id &i) {
     return make_path(m_remote_root, i, in_between_dirs_noop());
   }
 
   template <typename F>
-  std::string make_remote_path(const id &i, const F &in_between_dirs_f) const {
+  rstd::string make_remote_path(const id &i, const F &in_between_dirs_f) const {
     return make_path(m_remote_root, i, in_between_dirs_f);
   }
 
 
   template <typename F>
-  static std::string make_path(const std::string &root, const id &i,
+  static rstd::string make_path(const rstd::string &root, const id &i,
                                 const F &in_between_dirs_f) {
     NP1_ASSERT(i.is_valid(),
                 "Attempt to make a reliable storage path from an invalid id!  id: '"
                 + i.to_string() + "'");
 
-    std::string path(root);
+    rstd::string path(root);
     const char *p = i.ptr();
     int count;
     for (count = 0; count < 3; ++count, p += 2) {
@@ -394,9 +394,9 @@ private:
   
   /// HTTP GET a file into a local path.
   bool http_get(const id &i) {
-    std::string remote_path(make_remote_path(i));
-    std::string local_path(make_local_path(i, in_between_dirs_mkdir()));
-    std::string temp_local_path = local_path + "_" + str::to_dec_str(time::now_epoch_usec())
+    rstd::string remote_path(make_remote_path(i));
+    rstd::string local_path(make_local_path(i, in_between_dirs_mkdir()));
+    rstd::string temp_local_path = local_path + "_" + str::to_dec_str(time::now_epoch_usec())
         + "_" + str::to_dec_str(math::rand64()) + ".tmp";
 
     log_progress("HTTP GETting '", remote_path.c_str(), "' into '", temp_local_path.c_str(),
@@ -462,8 +462,8 @@ private:
 
   // HTTP PUT a file.
   bool http_put(const id &i) {
-    std::string remote_path(make_remote_path(i, in_between_dirs_mkcol(m_curl)));
-    std::string local_path(make_local_path(i));
+    rstd::string remote_path(make_remote_path(i, in_between_dirs_mkcol(m_curl)));
+    rstd::string local_path(make_local_path(i));
 
     log_progress("HTTP PUTting '", local_path.c_str(), "' into '", remote_path.c_str(), "'");
 
@@ -483,7 +483,7 @@ private:
 
   // HTTP DELETE a file.
   bool http_delete(const id &i) {
-    std::string remote_path(make_remote_path(i));
+    rstd::string remote_path(make_remote_path(i));
     log_progress("HTTP DELETEing '", remote_path.c_str(), "'");
     long http_status;
     bool result = m_curl.delete_no_headers(remote_path, http_status);
@@ -494,7 +494,7 @@ private:
 
   // Check to see if a remote file exists.
   bool http_exists(const id &i) {
-    std::string remote_path(make_remote_path(i));
+    rstd::string remote_path(make_remote_path(i));
     log_progress("HTTP HEADing '", remote_path.c_str(), "'");
     long http_status;
     bool result = m_curl.exists(remote_path, http_status);
@@ -512,11 +512,11 @@ private:
   }
 
   struct in_between_dirs_noop {
-    void operator()(const std::string &path) const {}  
+    void operator()(const rstd::string &path) const {}  
   };
 
   struct in_between_dirs_mkdir {
-    void operator()(const std::string &path) const {
+    void operator()(const rstd::string &path) const {
       // Don't bother checking the result. It will fail if the directory already
       // exists but that's ok for us.
       file::mkdir(path.c_str());
@@ -526,7 +526,7 @@ private:
   struct in_between_dirs_mkcol {
     explicit in_between_dirs_mkcol(net::curl &c) : m_curl(c) {}
 
-    void operator()(const std::string &path) const {
+    void operator()(const rstd::string &path) const {
       // Don't bother checking the result. It will fail if the directory already
       // exists but that's ok for us.
       long http_status;
@@ -572,8 +572,8 @@ private:
   };
 
 private:
-  std::string m_local_root;
-  std::string m_remote_root;
+  rstd::string m_local_root;
+  rstd::string m_remote_root;
   stats m_stats;
   net::curl m_curl;
 };

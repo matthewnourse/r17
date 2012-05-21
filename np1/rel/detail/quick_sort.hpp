@@ -5,7 +5,7 @@
 
 
 #include "np1/rel/record_ref.hpp"
-#include <vector>
+#include "rstd/vector.hpp"
 
 
 namespace np1 {
@@ -35,8 +35,8 @@ public:
    */
   template <typename Callback>
   void walk_sorted(Callback callback) const {
-    std::vector<record_ref>::const_iterator i = m_victims.begin();
-    std::vector<record_ref>::const_iterator iz = m_victims.end();
+    rstd::vector<record_ref>::const_iterator i = m_victims.begin();
+    rstd::vector<record_ref>::const_iterator iz = m_victims.end();
 
     for (; i < iz; ++i) {
       callback(*i);
@@ -71,7 +71,7 @@ private:
           --right_idx;
         }
 
-        std::swap(m_victims[left_idx], m_victims[right_idx]);
+        rstd::swap(m_victims[left_idx], m_victims[right_idx]);
         ++left_idx;
         --right_idx;
         if (left_idx - 1 == pivot) {
@@ -98,7 +98,7 @@ private:
   }
 
 private:
-  std::vector<record_ref> m_victims; 
+  rstd::vector<record_ref> m_victims; 
 };
 
 } // namespaces

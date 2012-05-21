@@ -4,7 +4,6 @@
 #define NP1_TIME_HPP
 
 #include "np1/simple_types.hpp"
-#include "lib/liberal/int64/int64.hpp"
 #ifndef _WIN32
 #include <sys/time.h>
 #include <time.h>
@@ -40,8 +39,8 @@ uint64_t now_epoch_usec() {
 
 
 /// Convert microseconds to other things and back.
-uint64_t usec_to_msec(uint64_t usec) { return lib::int64::divide(usec, 1000); }
-uint64_t usec_to_sec(uint64_t usec) { return lib::int64::divide(usec, 1000000); }
+uint64_t usec_to_msec(uint64_t usec) { return usec/1000; }
+uint64_t usec_to_sec(uint64_t usec) { return usec/1000000; }
 
 uint64_t msec_to_usec(uint64_t msec) { return msec * 1000; }
 uint64_t sec_to_usec(uint64_t usec) { return usec * 1000000; }

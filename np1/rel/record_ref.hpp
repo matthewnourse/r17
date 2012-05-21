@@ -4,7 +4,7 @@
 #define NP1_REL_DETAIL_RECORD_REF_HPP
 
 
-#include <vector>
+#include "rstd/vector.hpp"
 #include "np1/assert.hpp"
 #include "np1/str.hpp"
 #include "np1/compressed_int.hpp"
@@ -144,7 +144,7 @@ public:
   str::ref mandatory_field(size_t field_number) const {
     str::ref f = field(field_number);
     if (f.is_null()) {
-      std::string description =
+      rstd::string description =
           "Unable to find field " + str::to_dec_str(field_number)
           + " in record " + str::to_dec_str(m_record_number)
           + "  record: " + to_string();
@@ -195,7 +195,7 @@ public:
   size_t mandatory_find_field(const char *contents) const {
     size_t field_pos = find_field(contents);
     NP1_ASSERT(field_pos != (size_t)-1,
-                "Unable to find record contents: " + std::string(contents));
+                "Unable to find record contents: " + rstd::string(contents));
     return field_pos;
   }
 
@@ -247,16 +247,16 @@ public:
     return mandatory_find_heading(str::ref(s, strlen(s)));  
   }
 
-  size_t mandatory_find_heading(const std::string &s) const {
+  size_t mandatory_find_heading(const rstd::string &s) const {
     return mandatory_find_heading(str::ref(s));  
   }
 
   
   /// Get all the fields in this record.  NOTE that this is VERY slow!
-  std::vector<std::string> fields() const {
+  rstd::vector<rstd::string> fields() const {
     size_t i;
     size_t nfields = number_fields();
-    std::vector<std::string> result;
+    rstd::vector<rstd::string> result;
     
     for (i = 0; i < nfields; ++i) {
       str::ref f = field(i);
@@ -268,7 +268,7 @@ public:
   }
   
   /// Get a text representation of the record suitable for error messages.  This is VERY slow!
-  std::string to_string() const {
+  rstd::string to_string() const {
     return str::implode(fields(), "|");
   }
 
@@ -357,23 +357,23 @@ public:
 
   /// Write the fields to the output stream as a complete record.
   template <typename Mandatory_Output_Stream>
-  static void write(Mandatory_Output_Stream &mos, const std::vector<str::ref> &refs) {
+  static void write(Mandatory_Output_Stream &mos, const rstd::vector<str::ref> &refs) {
     write_complete_record(mos, refs.begin(), refs.end());
   }
 
   template <typename Mandatory_Output_Stream>
-  static void write(Mandatory_Output_Stream &mos, const std::vector<std::string> &strs) {
+  static void write(Mandatory_Output_Stream &mos, const rstd::vector<rstd::string> &strs) {
     write_complete_record(mos, strs.begin(), strs.end());
   }
 
   // Write out the supplied vector as headings, setting a default type tag if not supplied.
   template <typename Mandatory_Output_Stream>
-  static void write_headings(Mandatory_Output_Stream &mos, const std::vector<std::string> &strs,
+  static void write_headings(Mandatory_Output_Stream &mos, const rstd::vector<rstd::string> &strs,
                               rlang::dt::data_type default_type_tag) {
     // No need to be fast here, the headings should be written out once.
-    std::vector<std::string> final_strs;
-    std::vector<std::string>::const_iterator ii = strs.begin();
-    std::vector<std::string>::const_iterator iz = strs.end();
+    rstd::vector<rstd::string> final_strs;
+    rstd::vector<rstd::string>::const_iterator ii = strs.begin();
+    rstd::vector<rstd::string>::const_iterator iz = strs.end();
     for (; ii != iz; ++ii) {
       if (detail::helper::get_heading_type_tag(*ii).is_null()) {
         final_strs.push_back(detail::helper::make_typed_heading_name(rlang::dt::to_string(default_type_tag), *ii));
@@ -387,12 +387,12 @@ public:
 
 
   template <typename Mandatory_Output_Stream>
-  static void write_headings(Mandatory_Output_Stream &mos, const std::vector<str::ref> &strs,
+  static void write_headings(Mandatory_Output_Stream &mos, const rstd::vector<str::ref> &strs,
                               rlang::dt::data_type default_type_tag) {
     // No need to be fast here, the headings should be written out once.
-    std::vector<std::string> std_strs;
-    std::vector<str::ref>::const_iterator ii = strs.begin();
-    std::vector<str::ref>::const_iterator iz = strs.end();
+    rstd::vector<rstd::string> std_strs;
+    rstd::vector<str::ref>::const_iterator ii = strs.begin();
+    rstd::vector<str::ref>::const_iterator iz = strs.end();
     for (; ii != iz; ++ii) {
       std_strs.push_back(ii->to_string());
     }
@@ -426,14 +426,14 @@ public:
   
   // Figure out how much space it would take to store a record that consists of the supplied fields.
   template <typename T>
-  static size_t required_record_data_size(const std::vector<T> &fields) {
+  static size_t required_record_data_size(const rstd::vector<T> &fields) {
     return total_record_size(serialized_size(fields), fields.size());
   }
 
   void swap(record_ref &other) {
-    std::swap(m_start, other.m_start);
-    std::swap(m_end, other.m_end);
-    std::swap(m_record_number, other.m_record_number);
+    rstd::swap(m_start, other.m_start);
+    rstd::swap(m_end, other.m_end);
+    rstd::swap(m_record_number, other.m_record_number);
   }
 
   /// Equality comparison doesn't include record number.
@@ -510,7 +510,7 @@ private:
   }
 
   template <typename Mandatory_Output_Stream>
-  static inline void write_field(Mandatory_Output_Stream &mos, const std::string &field) {
+  static inline void write_field(Mandatory_Output_Stream &mos, const rstd::string &field) {
     write_field(mos, field.c_str(), field.length());
   }
 
@@ -526,12 +526,12 @@ private:
 
   // Write the fields in the vector.
   template <typename Mandatory_Output_Stream>
-  static inline void write_field(Mandatory_Output_Stream &mos, const std::vector<str::ref> &fields) {
+  static inline void write_field(Mandatory_Output_Stream &mos, const rstd::vector<str::ref> &fields) {
     write_fields(mos, fields.begin(), fields.end());
   }
 
   template <typename Mandatory_Output_Stream>
-  static inline void write_field(Mandatory_Output_Stream &mos, const std::vector<std::string> &fields) {
+  static inline void write_field(Mandatory_Output_Stream &mos, const rstd::vector<rstd::string> &fields) {
     write_fields(mos, fields.begin(), fields.end());
   }
 
@@ -573,15 +573,15 @@ private:
     return serialized_size(field.length());
   }
 
-  static inline size_t serialized_size(const std::string &field) {
+  static inline size_t serialized_size(const rstd::string &field) {
     return serialized_size(field.length());
   }
 
-  static inline size_t serialized_size(const std::vector<str::ref> &fields) {
+  static inline size_t serialized_size(const rstd::vector<str::ref> &fields) {
     return total_serialized_size(fields.begin(), fields.end());
   }
 
-  static inline size_t serialized_size(const std::vector<std::string> &fields) {
+  static inline size_t serialized_size(const rstd::vector<rstd::string> &fields) {
     return total_serialized_size(fields.begin(), fields.end());
   }
   
@@ -619,11 +619,11 @@ private:
   // Get the number of fields in a part of the record.
   static inline size_t number_component_fields(const char *) { return 1; }
   static inline size_t number_component_fields(const str::ref &) { return 1; }
-  static inline size_t number_component_fields(const std::string &) { return 1; }
+  static inline size_t number_component_fields(const rstd::string &) { return 1; }
   static inline size_t number_component_fields(const record_ref &r) { return r.number_fields(); }
   
   template <typename T>
-  static inline size_t number_component_fields(const std::vector<T> &fields) { return fields.size(); }
+  static inline size_t number_component_fields(const rstd::vector<T> &fields) { return fields.size(); }
 
   template <typename Field, typename... Fields>
   static size_t number_component_fields(const Field &f, const Fields&... fields) {

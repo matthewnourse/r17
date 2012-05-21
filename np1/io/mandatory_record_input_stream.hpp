@@ -3,7 +3,7 @@
 #ifndef NP1_IO_MANDATORY_RECORD_INPUT_STREAM_HPP
 #define NP1_IO_MANDATORY_RECORD_INPUT_STREAM_HPP
 
-#include <string>
+#include "rstd/string.hpp"
 #include "np1/str.hpp"
 #include "np1/io/mandatory_input_stream.hpp"
 
@@ -30,7 +30,7 @@ public:
    */
   Record parse_headings() {
     char c;
-    std::vector<unsigned char> headings;
+    rstd::vector<unsigned char> headings;
     while (m_stream.read_some(&c, 1) > 0) {
       headings.push_back(c);
       if (Record_Ref::get_record_end(&headings[0], headings.size()) != 0) {
@@ -55,7 +55,7 @@ public:
   template <typename Record_Callback>
   inline bool parse_records(Record_Callback record_callback) {
     enum { INITIAL_BUFFER_SIZE = 256 * 1024 };
-    std::vector<unsigned char> buffer;    
+    rstd::vector<unsigned char> buffer;    
     buffer.resize(INITIAL_BUFFER_SIZE);
     unsigned char *buffer_end = &buffer[0] + buffer.size();
     unsigned char *buffer_read_pos = &buffer[0];

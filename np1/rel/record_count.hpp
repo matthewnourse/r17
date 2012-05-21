@@ -11,7 +11,7 @@ class record_count {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     NP1_ASSERT(tokens.size() == 0, "rel.record_count accepts no arguments"); 
 
     // Read & discard the headings.

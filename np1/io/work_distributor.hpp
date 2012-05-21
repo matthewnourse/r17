@@ -6,7 +6,7 @@
 
 #include "np1/io/net/udp_messenger.hpp"
 #include "np1/io/reliable_storage.hpp"
-#include <string>
+#include "rstd/string.hpp"
 
 
 namespace np1 {
@@ -148,9 +148,9 @@ public:
 
 public:
   // Construct and start listening on the endpoint.
-  work_distributor(const std::string &reliable_storage_local_root,
-                    const std::string &reliable_storage_remote_root,
-                    const std::string &listen_endpoint,
+  work_distributor(const rstd::string &reliable_storage_local_root,
+                    const rstd::string &reliable_storage_remote_root,
+                    const rstd::string &listen_endpoint,
                     bool ok_to_search_for_available_endpoint) 
     : m_storage(reliable_storage_local_root, reliable_storage_remote_root),
       m_messenger(read_client_peer_list(m_storage), read_worker_peer_list(m_storage), listen_endpoint,
@@ -263,22 +263,22 @@ private:
 
 
   // Read the client peer list from reliable storage.
-  static std::vector<std::string> read_client_peer_list(reliable_storage &rs) {
+  static rstd::vector<rstd::string> read_client_peer_list(reliable_storage &rs) {
     return read_lines(reliable_storage::id::client_peer_list_id(), rs);
   }
 
   // Read the worker peer list from reliable storage.
-  static std::vector<std::string> read_worker_peer_list(reliable_storage &rs) {
+  static rstd::vector<rstd::string> read_worker_peer_list(reliable_storage &rs) {
     return read_lines(reliable_storage::id::worker_peer_list_id(), rs);
   }
 
   // Read a file of lines from reliable storage.
-  static std::vector<std::string> read_lines(const reliable_storage::id &i,
+  static rstd::vector<rstd::string> read_lines(const reliable_storage::id &i,
                                               reliable_storage &rs) {
     reliable_storage::stream rs_stream(rs);
     NP1_ASSERT(rs.open_ro(i, RELIABLE_STORAGE_TIMEOUT_SECONDS, rs_stream),
                 "Unable to open config file in reliable_storage");
-    std::vector<std::string> lines;
+    rstd::vector<rstd::string> lines;
     text_input_stream<reliable_storage::stream> input(rs_stream);
     //TODO: check for errors.
     input.read_all(lines);

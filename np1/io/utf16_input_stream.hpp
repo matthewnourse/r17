@@ -45,7 +45,7 @@ public:
     return m_stream.close();
   }
 
-  const std::string &name() const { return m_stream.name(); }
+  const rstd::string &name() const { return m_stream.name(); }
 
 
 private:

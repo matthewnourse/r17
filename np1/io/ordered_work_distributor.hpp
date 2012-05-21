@@ -22,9 +22,9 @@ public:
   typedef net::udp_messenger::message_id_type request_id_type;
 
 public:
-  ordered_work_distributor(const std::string &reliable_storage_local_root,
-                            const std::string &reliable_storage_remote_root,
-                            const std::string &listen_endpoint)
+  ordered_work_distributor(const rstd::string &reliable_storage_local_root,
+                            const rstd::string &reliable_storage_remote_root,
+                            const rstd::string &listen_endpoint)
     : m_distributor(reliable_storage_local_root, reliable_storage_remote_root, listen_endpoint, true) {
   }
 
@@ -100,7 +100,7 @@ private:
   bool receive_response(work_distributor::work_item_response &resp, uint32_t timeout_ms) {
     if (m_distributor.receive_response(resp, timeout_ms)) {    
       NP1_ASSERT(!resp.is_error(),
-                  "Error response received from worker: " + std::string(resp.error_message()));
+                  "Error response received from worker: " + rstd::string(resp.error_message()));
       return true;
     }
 
@@ -145,7 +145,7 @@ private:
 
 private:
   work_distributor m_distributor;
-  std::list<work_distributor::request_id_type> m_outstanding_requests;
+  rstd::list<work_distributor::request_id_type> m_outstanding_requests;
   typedef skip_list<work_distributor::work_item_response,
                     available_responses_less_than> available_responses_type;
   available_responses_type m_available_responses;

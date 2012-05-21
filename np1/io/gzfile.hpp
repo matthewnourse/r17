@@ -4,9 +4,9 @@
 #define NP1_IO_GZFILE_HPP
 
 
-
+#include "config.h"
 #include "np1/simple_types.hpp"
-#include "zlib.h"
+#include <zlib.h>
 
 
 
@@ -137,7 +137,7 @@ public:
     return result;
   }
 
-  const std::string &name() const {
+  const rstd::string &name() const {
     return m_file.name();
   }
 
@@ -192,11 +192,13 @@ private:
         (file_size_based_buffer_size < MAX_ZLIB_IO_BUFFER_SIZE) ? file_size_based_buffer_size : MAX_ZLIB_IO_BUFFER_SIZE;
     }
 
+#ifndef HAVE_NO_GZBUFFER
     if (::gzbuffer(m_gzhandle, buffer_size) != 0) {
        ::gzclose(m_gzhandle);
        m_file.release();
        return false;      
     }
+#endif
 
     return true;
   }

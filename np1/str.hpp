@@ -3,9 +3,8 @@
 #ifndef NP1_STR_HPP
 #define NP1_STR_HPP
 
-#include <string>
+#include "rstd/string.hpp"
 #include <ctype.h>
-#include "lib/liberal/int64/int64.hpp"
 
 // String utilities.
 
@@ -19,20 +18,20 @@ class ref {
 public:
   ref() : m_ptr(0), m_length(0) {}
   explicit ref(const char *p) : m_ptr(p), m_length(strlen(p)) {}
-  explicit ref(const std::string &s) : m_ptr(s.c_str()), m_length(s.length()) {}
+  explicit ref(const rstd::string &s) : m_ptr(s.c_str()), m_length(s.length()) {}
   ref(const char *p, size_t n) : m_ptr(p), m_length(n) {}
   inline const char *ptr() const { return m_ptr; }
   inline size_t length() const { return m_length; }
   inline bool is_null() const { return !m_ptr; }
-  std::string to_string() const { return std::string(m_ptr, m_length); }
+  rstd::string to_string() const { return rstd::string(m_ptr, m_length); }
 
   // For the use of vm_stack and similar.
   inline void set_ptr(const char *new_ptr) { m_ptr = new_ptr; }
   inline void set_length(size_t len) { m_length = len; }
 
   void swap(str::ref &other) {
-    std::swap(m_ptr, other.m_ptr);
-    std::swap(m_length, other.m_length);
+    rstd::swap(m_ptr, other.m_ptr);
+    rstd::swap(m_length, other.m_length);
   }
 private:
   const char *m_ptr;
@@ -111,7 +110,7 @@ int64_t dec_to_int64(const char *s, size_t length) {
   const char *s_end = s + length;
   int64_t result = partial_dec_to_int64(s, s_end, &end_of_number_p);
   NP1_ASSERT(s_end == end_of_number_p || isspace(*end_of_number_p),
-              "String is not a decimal number: '" + std::string(s, length) + "'");  
+              "String is not a decimal number: '" + rstd::string(s, length) + "'");  
 
   return result;
 }
@@ -127,7 +126,7 @@ int64_t dec_to_int64(const char *s) {
   return dec_to_int64(s, strlen(s));
 }
 
-int64_t dec_to_int64(const std::string &s) {
+int64_t dec_to_int64(const rstd::string &s) {
   return dec_to_int64(s.c_str(), s.length());
 }
 
@@ -156,7 +155,7 @@ double dec_to_double(const char *s, size_t length) {
   const char *s_end = s + length;
   double result = partial_dec_to_double(s, s_end, &end_of_number_p);
   NP1_ASSERT(s_end == end_of_number_p || isspace(*end_of_number_p),
-              "String is not a decimal floating-point number: '" + std::string(s, length) + "'");  
+              "String is not a decimal floating-point number: '" + rstd::string(s, length) + "'");  
 
   return result;
 }
@@ -171,8 +170,8 @@ void to_dec_str(char *num_str, uint64_t i) {
   char reversed[MAX_NUM_STR_LENGTH];
   char *reversed_ptr = reversed;
   do {
-    *reversed_ptr++ = '0' + lib::int64::modulus(i, 10);
-    i = lib::int64::divide(i, 10);
+    *reversed_ptr++ = '0' + i % 10;
+    i = i/10;
   } while (i != 0);
   
   while (--reversed_ptr >= reversed) {
@@ -213,7 +212,7 @@ void to_dec_str(char *num_str, ssize_t sz) {
 
 
 template <typename T>
-std::string to_dec_str(T i) {
+rstd::string to_dec_str(T i) {
   char num_str[MAX_NUM_STR_LENGTH];
   to_dec_str(num_str, i);
   return num_str;
@@ -275,7 +274,7 @@ void to_hex_str_pad_16(char *num_str, int64_t i) {
   *(detail::hex_encode_16(num_str, i)) = '\0';
 }
 
-std::string to_hex_str_pad_16(int64_t i) {
+rstd::string to_hex_str_pad_16(int64_t i) {
   char num_str[17];
   to_hex_str_pad_16(num_str, i);
   return num_str;
@@ -293,7 +292,7 @@ void to_hex_str_pad_64(char *num_str, const unsigned char *bytes) {
 }
 
 
-std::string to_hex_str(int64_t i) {
+rstd::string to_hex_str(int64_t i) {
   char num_str[MAX_NUM_STR_LENGTH];
   to_hex_str(num_str, i);
   return num_str;
@@ -304,7 +303,7 @@ void to_dec_str(char *num_str, double d) {
   sprintf(num_str, "%f", d);
 }
 
-std::string to_dec_str(double d) {
+rstd::string to_dec_str(double d) {
   char num_str[MAX_NUM_STR_LENGTH];
   to_dec_str(num_str, d);
   return num_str;
@@ -417,15 +416,15 @@ int icmp(const char *s1, const str::ref &s2) {
 }
 
 
-int icmp(const std::string &s1, const char *s2) {
+int icmp(const rstd::string &s1, const char *s2) {
   return icmp(str::ref(s1), s2);
 }
 
-int icmp(const char *s1, const std::string &s2) {
+int icmp(const char *s1, const rstd::string &s2) {
   return icmp(s1, str::ref(s2));
 }
 
-int icmp(const std::string &s1, const std::string &s2) {
+int icmp(const rstd::string &s1, const rstd::string &s2) {
   return icmp(str::ref(s1), str::ref(s2));
 }
 
@@ -474,15 +473,15 @@ int cmp(const char *s1, const str::ref &s2) {
   return cmp(s1, strlen(s1), s2.ptr(), s2.length());
 }
 
-int cmp(const std::string &s1, const char *s2) {
+int cmp(const rstd::string &s1, const char *s2) {
   return cmp(str::ref(s1), s2);
 }
 
-int cmp(const char *s1, const std::string &s2) {
+int cmp(const char *s1, const rstd::string &s2) {
   return cmp(s1, str::ref(s2));
 }
 
-int cmp(const str::ref &s1, const std::string &s2) {
+int cmp(const str::ref &s1, const rstd::string &s2) {
   return cmp(s1, str::ref(s2));
 }
 
@@ -517,7 +516,7 @@ inline bool starts_with(const char *haystack, const str::ref &needle) {
   return starts_with(haystack, strlen(haystack), needle.ptr(), needle.length());
 }
 
-inline bool starts_with(const std::string &haystack, const char *needle) {
+inline bool starts_with(const rstd::string &haystack, const char *needle) {
   return starts_with(str::ref(haystack.c_str()), str::ref(needle, strlen(needle)));
 }
 
@@ -538,7 +537,7 @@ inline bool istarts_with(const str::ref &r1, const str::ref &r2) {
 }
 
 
-inline bool istarts_with(const std::string &haystack, const char *needle) {
+inline bool istarts_with(const rstd::string &haystack, const char *needle) {
   return istarts_with(str::ref(haystack), str::ref(needle, strlen(needle)));
 }
 
@@ -559,7 +558,7 @@ inline bool ends_with(const str::ref &r1, const str::ref &r2) {
   return ends_with(r1.ptr(), r1.length(), r2.ptr(), r2.length());
 }
 
-inline bool ends_with(const std::string &s1, const std::string &s2) {
+inline bool ends_with(const rstd::string &s1, const rstd::string &s2) {
   return ends_with(s1.c_str(), s1.length(), s2.c_str(), s2.length());
 }
 
@@ -620,22 +619,22 @@ inline bool icontains(const str::ref &r1, const str::ref &r2) {
 
 
 
-std::vector<std::string> argv_to_string_vector(int argc, const char **argv) {
-  std::vector<std::string> result;
+rstd::vector<rstd::string> argv_to_string_vector(int argc, const char **argv) {
+  rstd::vector<rstd::string> result;
   int i;
   for (i = 0; i < argc; ++i) {
-    result.push_back(std::string(argv[i]));
+    result.push_back(rstd::string(argv[i]));
   }
 
   return result;
 }
 
 
-std::string implode(const std::vector<std::string> &a, const std::string &in_between) {
-  std::string result;
+rstd::string implode(const rstd::vector<rstd::string> &a, const rstd::string &in_between) {
+  rstd::string result;
 
-  std::vector<std::string>::const_iterator i = a.begin();
-  std::vector<std::string>::const_iterator iz = a.end();
+  rstd::vector<rstd::string>::const_iterator i = a.begin();
+  rstd::vector<rstd::string>::const_iterator iz = a.end();
 
   if (i == iz) {
     return result;
@@ -721,7 +720,7 @@ bool read_quoted_string(Text_Input_Stream &input, Text_Output_Stream &output) {
 
 
 template <typename Text_Output_Stream>
-void write_bash_escaped_string(const std::string &s, Text_Output_Stream &output) {
+void write_bash_escaped_string(const rstd::string &s, Text_Output_Stream &output) {
   const char *p = s.c_str();
   const char *end = p + s.length();
 
@@ -782,17 +781,17 @@ namespace detail {
   struct basic_string_output_stream {
     void write(const char *s) { m_s.append(s); }
     void write(char c) { m_s.push_back(c); }
-    std::string m_s;
+    rstd::string m_s;
   };  
 } // namespace detail
 
-std::string get_as_hex_dump(const unsigned char *start, const unsigned char *end) {
+rstd::string get_as_hex_dump(const unsigned char *start, const unsigned char *end) {
   detail::basic_string_output_stream bsos;
   write_hex_dump(start, end, bsos);
   return bsos.m_s;
 }
 
-std::string get_as_hex_dump(const char *start, const char *end) {
+rstd::string get_as_hex_dump(const char *start, const char *end) {
   return get_as_hex_dump((const unsigned char *)start, (const unsigned char *)end);
 }
 
@@ -931,7 +930,7 @@ bool is_valid_utf8(const char *s) {
   return is_valid_utf8(s, strlen(s));
 }
 
-bool is_valid_utf8(const std::string &s) {
+bool is_valid_utf8(const rstd::string &s) {
   return is_valid_utf8(s.c_str(), s.length());
 }
 

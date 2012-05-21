@@ -21,7 +21,7 @@ class str_split {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     /* Get the headers. */
     record headings(input.parse_headings());
 
@@ -39,15 +39,15 @@ public:
   }
 
 
-  static void parse_arguments(const record &headings, const std::vector<rel::rlang::token> &tokens,
+  static void parse_arguments(const record &headings, const rstd::vector<rel::rlang::token> &tokens,
                                size_t &target_heading_id, regex::pattern &split_regex_pattern) {
-    std::vector<std::vector<rlang::token> > arg_expressions = rlang::compiler::split_expressions(tokens);
+    rstd::vector<rstd::vector<rlang::token> > arg_expressions = rlang::compiler::split_expressions(tokens);
     NP1_ASSERT(arg_expressions.size() == 2, "Incorrect number of arguments to rel.str_split");
-    std::vector<std::string> heading_names;
+    rstd::vector<rstd::string> heading_names;
     rlang::compiler::compile_heading_name_list(arg_expressions[0], headings.ref(), heading_names);
     NP1_ASSERT(heading_names.size() == 1, "Incorrect number of headings supplied to rel.str_split");
     target_heading_id = headings.mandatory_find_heading(heading_names[0]);
-    std::string split_regex_str = rlang::compiler::eval_to_string_only(arg_expressions[1]);
+    rstd::string split_regex_str = rlang::compiler::eval_to_string_only(arg_expressions[1]);
 
     // Figure out the type of the heading and check that it's ok.
     rlang::dt::data_type target_heading_type =
@@ -66,10 +66,10 @@ public:
   }
 
 
-  static std::vector<std::string> make_output_headings(const std::vector<str::ref> &input_headings) {
-    std::vector<std::string> result;
-    std::vector<str::ref>::const_iterator i = input_headings.begin();
-    std::vector<str::ref>::const_iterator iz = input_headings.end();
+  static rstd::vector<rstd::string> make_output_headings(const rstd::vector<str::ref> &input_headings) {
+    rstd::vector<rstd::string> result;
+    rstd::vector<str::ref>::const_iterator i = input_headings.begin();
+    rstd::vector<str::ref>::const_iterator iz = input_headings.end();
     
     for (; i != iz; ++i) {
       result.push_back(i->to_string());
@@ -128,7 +128,7 @@ private:
     Output_Stream &m_output;
     size_t m_target_field_id;
     regex::pattern &m_split_regex_pattern;
-    std::vector<str::ref> m_output_fields;
+    rstd::vector<str::ref> m_output_fields;
   };
 };
 

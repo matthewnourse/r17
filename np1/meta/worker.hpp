@@ -16,9 +16,9 @@ public:
   enum { RELIABLE_STORAGE_TIMEOUT_SECONDS = io::work_distributor::RELIABLE_STORAGE_TIMEOUT_SECONDS };
 
 public:
-  static void run(const std::string &reliable_storage_local_root,
-                  const std::string &reliable_storage_remote_root,
-                  const std::string &listen_endpoint) {
+  static void run(const rstd::string &reliable_storage_local_root,
+                  const rstd::string &reliable_storage_remote_root,
+                  const rstd::string &listen_endpoint) {
     io::work_distributor distributor(reliable_storage_local_root, reliable_storage_remote_root,
                                       listen_endpoint, false);
     io::reliable_storage rs(reliable_storage_local_root, reliable_storage_remote_root);
@@ -55,7 +55,7 @@ private:
       // Now run the script.
       //TODO: make a special string input stream so that we don't have to copy
       // the script text.      
-      std::string script_text_str(script_text.to_string());
+      rstd::string script_text_str(script_text.to_string());
       io::string_input_stream script_input(script_text_str);
       
       log_info("About to execute script.", script_text, input_resource_id, output_resource_id);
@@ -86,8 +86,8 @@ private:
 };
 
 /// Helper function to avoid circular #includes.
-void worker_run(const std::string &reliable_storage_local_root, const std::string &reliable_storage_remote_root,
-                const std::string &listen_endpoint) {
+void worker_run(const rstd::string &reliable_storage_local_root, const rstd::string &reliable_storage_remote_root,
+                const rstd::string &listen_endpoint) {
   worker::run(reliable_storage_local_root, reliable_storage_remote_root, listen_endpoint);
 }
 

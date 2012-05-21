@@ -5,7 +5,6 @@
 
 
 #include "np1/rel/detail/record_multihashmap.hpp"
-#include "lib/liberal/int64/int64.hpp"
 #include "np1/rel/rlang/rlang.hpp"
 
 namespace np1 {
@@ -45,7 +44,7 @@ class group {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {    
+                  const rstd::vector<rel::rlang::token> &tokens) {    
     // Get the argument(s).
     const char *aggregator; 
     const char *aggregator_heading_name;
@@ -77,7 +76,7 @@ public:
     } else if (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MAX) == 0) {                   
       group_max(input_headings, output_headings, aggregator_heading_name, input, output);
     } else {
-      NP1_ASSERT(false, "Unknown aggregator: " + std::string(aggregator));
+      NP1_ASSERT(false, "Unknown aggregator: " + rstd::string(aggregator));
     }
   }
 
@@ -86,7 +85,7 @@ public:
   template <typename Input_Stream, typename Output_Stream>
   static void group_count(const record &input_headings, const record &output_headings,
                           Input_Stream &input, Output_Stream &output) {
-    std::vector<std::string> input_heading_names = input_headings.fields();
+    rstd::vector<rstd::string> input_heading_names = input_headings.fields();
     detail::compare_specs specs(input_headings, input_heading_names);
     validate_specs(specs);
     detail::record_multihashmap<uint64_t> group_map(specs);
@@ -173,7 +172,7 @@ public:
   template <typename Input_Stream, typename Output_Stream>
   static void group_sum_count_to_avg(const record &input_headings, const record &output_headings, Input_Stream &input,
                                       Output_Stream &output) {
-    std::vector<std::string> input_heading_names = input_headings.fields();
+    rstd::vector<rstd::string> input_heading_names = input_headings.fields();
   
     input_heading_names.erase(
       input_heading_names.begin() + input_headings.mandatory_find_heading(NP1_REL_GROUP_OUTPUT_HEADING_SUM));
@@ -194,7 +193,7 @@ public:
         detail::helper::mandatory_get_heading_type_tag(input_headings.mandatory_field(sum_field_id)));
 
     if ((rlang::dt::TYPE_INT == sum_type) || (rlang::dt::TYPE_UINT == sum_type)) {
-      detail::record_multihashmap<std::pair<int64_t, int64_t> > sum_map(specs);      
+      detail::record_multihashmap<rstd::pair<int64_t, int64_t> > sum_map(specs);      
       input.parse_records(sum_sum_count_record_callback<int64_t>(sum_map, sum_field_id, count_field_id));
       output_headings.write(output);
       sum_map.for_each(output_sum_or_avg_aggregated_record_callback<Output_Stream, int64_t, 2>(
@@ -202,7 +201,7 @@ public:
     } else {
       validate_type_is_double(sum_type, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT, str::ref(rlang::dt::to_string(sum_type)));
 
-      detail::record_multihashmap<std::pair<double, int64_t> > sum_map(specs);      
+      detail::record_multihashmap<rstd::pair<double, int64_t> > sum_map(specs);      
       input.parse_records(sum_sum_count_record_callback<double>(sum_map, sum_field_id, count_field_id));
       output_headings.write(output);
       sum_map.for_each(output_sum_or_avg_aggregated_record_callback<Output_Stream, double, 2>(
@@ -252,12 +251,12 @@ public:
   static void avg_sum_helper(const record &input_headings, const record &output_headings,
                               const char *aggregator_heading_name, Input_Stream &input, Output_Stream &output,
                               Sum_Map_Callback sum_map_callback) {
-    std::vector<std::string> input_heading_names = input_headings.fields();
+    rstd::vector<rstd::string> input_heading_names = input_headings.fields();
     size_t aggregator_heading_id = input_headings.mandatory_find_heading(aggregator_heading_name);
     input_heading_names.erase(input_heading_names.begin() + aggregator_heading_id);
     detail::compare_specs specs(input_headings, input_heading_names);
     validate_specs(specs);
-    detail::record_multihashmap<std::pair<Number_Type, int64_t> > sum_map(specs);
+    detail::record_multihashmap<rstd::pair<Number_Type, int64_t> > sum_map(specs);
     input.parse_records(sum_record_callback<Number_Type>(
                           sum_map, 
                           detail::compare_spec(input_headings, aggregator_heading_name)));
@@ -273,7 +272,7 @@ public:
     template <typename Input_Stream, typename Output_Stream>
     void operator()(const record &input_headings, const record &output_headings,
                     const char *aggregator_heading_name, Input_Stream &input, Output_Stream &output) {
-      std::vector<std::string> input_heading_names = input_headings.fields();
+      rstd::vector<rstd::string> input_heading_names = input_headings.fields();
       size_t aggregator_heading_id = input_headings.mandatory_find_heading(aggregator_heading_name);
       input_heading_names.erase(input_heading_names.begin() + aggregator_heading_id);
       detail::compare_specs specs(input_headings, input_heading_names);
@@ -289,7 +288,7 @@ public:
   };  
     
 
-  static void parse_arguments(const std::vector<rel::rlang::token> &tokens,
+  static void parse_arguments(const rstd::vector<rel::rlang::token> &tokens,
                               const char **aggregator_p,
                               const char **aggregator_heading_name_p) {
     NP1_ASSERT(tokens.size() > 0, "No aggregator supplied to rel.group");
@@ -308,7 +307,7 @@ public:
         && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MAX) != 0)
         && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM) != 0)
         && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) != 0)) {       
-      NP1_ASSERT(false, "Unknown aggregator: " + std::string(aggregator));
+      NP1_ASSERT(false, "Unknown aggregator: " + rstd::string(aggregator));
     }
     
     if (((str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_AVG) == 0)
@@ -317,7 +316,7 @@ public:
           || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM) == 0)
           || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) == 0))
         && !aggregator_heading_name) {
-      NP1_ASSERT(false, "The aggregator '" + std::string(aggregator)
+      NP1_ASSERT(false, "The aggregator '" + rstd::string(aggregator)
                           + "' requires a heading name");
     }
 
@@ -330,7 +329,7 @@ public:
                                     const char *aggregator_heading_name,
                                     const str::ref &aggregator_type_tag,
                                     const record &input_headings) {
-    std::vector<str::ref> header_fields;         
+    rstd::vector<str::ref> header_fields;         
 
     // Get the headings.
     if ((str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_AVG) == 0)
@@ -343,11 +342,11 @@ public:
       get_fields(header_fields, input_headings, input_headings.number_fields());
     }
     
-    std::string aggregator_type_name = aggregator_type_tag.to_string();
+    rstd::string aggregator_type_name = aggregator_type_tag.to_string();
     
     // This variable exists so that all str::refs in header_fields point to valid memory until the end
     // of the function.
-    std::string typed_heading_name;
+    rstd::string typed_heading_name;
     
     if (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_COUNT) == 0) {
       header_fields.push_back(str::ref(NP1_REL_GROUP_OUTPUT_HEADING_COUNT));
@@ -387,7 +386,7 @@ private:
   static void validate_type_is_double(rlang::dt::data_type type, const char *operator_name, const str::ref &type_tag) {
     NP1_ASSERT(
         (rlang::dt::TYPE_DOUBLE == type),
-        std::string(operator_name) + " does not support type: " + type_tag.to_string());
+        rstd::string(operator_name) + " does not support type: " + type_tag.to_string());
   }
   
     
@@ -425,13 +424,13 @@ private:
   template <typename Number_Type>
   struct sum_record_callback {
     sum_record_callback(
-      detail::record_multihashmap<std::pair<Number_Type, int64_t> > &m,
+      detail::record_multihashmap<rstd::pair<Number_Type, int64_t> > &m,
       const detail::compare_spec &spec)
     : m_map(m), m_spec(spec) {}
     bool operator()(const record_ref &r) const {
       // The first element in the pair is the sum, the second element is the
       // count of elements.
-      typedef typename std::pair<Number_Type, int64_t> pair_type;
+      typedef typename rstd::pair<Number_Type, int64_t> pair_type;
       typedef typename detail::record_multihashmap<pair_type>::equal_list_type eq_list_type;
       eq_list_type *eq_list;
         
@@ -441,7 +440,7 @@ private:
         eq_list->front().second.first += num;
         eq_list->front().second.second++;
       } else {
-        m_map.insert(r, std::make_pair(num, (int64_t)1));
+        m_map.insert(r, rstd::make_pair(num, (int64_t)1));
       }
       
       return true;
@@ -453,7 +452,7 @@ private:
       return num;
     }        
     
-    detail::record_multihashmap<std::pair<Number_Type, int64_t> > &m_map;
+    detail::record_multihashmap<rstd::pair<Number_Type, int64_t> > &m_map;
     detail::compare_spec m_spec;   
   };
   
@@ -462,7 +461,7 @@ private:
   template <typename Number_Type>
   struct sum_sum_count_record_callback {
     sum_sum_count_record_callback(
-      detail::record_multihashmap<std::pair<Number_Type, int64_t> > &m,
+      detail::record_multihashmap<rstd::pair<Number_Type, int64_t> > &m,
       size_t sum_field_id,
       size_t count_field_id)
     : m_map(m), m_sum_field_id(sum_field_id), m_count_field_id(count_field_id) {}
@@ -470,7 +469,7 @@ private:
     bool operator()(const record_ref &r) const {
       // The first element in the pair is the sum, the second element is the
       // count of elements.
-      typedef typename std::pair<Number_Type, int64_t> pair_type;
+      typedef typename rstd::pair<Number_Type, int64_t> pair_type;
       typedef typename detail::record_multihashmap<pair_type>::equal_list_type eq_list_type;
       eq_list_type *eq_list;
         
@@ -482,13 +481,13 @@ private:
         eq_list->front().second.first += sum;
         eq_list->front().second.second += count;
       } else {
-        m_map.insert(r, std::make_pair(sum, count));
+        m_map.insert(r, rstd::make_pair(sum, count));
       }
       
       return true;
     }
       
-    detail::record_multihashmap<std::pair<Number_Type, int64_t> > &m_map;
+    detail::record_multihashmap<rstd::pair<Number_Type, int64_t> > &m_map;
     size_t m_sum_field_id;
     size_t m_count_field_id;
   };
@@ -565,9 +564,9 @@ private:
   
   // Get all the fields from the record.  number_fields is supplied for
   // performance reasons.
-  static void get_fields(std::vector<str::ref> &fields, const record &r, size_t number_fields) {
+  static void get_fields(rstd::vector<str::ref> &fields, const record &r, size_t number_fields) {
     fields.resize(number_fields);
-    std::vector<str::ref>::iterator fields_iter = fields.begin();
+    rstd::vector<str::ref>::iterator fields_iter = fields.begin();
 
     size_t i;
     for (i = 0; i < number_fields; ++i, ++fields_iter) {
@@ -606,12 +605,12 @@ private:
   // Get all the fields from the record except the victim field.  number_fields
   // is supplied for performance reasons.
   template <size_t N>
-  static void get_fields_except(std::vector<str::ref> &fields,
+  static void get_fields_except(rstd::vector<str::ref> &fields,
                                 const record &r, size_t number_fields,
                                 const field_id_list<N> &victim_field_numbers) {
     fields.resize(number_fields - victim_field_numbers.size());
     
-    std::vector<str::ref>::iterator fields_iter = fields.begin();
+    rstd::vector<str::ref>::iterator fields_iter = fields.begin();
 
     size_t i;
     for (i = 0; i < number_fields; ++i) {
@@ -635,7 +634,7 @@ private:
     : m_output(output), m_field_ids_to_omit(field_ids_to_omit), m_number_fields(number_fields), m_is_sum(is_sum) {}
 
     bool operator()(const record &r, 
-                    const std::pair<Number_Type, int64_t> &sum_count_pair) {
+                    const rstd::pair<Number_Type, int64_t> &sum_count_pair) {
       // Get all the fields except the one that was involved in the
       // averaging.
       get_fields_except(m_output_fields, r, m_number_fields, m_field_ids_to_omit);
@@ -645,25 +644,17 @@ private:
       if (m_is_sum) {      
         str::to_dec_str(num_string, sum_count_pair.first);
       } else {
-        str::to_dec_str(num_string, divide(sum_count_pair.first, sum_count_pair.second));
+        str::to_dec_str(num_string, sum_count_pair.first/sum_count_pair.second);
       }
       
       record_ref::write(m_output, m_output_fields, num_string);
       
       return true;
     }
-    
-    int64_t divide(int64_t sum, int64_t count) {
-      return lib::int64::divide(sum, count);
-    }
-    
-    double divide(double sum, int64_t count) {
-      return sum/count;
-    }
-    
+            
     Output_Stream &m_output;
     field_id_list<N> m_field_ids_to_omit;
-    std::vector<str::ref> m_output_fields;
+    rstd::vector<str::ref> m_output_fields;
     size_t m_number_fields;
     bool m_is_sum;
   };
@@ -679,7 +670,7 @@ private:
                         size_t number_fields) 
     : m_output(output), m_field_ids_to_omit(field_ids_to_omit), m_number_fields(number_fields) {}
 
-    bool operator()(const record &r, const std::pair<Number_Type, int64_t> &sum_count_pair) {
+    bool operator()(const record &r, const rstd::pair<Number_Type, int64_t> &sum_count_pair) {
       // Get all the fields except the one that was involved in the
       // averaging.
       get_fields_except(m_output_fields, r, m_number_fields, m_field_ids_to_omit);
@@ -697,7 +688,7 @@ private:
     
     Output_Stream &m_output;
     field_id_list<N> m_field_ids_to_omit;
-    std::vector<str::ref> m_output_fields;
+    rstd::vector<str::ref> m_output_fields;
     size_t m_number_fields;
   };
   

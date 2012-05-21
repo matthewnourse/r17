@@ -13,7 +13,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <sys/syscall.h>
-#include <string>
+#include "rstd/string.hpp"
 
 
 
@@ -317,7 +317,7 @@ public:
       result = (::close(m_handle) == 0);
 #endif
       m_handle = invalid_handle_value();
-      m_file_name = std::string();
+      m_file_name = rstd::string();
     }
 
     return result;
@@ -416,7 +416,7 @@ public:
             || (stderr_handle() == m_handle));
   }
 
-  const std::string &name() const { return m_file_name; }
+  const rstd::string &name() const { return m_file_name; }
 
 private:
   /// Disable copy.
@@ -462,7 +462,7 @@ private:
 
 private:
   handle_type m_handle;
-  std::string m_file_name;
+  rstd::string m_file_name;
 };
 
 

@@ -12,18 +12,18 @@ namespace meta {
 class remote {
 public:
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     // Split the arguments into a hostname and the rest.
-    std::vector<std::vector<rel::rlang::token> > expressions = rel::rlang::compiler::split_expressions(tokens);
+    rstd::vector<rstd::vector<rel::rlang::token> > expressions = rel::rlang::compiler::split_expressions(tokens);
     NP1_ASSERT(expressions.size() >= 2, "meta.remote expects a hostname argument and a script argument");
-    std::string hostname = rel::rlang::compiler::eval_to_string_only(expressions[0]);
+    rstd::string hostname = rel::rlang::compiler::eval_to_string_only(expressions[0]);
 
     // Get the rest of the arguments as a string.
-    std::vector<std::vector<rel::rlang::token> >::const_iterator i = expressions.begin();
+    rstd::vector<rstd::vector<rel::rlang::token> >::const_iterator i = expressions.begin();
     ++i; // Skip over the hostname.
-    std::vector<std::vector<rel::rlang::token> >::const_iterator iz = expressions.end();
+    rstd::vector<rstd::vector<rel::rlang::token> >::const_iterator iz = expressions.end();
 
-    std::string r17_script;
+    rstd::string r17_script;
     io::string_output_stream r17_script_sos(r17_script);
     
     for (; i != iz; ++i) {
@@ -33,12 +33,12 @@ public:
     r17_script_sos.write(';');
 
     // Escape the string for use on a bash command line.
-    std::string escaped_r17_script;
+    rstd::string escaped_r17_script;
     io::string_output_stream escaped_r17_script_sos(escaped_r17_script);
     str::write_bash_escaped_string(r17_script, escaped_r17_script_sos);
 
     // Prepare the arguments ready for the exec.
-    std::vector<std::string> exec_args;
+    rstd::vector<rstd::string> exec_args;
     exec_args.push_back("ssh");
     exec_args.push_back(hostname);
     exec_args.push_back("r17");
@@ -74,7 +74,7 @@ public:
 
 
   // Read the file descriptor, copying to stderr and prefixing each line with helpful info.
-  static void read_and_prefix_stderr(const std::string &hostname, int fd) {
+  static void read_and_prefix_stderr(const rstd::string &hostname, int fd) {
     FILE *fp = fdopen(fd, "r");
     NP1_ASSERT(fp, "meta.remote: fdopen failed");
     char line[256 * 1024];

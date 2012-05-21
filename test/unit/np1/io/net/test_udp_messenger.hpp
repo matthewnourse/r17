@@ -18,9 +18,9 @@ typedef ::np1::io::net::udp_messenger udp_messenger_type;
 
 
 
-void run_worker_udp_messenger(const std::vector<std::string> &client_peer_strings,
-                              const std::vector<std::string> &worker_peer_strings,
-                              const std::string &endpoint_info) {
+void run_worker_udp_messenger(const rstd::vector<rstd::string> &client_peer_strings,
+                              const rstd::vector<rstd::string> &worker_peer_strings,
+                              const rstd::string &endpoint_info) {
   udp_messenger_type messenger(client_peer_strings, worker_peer_strings,
                                 endpoint_info, false);
 
@@ -30,7 +30,7 @@ void run_worker_udp_messenger(const std::vector<std::string> &client_peer_string
       NP1_TEST_ASSERT(request_message.has_valid_peer());
 
       // DON'T assume that message payload is null-terminated in production code.
-      std::string request_payload = (const char *)request_message.payload_ptr();
+      rstd::string request_payload = (const char *)request_message.payload_ptr();
       if (request_payload == "exit") {
         return;
       }
@@ -38,7 +38,7 @@ void run_worker_udp_messenger(const std::vector<std::string> &client_peer_string
       udp_messenger_type::message response_message(
         request_message, udp_messenger_type::message::ack_marker());
 
-      std::string response_payload = "x" + request_payload;
+      rstd::string response_payload = "x" + request_payload;
       response_message.append(response_payload.c_str(), response_payload.length() + 1);
       messenger.send(response_message);
     }
@@ -48,8 +48,8 @@ void run_worker_udp_messenger(const std::vector<std::string> &client_peer_string
 
 
 void test_udp_messenger_send_receive() {
-  std::vector<std::string> client_peer_strings;
-  std::vector<std::string> worker_peer_strings;
+  rstd::vector<rstd::string> client_peer_strings;
+  rstd::vector<rstd::string> worker_peer_strings;
 
   client_peer_strings.push_back("127.0.0.1:22222");  // The requestor.
 
@@ -90,21 +90,21 @@ void test_udp_messenger_send_receive() {
   // Send all the messages and receive any responses we get while sending.
   // We'll just pretend there is one resource per message because in a real query
   // that's (very) approximately what will happen anyway.
-  ::np1::skip_list<std::string> worker_responses;
+  ::np1::skip_list<rstd::string> worker_responses;
   size_t unique_responses_received = 0;
 
   udp_messenger_type::message incoming;
 
   for (i = 0; i < NUMBER_MESSAGES; ++i) {
-    std::string outgoing_payload = ::np1::str::to_dec_str(i);
-    std::string resource_id = outgoing_payload;
+    rstd::string outgoing_payload = ::np1::str::to_dec_str(i);
+    rstd::string resource_id = outgoing_payload;
     ::np1::str::ref resource_id_ref = ::np1::str::ref(resource_id);
     udp_messenger_type::message outgoing(resource_id_ref);
     outgoing.append(outgoing_payload.c_str(), outgoing_payload.length() + 1);
     
     if (messenger.receive(incoming, 0)) {
       // DON'T assume that the message is null-terminated in production code!
-      if (worker_responses.insert(std::string((const char *)incoming.payload_ptr()))) {
+      if (worker_responses.insert(rstd::string((const char *)incoming.payload_ptr()))) {
         ++unique_responses_received;
       }      
     }
@@ -116,7 +116,7 @@ void test_udp_messenger_send_receive() {
   while (unique_responses_received < NUMBER_MESSAGES) {
     if (messenger.receive(incoming)) {
       // DON'T assume that the message is null-terminated in production code!
-      if (worker_responses.insert(std::string((const char *)incoming.payload_ptr()))) {
+      if (worker_responses.insert(rstd::string((const char *)incoming.payload_ptr()))) {
         ++unique_responses_received;
       }
     }
@@ -130,7 +130,7 @@ void test_udp_messenger_send_receive() {
 
   // Tell all the workers to shut down.
   for (i = 0; i < NUMBER_WORKERS; ++i) {
-    std::string outgoing_payload = "exit";
+    rstd::string outgoing_payload = "exit";
     ::np1::io::net::ip_endpoint worker_ep(worker_peer_strings[i]);    
     udp_messenger_type::message outgoing(worker_ep);
     outgoing.append(outgoing_payload.c_str(), outgoing_payload.length() + 1);

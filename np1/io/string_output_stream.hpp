@@ -15,7 +15,7 @@ public:
   struct is_unbuffered {};
 
 public:
-  explicit string_output_stream(std::string &s)
+  explicit string_output_stream(rstd::string &s)
     : detail::stream_helper<string_output_stream>(*this), m_string(s) {}
 
   /// Returns false and sets *bytes_written_p=0 on error. 
@@ -27,8 +27,8 @@ public:
 
   bool close() { return true; }
 
-  const std::string &name() const {
-    static std::string n("[string output]");
+  const rstd::string &name() const {
+    static rstd::string n("[string output]");
     return n;
   }
 
@@ -39,7 +39,7 @@ private:
   string_output_stream &operator = (const string_output_stream &);
 
 private:
-  std::string &m_string;  
+  rstd::string &m_string;  
 };
 
 

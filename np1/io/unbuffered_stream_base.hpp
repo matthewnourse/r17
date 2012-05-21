@@ -4,7 +4,7 @@
 #define NP1_IO_UNBUFFERED_STREAM_BASE_HPP
 
 
-#include <string>
+#include "rstd/string.hpp"
 
 namespace np1 {
 namespace io {
@@ -65,9 +65,9 @@ public:
 
   virtual bool close() { return true; }  
 
-  virtual const std::string &name() const {
+  virtual const rstd::string &name() const {
     NP1_ASSERT(false, "name not implemented!");
-    static std::string n("[infinite sadness]");
+    static rstd::string n("[infinite sadness]");
     return n;
   }
 

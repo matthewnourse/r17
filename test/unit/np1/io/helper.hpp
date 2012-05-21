@@ -15,8 +15,8 @@ namespace np1 {
 namespace io {
 
 
-std::string make_alphabet_test_data_string(size_t size = 10000000) {
-  std::string test_data;
+rstd::string make_alphabet_test_data_string(size_t size = 10000000) {
+  rstd::string test_data;
   size_t i;
   char CHARS[] = "abcdefghijklmnopqrstuvwxyz";
   

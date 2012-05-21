@@ -3,9 +3,9 @@
 #ifndef NP1_REL_DETAIL_RECORD_HPP
 #define NP1_REL_DETAIL_RECORD_HPP
 
-#include <string>
+#include "rstd/string.hpp"
 #include "np1/rel/record_ref.hpp"
-#include "std/detail/mem.hpp"
+#include "rstd/detail/mem.hpp"
 
 
 namespace np1 {
@@ -22,31 +22,31 @@ public:
   explicit record(const record_ref &ref) { initialize(ref); }
   
   /// Construct from strings.  This is SLOW- use sparingly.
-  record(const std::string &s1, size_t record_number) {
-    std::vector<std::string> strs;
+  record(const rstd::string &s1, size_t record_number) {
+    rstd::vector<rstd::string> strs;
     strs.push_back(s1);
     initialize(strs, record_number);   
   }
 
-  record(const std::string &s1, const std::string &s2, size_t record_number) {
-    std::vector<std::string> strs;
+  record(const rstd::string &s1, const rstd::string &s2, size_t record_number) {
+    rstd::vector<rstd::string> strs;
     strs.push_back(s1);
     strs.push_back(s2);
     initialize(strs, record_number);   
   }
 
-  record(const std::string &s1, const std::string &s2, const std::string &s3,
+  record(const rstd::string &s1, const rstd::string &s2, const rstd::string &s3,
          size_t record_number) {
-    std::vector<std::string> strs;
+    rstd::vector<rstd::string> strs;
     strs.push_back(s1);
     strs.push_back(s2);
     strs.push_back(s3);
     initialize(strs, record_number);   
   }
 
-  record(const std::string &s1, const std::string &s2, const std::string &s3,
-         const std::string &s4, size_t record_number) {
-    std::vector<std::string> strs;
+  record(const rstd::string &s1, const rstd::string &s2, const rstd::string &s3,
+         const rstd::string &s4, size_t record_number) {
+    rstd::vector<rstd::string> strs;
     strs.push_back(s1);
     strs.push_back(s2);
     strs.push_back(s3);
@@ -54,9 +54,9 @@ public:
     initialize(strs, record_number);   
   }
 
-  record(const std::string &s1, const std::string &s2, const std::string &s3,
-         const std::string &s4, const std::string &s5, size_t record_number) {
-    std::vector<std::string> strs;
+  record(const rstd::string &s1, const rstd::string &s2, const rstd::string &s3,
+         const rstd::string &s4, const rstd::string &s5, size_t record_number) {
+    rstd::vector<rstd::string> strs;
     strs.push_back(s1);
     strs.push_back(s2);
     strs.push_back(s3);
@@ -65,11 +65,11 @@ public:
     initialize(strs, record_number);   
   }
 
-  record(const std::vector<std::string> &strs, size_t record_number) {
+  record(const rstd::vector<rstd::string> &strs, size_t record_number) {
     initialize(strs, record_number);
   }
 
-  record(const std::vector<str::ref> &strs, size_t record_number) {
+  record(const rstd::vector<str::ref> &strs, size_t record_number) {
     initialize(strs, record_number);
   }
 
@@ -122,7 +122,7 @@ public:
     return m_ref.mandatory_find_field(contents);
   }
   
-  size_t mandatory_find_field(const std::string &contents) const {
+  size_t mandatory_find_field(const rstd::string &contents) const {
     return mandatory_find_field(contents.c_str());
   }
 
@@ -136,7 +136,7 @@ public:
     return m_ref.mandatory_find_heading(heading);  
   }
 
-  size_t mandatory_find_heading(const std::string &heading) const {
+  size_t mandatory_find_heading(const rstd::string &heading) const {
     return m_ref.mandatory_find_heading(heading);  
   }
 
@@ -145,10 +145,10 @@ public:
   
 
    /// Get all the fields in this record.  NOTE that this is VERY slow!
-  std::vector<std::string> fields() const { return m_ref.fields(); }
+  rstd::vector<rstd::string> fields() const { return m_ref.fields(); }
 
   /// Get a text representation of the record suitable for error messages.  This is VERY slow!
-  std::string to_string() const { return m_ref.to_string(); }
+  rstd::string to_string() const { return m_ref.to_string(); }
 
 
     /// Is the record empty?
@@ -174,7 +174,7 @@ public:
 
   /// Write the fields to the output stream, ending with a record delimiter.
   template <typename Mandatory_Output_Stream>
-  static void write(Mandatory_Output_Stream &mos, const std::vector<str::ref> &refs) {
+  static void write(Mandatory_Output_Stream &mos, const rstd::vector<str::ref> &refs) {
     record_ref::write(mos, refs); 
   }
 
@@ -188,7 +188,7 @@ public:
   /// Write multiple arguments to the output stream as a single record.
   template <typename Mandatory_Output_Stream, typename... Fields>
   static void write(Mandatory_Output_Stream &mos,
-                    const std::vector<str::ref> &refs,
+                    const rstd::vector<str::ref> &refs,
                     const Fields&... fields) {
     record_ref::write(mos, refs, fields...);
   }
@@ -216,7 +216,7 @@ public:
   /// Swap.
   void swap(record &other) {
     m_ref.swap(other.m_ref);
-    std::swap(m_buffer, other.m_buffer);
+    rstd::swap(m_buffer, other.m_buffer);
   }
 
   /// Assign using a record reference.
@@ -240,7 +240,7 @@ private:
   void initialize(const record_ref &ref) {
     //+1 to include the record delimiter.
     size_t record_data_size = ref.byte_size();     
-    m_buffer = (unsigned char *)std::detail::mem::alloc(record_data_size);
+    m_buffer = (unsigned char *)rstd::detail::mem::alloc(record_data_size);
                   
     memcpy(m_buffer, ref.start(), record_data_size);    
     m_ref.initialize(m_buffer, m_buffer + record_data_size, ref.record_number());      
@@ -248,9 +248,9 @@ private:
 
   /// Initialize using the vector of strings.
   template <typename T>
-  void initialize(const std::vector<T> &strs, size_t record_number) {
+  void initialize(const rstd::vector<T> &strs, size_t record_number) {
     size_t record_data_size = record_ref::required_record_data_size(strs);
-    m_buffer = (unsigned char *)std::detail::mem::alloc(record_data_size);
+    m_buffer = (unsigned char *)rstd::detail::mem::alloc(record_data_size);
     np1::io::ext_static_buffer_output_stream temp_stream(m_buffer, record_data_size);
     record_ref::write(temp_stream, strs);
     m_ref.initialize(m_buffer, m_buffer + record_data_size, record_number);      
@@ -259,7 +259,7 @@ private:
   
   /// Free the memory for this object.
   void uninitialize() {
-    std::detail::mem::free(m_buffer);
+    rstd::detail::mem::free(m_buffer);
     m_buffer = NULL;
     m_ref.initialize(NULL, NULL, 0);
   }

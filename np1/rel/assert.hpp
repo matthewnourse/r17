@@ -15,7 +15,7 @@ class assert {
 public:
   template <typename Input_Stream, typename Output_Stream>
   void operator()(Input_Stream &input, Output_Stream &output,
-                    const std::vector<rlang::token> &tokens,
+                    const rstd::vector<rlang::token> &tokens,
                     bool assert_empty) {      
     /* Do the work. */
     bool result;

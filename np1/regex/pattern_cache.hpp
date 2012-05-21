@@ -53,7 +53,7 @@ private:
 
 private:
   struct entry {
-    std::string m_pattern_string;
+    rstd::string m_pattern_string;
     regex::pattern m_pattern;
     bool m_is_case_sensitive;
   };

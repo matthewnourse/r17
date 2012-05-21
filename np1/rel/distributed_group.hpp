@@ -22,11 +22,11 @@ private:
 
 public:
   template <typename Input_Stream, typename Output_Stream>
-  void operator()(const std::string &reliable_storage_local_root,
-                  const std::string &reliable_storage_remote_root,
-                  const std::string &listen_endpoint,                  
+  void operator()(const rstd::string &reliable_storage_local_root,
+                  const rstd::string &reliable_storage_remote_root,
+                  const rstd::string &listen_endpoint,                  
                   Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &original_tokens) {
+                  const rstd::vector<rel::rlang::token> &original_tokens) {
     log_info("Reading headers and doing basic argument checks.");
 
     const char *original_aggregator;
@@ -37,7 +37,7 @@ public:
     log_info("Parsed arguments.");
 
     const char *for_distribution_aggregator = original_aggregator;
-    std::vector<rel::rlang::token> for_distribution_tokens = original_tokens;
+    rstd::vector<rel::rlang::token> for_distribution_tokens = original_tokens;
  
     // Average can't be accurately computed by workers, we need them to calculate something
     // we can calculate the average from.
@@ -106,8 +106,8 @@ public:
 
 
 private:
-  void translate(int from_fd, int to_fd, const std::string &reliable_storage_local_root,
-                  const std::string &reliable_storage_remote_root) {
+  void translate(int from_fd, int to_fd, const rstd::string &reliable_storage_local_root,
+                  const rstd::string &reliable_storage_remote_root) {
     // Set up the "from" stream.
     io::file distribution_results_file;
     distribution_results_file.from_handle(from_fd);
@@ -172,7 +172,7 @@ private:
       group::group_max(normal_output_headings, normal_output_headings, aggregator_heading_name,
                         translated_stream, output);
     } else {
-      NP1_ASSERT(false, "Aggregator unsupported for distribution: " + std::string(original_aggregator));
+      NP1_ASSERT(false, "Aggregator unsupported for distribution: " + rstd::string(original_aggregator));
     }
   }
 

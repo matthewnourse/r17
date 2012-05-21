@@ -26,7 +26,7 @@ struct distributed_worker_processor_fn {
     reliable_storage_type::id new_resource_id = reliable_storage_type::id::generate();
     create_reliable_storage_file(
         new_resource_id,
-        read_reliable_storage_file(resource_id) + std::string(payload.ptr(), payload.length()));
+        read_reliable_storage_file(resource_id) + rstd::string(payload.ptr(), payload.length()));
 
     return new_resource_id;
   }
@@ -34,7 +34,7 @@ struct distributed_worker_processor_fn {
 
 
 struct run_distributed_worker {
-  void operator()(const std::string &listen_endpoint) {
+  void operator()(const rstd::string &listen_endpoint) {
     work_distributor_type distributor(NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_LOCAL_ROOT,
                                       NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_REMOTE_ROOT, listen_endpoint, false);
     reliable_storage_type rs(NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_LOCAL_ROOT,
@@ -51,10 +51,10 @@ struct run_distributed_worker {
 
 
 void test_ordered_work_distributor_send_receive() {
-  std::string client_peer_endpoint = write_client_peer_strings_list();  
-  std::vector<std::string> worker_peer_strings = write_worker_peer_strings_list();  
+  rstd::string client_peer_endpoint = write_client_peer_strings_list();  
+  rstd::vector<rstd::string> worker_peer_strings = write_worker_peer_strings_list();  
 
-  std::vector<pid_t> children = fork_distributed_workers(worker_peer_strings,
+  rstd::vector<pid_t> children = fork_distributed_workers(worker_peer_strings,
                                                           run_distributed_worker());
 
   // We can only get to here if we are the parent, which acts as the client.
@@ -76,7 +76,7 @@ void test_ordered_work_distributor_send_receive() {
   // Receive all the responses.  They should be returned to us in order.
   reliable_storage_type::id resp_resource_id;
   for (i = 0; (i < NUMBER_WORK_ITEMS) && distributor.receive_response(resp_resource_id); ++i) {
-    std::string resp_data = read_reliable_storage_file(resp_resource_id);
+    rstd::string resp_data = read_reliable_storage_file(resp_resource_id);
     NP1_TEST_ASSERT(resp_data == (::np1::str::to_dec_str(i) + " " + ::np1::str::to_dec_str(i)));
   }
 

@@ -4,16 +4,60 @@
 #define RELOPT_RECORD_MULTIHASHMAP_HPP
 
 
-#include <vector>
-#include <list>
+#include "rstd/vector.hpp"
+#include "rstd/list.hpp"
+#include "rstd/pair.hpp"
 #include "np1/rel/detail/helper.hpp"
 #include "np1/rel/detail/compare_specs.hpp"
-#include "np1/rel/detail/record_multimap.hpp"
 
 
 namespace np1 {
 namespace rel {
 namespace detail {
+
+// A record comparison function that takes two compatible lists of compare specs, one for each record.  The compare
+// specs must be in the same order. 
+template <typename Record1, typename Record2>
+int hetero_record_compare(const Record1 &r1, const compare_specs &specs1,
+                          const Record2 &r2, const compare_specs &specs2) {
+  NP1_ASSERT(specs1.size() == specs2.size(), "compare spec sizes are not equal");
+  
+  compare_specs::const_iterator spec1 = specs1.begin();
+  compare_specs::const_iterator spec1_iz = specs1.end();
+  compare_specs::const_iterator spec2 = specs2.begin();
+  
+  for (; spec1 != spec1_iz; ++spec1, ++spec2) {        
+    str::ref field1 = r1.field(spec1->field_number());    
+    str::ref field2 = r2.field(spec2->field_number());
+    
+    if (field1.is_null() || field2.is_null()) {
+      NP1_ASSERT(false, "Unable to find field while comparing hetero records");      
+    }
+        
+    if (spec1->compare_function() == spec2->compare_function()) {
+      int compare_result = spec1->compare_function()(field1.ptr(),
+                                                      field1.length(),
+                                                      field2.ptr(),
+                                                      field2.length());                      
+      if (compare_result != 0) {
+        return compare_result;
+      }
+    } else {
+      NP1_ASSERT(false, "Incompatible compare functions while comparing hetero records");     
+    }
+  }
+  
+  // If we get to here then all specs have returned equal.
+  return 0;
+}
+
+
+/// A record comparison function that takes a list of compare specs.
+template <typename Record1, typename Record2>
+int record_compare(const Record1 &r1, const Record2 &r2, 
+                    const compare_specs &specs) {
+  return hetero_record_compare(r1, specs, r2, specs);
+}
   
 // A non-unique hash table of records.
 template <typename Value>
@@ -28,13 +72,13 @@ public:
   };
   
   // A list of records that compare equal.
-  typedef std::list<std::pair<record, Value> > equal_list_type;
+  typedef rstd::list<rstd::pair<record, Value> > equal_list_type;
   
   // A chain of records that hash to the same value.
-  typedef std::list<equal_list_type> hash_chain_type;
+  typedef rstd::list<equal_list_type> hash_chain_type;
   
   // The hash table itself - a list of chains.
-  typedef std::vector<hash_chain_type> hash_map_type;
+  typedef rstd::vector<hash_chain_type> hash_map_type;
   
 public:
   record_multihashmap(const compare_specs &specs,
@@ -62,11 +106,11 @@ public:
     equal_list_type *equal_list = find_equal_list(r, *hash_chain, m_specs);
     
     if (equal_list) {
-      equal_list->push_back(std::make_pair(record(r), v));
+      equal_list->push_back(rstd::make_pair(record(r), v));
     } else {
       // There are no matching records, just make a new list.
       equal_list_type new_list;
-      new_list.push_back(std::make_pair(record(r), v));
+      new_list.push_back(rstd::make_pair(record(r), v));
       hash_chain->push_back(equal_list_type());
       hash_chain->back().swap(new_list);
     }
@@ -244,7 +288,7 @@ private:
       const str::ref f = r.field(spec->field_number());    
             
       if (f.is_null()) {
-        std::string error_message =
+        rstd::string error_message =
           "Unable to find field " + str::to_dec_str(spec->field_number())
           + " while hashing.  Record number: "
           + str::to_dec_str(r.record_number());

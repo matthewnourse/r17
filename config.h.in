@@ -1,5 +1,8 @@
 /* config.h.in.  Generated from configure.ac by autoheader.  */
 
+/* The zlib version is too old to have the gzbuffer function. */
+#undef HAVE_NO_GZBUFFER
+
 /* Name of package */
 #undef PACKAGE
 

@@ -49,8 +49,8 @@ public:
   /// Get the length of the data in the buffer.
   size_t size() const { return m_stream.size(); }
 
-  const std::string &name() const {
-    static std::string n("[heap buffer output stream]");
+  const rstd::string &name() const {
+    static rstd::string n("[heap buffer output stream]");
     return n;
   }
 

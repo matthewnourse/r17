@@ -12,7 +12,7 @@ namespace meta {
 
 
 void create_test_files(::np1::io::file &input, ::np1::io::file &output,
-                        const std::string &test_data) {
+                        const rstd::string &test_data) {
   FILE *input_fp = tmpfile();
   input.from_handle(input_fp);
   input.write(test_data.c_str(), test_data.length());
@@ -23,7 +23,7 @@ void create_test_files(::np1::io::file &input, ::np1::io::file &output,
 }
 
 
-void run_script(const std::string &script, const std::string &test_data, const std::string &expected_output) {
+void run_script(const rstd::string &script, const rstd::string &test_data, const rstd::string &expected_output) {
   FILE *script_fp = tmpfile();
   ::np1::io::file script_file;
   script_file.from_handle(script_fp);
@@ -40,7 +40,7 @@ void run_script(const std::string &script, const std::string &test_data, const s
 
   output.rewind();
 
-  std::vector<char> actual_output;
+  rstd::vector<char> actual_output;
   size_t expected_output_length = expected_output.length();
   actual_output.resize((expected_output_length + 1) * 2);
   size_t bytes_read = 0;
@@ -53,8 +53,8 @@ void run_script(const std::string &script, const std::string &test_data, const s
 
 
 struct meta_worker_f {
-  void operator()(const std::string &listen_endpoint) {
-    std::string script = "meta.worker('" + listen_endpoint + "');";
+  void operator()(const rstd::string &listen_endpoint) {
+    rstd::string script = "meta.worker('" + listen_endpoint + "');";
     run_script(script, "", "");
   }
 };
@@ -62,22 +62,22 @@ struct meta_worker_f {
 
 
 // No need to supply a test data argument, just use one set of huge test data.
-void run_script_distributed(const std::string &script, const char *expected_output) {
+void run_script_distributed(const rstd::string &script, const char *expected_output) {
   write_client_peer_strings_list();
-  std::vector<std::string> worker_peer_list = write_worker_peer_strings_list();
+  rstd::vector<rstd::string> worker_peer_list = write_worker_peer_strings_list();
 
-  std::vector<pid_t> workers = fork_distributed_workers(worker_peer_list, meta_worker_f());
+  rstd::vector<pid_t> workers = fork_distributed_workers(worker_peer_list, meta_worker_f());
 
   reliable_storage_type::id input_recordset_id = reliable_storage_type::id::generate();
 
   printf("  Creating test data, input recordset id is %s\n", input_recordset_id.to_string().c_str());
-  std::string test_data;
+  rstd::string test_data;
   make_large_test_data_record_string(test_data);
   ::np1::io::string_input_stream input(test_data);
 
   printf("  Writing test data to disk and running tests\n");
 
-  std::string script_with_recordset_stuff =
+  rstd::string script_with_recordset_stuff =
     "rel.from_tsv() | rel.recordset.create('" + input_recordset_id.to_string()
     + "', 1024*1024); rel.recordset.read('" + input_recordset_id.to_string() + "') | "
     + script;
@@ -88,8 +88,8 @@ void run_script_distributed(const std::string &script, const char *expected_outp
 }
 
 
-void check_split_file(const std::string &prefix, uint64_t n, const char *expected_result) {
-  std::string file_name = prefix + ::np1::str::to_hex_str_pad_16(n) + ".gz";
+void check_split_file(const rstd::string &prefix, uint64_t n, const char *expected_result) {
+  rstd::string file_name = prefix + ::np1::str::to_hex_str_pad_16(n) + ".gz";
   run_script("io.file.read('" + file_name + "') | rel.to_tsv();",
             "",
             expected_result);
@@ -196,7 +196,7 @@ void test_inline_script() {
 
   output.rewind();
 
-  std::vector<char> actual_output;
+  rstd::vector<char> actual_output;
   size_t expected_output_length = strlen(expected_output);
   actual_output.resize((expected_output_length + 1) * 2);
   size_t bytes_read = 0;
@@ -210,7 +210,7 @@ void test_inline_script() {
 
 void test_variable_record_lengths() {
   static const size_t max_record_length = 1024;
-  std::string input = "string:test\n";
+  rstd::string input = "string:test\n";
 
   size_t i;
   for (i = 0; i < max_record_length; i += 17) {
@@ -230,7 +230,7 @@ void test_variable_record_lengths() {
 
 
 
-void test_order_by(const std::string &op_name, const char *expected_results) {
+void test_order_by(const rstd::string &op_name, const char *expected_results) {
   printf("  order_by op: %s\n", op_name.c_str());
 
   run_script(
@@ -241,7 +241,7 @@ void test_order_by(const std::string &op_name, const char *expected_results) {
     expected_results);
 }
 
-void test_order_by_asc(const std::string &op_name) {
+void test_order_by_asc(const rstd::string &op_name) {
   test_order_by(
     op_name, 
     "string:name\tuint:value1\tint:value2\n"
@@ -262,7 +262,7 @@ void test_order_by_asc(const std::string &op_name) {
     "wilma\t100\t-1\n"); 
 }
 
-void test_order_by_desc(const std::string &op_name) {
+void test_order_by_desc(const rstd::string &op_name) {
   test_order_by(
     op_name,
     "string:name\tuint:value1\tint:value2\n"
@@ -308,7 +308,7 @@ void test_order_by() {
   
   printf("  big order_by\n");
   
-  std::string test_data;
+  rstd::string test_data;
   make_very_large_test_data_record_string(test_data);
 
   run_script("rel.from_tsv() | rel.order_by.desc(mul1_int) | rel.order_by(mul1_int) | rel.to_tsv();",
@@ -325,12 +325,12 @@ void test_join() {
   //TODO: implement temp files to handle this kind of case.
   // Test joins where the file has no non-common fields.
   const char *join_file_name = "/tmp/this_is_a_very_boring_test_file_for_join.native";
-  run_script("rel.from_tsv() | io.file.overwrite(\"" + std::string(join_file_name) + "\");",
+  run_script("rel.from_tsv() | io.file.overwrite(\"" + rstd::string(join_file_name) + "\");",
               "string:name\nfred\nbarney\n",
               "");
 
   run_script(
-    "rel.from_tsv() | rel.join.natural(\"" + std::string(join_file_name) + "\") | rel.to_tsv();",
+    "rel.from_tsv() | rel.join.natural(\"" + rstd::string(join_file_name) + "\") | rel.to_tsv();",
 
     basic_flintstones_data(),
 
@@ -343,7 +343,7 @@ void test_join() {
 
 
   run_script(
-    "rel.from_tsv() | rel.join.left(\"" + std::string(join_file_name) + "\") | rel.to_tsv();",
+    "rel.from_tsv() | rel.join.left(\"" + rstd::string(join_file_name) + "\") | rel.to_tsv();",
 
     basic_flintstones_data(),
 
@@ -358,7 +358,7 @@ void test_join() {
 
 
   run_script(
-    "rel.from_tsv() | rel.join.anti(\"" + std::string(join_file_name) + "\") | rel.to_tsv();",
+    "rel.from_tsv() | rel.join.anti(\"" + rstd::string(join_file_name) + "\") | rel.to_tsv();",
 
     basic_flintstones_data(),
 
@@ -372,7 +372,7 @@ void test_join() {
   // is based on the current implementation, if the hash implementation changes then the
   // test will fail, but the output might still be legal.
   run_script(
-    "rel.from_tsv() | rel.join.consistent_hash(\"" + std::string(join_file_name) + "\") | rel.to_tsv();",
+    "rel.from_tsv() | rel.join.consistent_hash(\"" + rstd::string(join_file_name) + "\") | rel.to_tsv();",
 
     "int:value1\n0\n",
 
@@ -381,12 +381,12 @@ void test_join() {
 
 
   // Test joins where the file HAS non-common fields.
-  run_script("rel.from_tsv() | io.file.overwrite(\"" + std::string(join_file_name) + "\");",
+  run_script("rel.from_tsv() | io.file.overwrite(\"" + rstd::string(join_file_name) + "\");",
               "string:name\tint:value3\nfred\t10\nbarney\t20\n",
               "");
 
   run_script(
-    "rel.from_tsv() | rel.join.natural(\"" + std::string(join_file_name) + "\") | rel.to_tsv();",
+    "rel.from_tsv() | rel.join.natural(\"" + rstd::string(join_file_name) + "\") | rel.to_tsv();",
 
     basic_flintstones_data(),
 
@@ -399,7 +399,7 @@ void test_join() {
 
 
   run_script(
-    "rel.from_tsv() | rel.join.left(\"" + std::string(join_file_name) + "\") | rel.to_tsv();",
+    "rel.from_tsv() | rel.join.left(\"" + rstd::string(join_file_name) + "\") | rel.to_tsv();",
 
     basic_flintstones_data(),
 
@@ -414,7 +414,7 @@ void test_join() {
 
 
   run_script(
-    "rel.from_tsv() | rel.join.anti(\"" + std::string(join_file_name) + "\") | rel.to_tsv();",
+    "rel.from_tsv() | rel.join.anti(\"" + rstd::string(join_file_name) + "\") | rel.to_tsv();",
 
     basic_flintstones_data(),
 
@@ -622,7 +622,7 @@ void test_record_count() {
 
 
 void test_record_split() {
-  std::string prefix = "/tmp/np1_test_reliable_storage_local_root/test_record_split_";
+  rstd::string prefix = "/tmp/np1_test_reliable_storage_local_root/test_record_split_";
 
   run_script(
     "rel.from_tsv() | rel.record_split(1, '" + prefix + "');",
@@ -845,7 +845,7 @@ void test_utf16_to_utf8() {
   run_script(
     "text.utf16_to_utf8();",
 
-    std::string("\xff\xfe\x74\x00\x68\x00\x69\x00\x73\x00\x20\x00\x69\x00\x73\x00\x20\x00\x61\x00\x20\x00\x74\x00\x65\x00\x73\x00\x74\x00\x20\x00\x75\x00\x6e\x00\x69\x00\x63\x00\x6f\x00\x64\x00\x65\x00\x20\x00\x66\x00\x69\x00\x6c\x00\x65\x00\x2e\x00\x0d\x00\x0a\x00\x69\x00\x74\x00\x20\x00\x69\x00\x73\x00\x20\x00\x65\x00\x78\x00\x74\x00\x72\x00\x65\x00\x6d\x00\x65\x00\x6c\x00\x79\x00\x20\x00\x65\x00\x78\x00\x63\x00\x69\x00\x74\x00\x69\x00\x6e\x00\x67\x00\x2e\x00\x0d\x00\x0a\x00", 116),
+    rstd::string("\xff\xfe\x74\x00\x68\x00\x69\x00\x73\x00\x20\x00\x69\x00\x73\x00\x20\x00\x61\x00\x20\x00\x74\x00\x65\x00\x73\x00\x74\x00\x20\x00\x75\x00\x6e\x00\x69\x00\x63\x00\x6f\x00\x64\x00\x65\x00\x20\x00\x66\x00\x69\x00\x6c\x00\x65\x00\x2e\x00\x0d\x00\x0a\x00\x69\x00\x74\x00\x20\x00\x69\x00\x73\x00\x20\x00\x65\x00\x78\x00\x74\x00\x72\x00\x65\x00\x6d\x00\x65\x00\x6c\x00\x79\x00\x20\x00\x65\x00\x78\x00\x63\x00\x69\x00\x74\x00\x69\x00\x6e\x00\x67\x00\x2e\x00\x0d\x00\x0a\x00", 116),
 
     expected_result
   );
@@ -854,7 +854,7 @@ void test_utf16_to_utf8() {
   run_script(
     "text.utf16_to_utf8();",
 
-    std::string("\xfe\xff\x00\x74\x00\x68\x00\x69\x00\x73\x00\x20\x00\x69\x00\x73\x00\x20\x00\x61\x00\x20\x00\x74\x00\x65\x00\x73\x00\x74\x00\x20\x00\x75\x00\x6e\x00\x69\x00\x63\x00\x6f\x00\x64\x00\x65\x00\x20\x00\x66\x00\x69\x00\x6c\x00\x65\x00\x2e\x00\x0d\x00\x0a\x00\x69\x00\x74\x00\x20\x00\x69\x00\x73\x00\x20\x00\x65\x00\x78\x00\x74\x00\x72\x00\x65\x00\x6d\x00\x65\x00\x6c\x00\x79\x00\x20\x00\x65\x00\x78\x00\x63\x00\x69\x00\x74\x00\x69\x00\x6e\x00\x67\x00\x2e\x00\x0d\x00\x0a", 116),
+    rstd::string("\xfe\xff\x00\x74\x00\x68\x00\x69\x00\x73\x00\x20\x00\x69\x00\x73\x00\x20\x00\x61\x00\x20\x00\x74\x00\x65\x00\x73\x00\x74\x00\x20\x00\x75\x00\x6e\x00\x69\x00\x63\x00\x6f\x00\x64\x00\x65\x00\x20\x00\x66\x00\x69\x00\x6c\x00\x65\x00\x2e\x00\x0d\x00\x0a\x00\x69\x00\x74\x00\x20\x00\x69\x00\x73\x00\x20\x00\x65\x00\x78\x00\x74\x00\x72\x00\x65\x00\x6d\x00\x65\x00\x6c\x00\x79\x00\x20\x00\x65\x00\x78\x00\x63\x00\x69\x00\x74\x00\x69\x00\x6e\x00\x67\x00\x2e\x00\x0d\x00\x0a", 116),
 
     expected_result
   );
@@ -883,12 +883,12 @@ void test_strip_cr() {
 
 
 void test_remote() {
-  std::vector<std::string> hostnames;
+  rstd::vector<rstd::string> hostnames;
   hostnames.push_back("127.0.0.1");
   hostnames.push_back("localhost");
 
-  std::vector<std::string>::const_iterator i = hostnames.begin();
-  std::vector<std::string>::const_iterator iz = hostnames.end();
+  rstd::vector<rstd::string>::const_iterator i = hostnames.begin();
+  rstd::vector<rstd::string>::const_iterator iz = hostnames.end();
   for (; i != iz; ++i) {
     run_script(
       "rel.from_tsv() | meta.remote('" + *i + "', rel.select(name as character) | rel.where(character = 'fred')) | rel.to_tsv();",
@@ -915,10 +915,10 @@ void test_shell() {
 
 
 void test_parallel() {
-  std::string file_prefix = "/tmp/np1_test_reliable_storage_local_root/test_parallel_";
+  rstd::string file_prefix = "/tmp/np1_test_reliable_storage_local_root/test_parallel_";
 
   // Make the test data and write it out to a bunch of files.
-  std::string test_data;
+  rstd::string test_data;
   make_large_test_data_record_string(test_data);
 
   run_script("rel.from_tsv() | rel.record_split(100000, '" + file_prefix + "');", test_data, "");
@@ -944,15 +944,15 @@ void test_parallel() {
 
 
 void test_file_read() {
-  std::string file_prefix = "/tmp/np1_test_reliable_storage_local_root/test_file_read_";
+  rstd::string file_prefix = "/tmp/np1_test_reliable_storage_local_root/test_file_read_";
 
   // Make the test data and write it out to a bunch of files.
-  std::string test_data;
+  rstd::string test_data;
   make_large_test_data_record_string(test_data);
 
   run_script("rel.from_tsv() | rel.record_split(100000, '" + file_prefix + "');", test_data, "");
 
-  std::string file_name_argument_list =
+  rstd::string file_name_argument_list =
     "\"" + file_prefix + ::np1::str::to_hex_str_pad_16(0) + ".gz\", \""
     + file_prefix + ::np1::str::to_hex_str_pad_16(1) + ".gz\", \""
     + file_prefix + ::np1::str::to_hex_str_pad_16(2) + ".gz\", \""
@@ -979,13 +979,13 @@ void test_file_read() {
 
 
 void test_directory_list() {
-  std::string test_root = "/tmp/np1_test_reliable_storage_local_root/test_directory_list";
-  std::string subdir_name = "test_subdir";
-  std::string file1_name = "file1.txt";
-  std::string file2_name = "file2.txt";
-  std::string subdir_full_path = test_root + "/" + subdir_name;
-  std::string file1_full_path = test_root + "/" + file1_name;
-  std::string file2_full_path = subdir_full_path + "/" + file2_name;
+  rstd::string test_root = "/tmp/np1_test_reliable_storage_local_root/test_directory_list";
+  rstd::string subdir_name = "test_subdir";
+  rstd::string file1_name = "file1.txt";
+  rstd::string file2_name = "file2.txt";
+  rstd::string subdir_full_path = test_root + "/" + subdir_name;
+  rstd::string file1_full_path = test_root + "/" + file1_name;
+  rstd::string file2_full_path = subdir_full_path + "/" + file2_name;
   ::np1::io::file::mkdir(test_root.c_str());
   ::np1::io::file::mkdir(subdir_full_path.c_str());  
 

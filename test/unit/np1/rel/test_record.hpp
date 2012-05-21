@@ -14,7 +14,7 @@ typedef ::np1::io::static_buffer_output_stream<4096> buffer_output_stream_type;
 
 
 void test_initialize_from_string_vector_then_write_record_1() {
-  std::vector<std::string> fields;
+  rstd::vector<rstd::string> fields;
   fields.push_back("string:Path_ID");
   fields.push_back("string:Other_Data_Brand");
   fields.push_back("string:Other_Data_Event");
@@ -35,7 +35,7 @@ void test_initialize_from_string_vector_then_write_record_1() {
 
 void test_initialize_from_string_vector_then_write_record_2() {
   // This simulates a real-world problem.
-  std::vector<std::string> fields;
+  rstd::vector<rstd::string> fields;
   fields.push_back("string:User_ID");
   fields.push_back("string:Path_ID");
   fields.push_back("string:Other_Data_Brand");

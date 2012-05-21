@@ -46,8 +46,8 @@ public:
 
   // Read the whole file and return it as a vector of lines.
   //TODO: detect errors!
-  void read_all(std::vector<std::string> &lines) {
-    std::string line;
+  void read_all(rstd::vector<rstd::string> &lines) {
+    rstd::string line;
     lines.clear();
     int c;
     // Stop on NUL as well as on EOF & error.
@@ -122,8 +122,8 @@ public:
   /// Get the current line number.
   size_t line_number() const { return m_line_number; }
 
-  const std::string &name() const {
-    static std::string n("[text input]");
+  const rstd::string &name() const {
+    static rstd::string n("[text input]");
     return n;
   }
 

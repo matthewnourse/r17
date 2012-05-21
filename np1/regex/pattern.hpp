@@ -4,7 +4,7 @@
 #define NP1_NP1_REGEX_PATTERN_HPP
 
 
-#include "pcre.h"
+#include <pcre.h>
 #include "np1/io/ext_heap_buffer_output_stream.hpp"
 
 namespace np1 {
@@ -28,7 +28,7 @@ public:
     return compile(pattern_str, BASE_PCRE_COMPILE_OPTIONS);
   }
 
-  bool compile(const std::string &pattern_str) {
+  bool compile(const rstd::string &pattern_str) {
     return compile(pattern_str.c_str());
   }
 
@@ -41,7 +41,7 @@ public:
     return compile(pattern_str, BASE_PCRE_COMPILE_OPTIONS | PCRE_CASELESS);
   }
 
-  bool icompile(const std::string &pattern_str) {
+  bool icompile(const rstd::string &pattern_str) {
     return icompile(pattern_str.c_str());
   }
 
@@ -248,8 +248,8 @@ private:
 private:
   pcre *m_pcre;
   pcre_extra *m_extra;
-  std::vector<char> m_lower_buffer;
-  std::vector<int> m_ovector;
+  rstd::vector<char> m_lower_buffer;
+  rstd::vector<int> m_ovector;
   size_t m_capture_count;
 };
 

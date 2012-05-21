@@ -10,7 +10,7 @@
 #include "np1/skip_list.hpp"
 #include "np1/io/heap_buffer_output_stream.hpp"
 #include "np1/io/mandatory_mapped_record_input_file.hpp"
-#include <vector>
+#include "rstd/vector.hpp"
 
 
 
@@ -57,8 +57,8 @@ public:
     ~sort_state() {
       m_child_processes.wait_all();
       
-      std::list<FILE*>::iterator fp_i = m_child_output_fps.begin();
-      std::list<FILE*>::iterator fp_iz = m_child_output_fps.end();
+      rstd::list<FILE*>::iterator fp_i = m_child_output_fps.begin();
+      rstd::list<FILE*>::iterator fp_iz = m_child_output_fps.end();
       for (; fp_i != fp_iz; ++fp_i) {
         fclose(*fp_i);
       }            
@@ -77,8 +77,8 @@ public:
     uint64_t m_chunk_starting_row_number;
     Sorter m_sorter;
     process_pool_type m_child_processes;
-    std::list<FILE*> m_child_output_fps;
-    std::list<uint64_t> m_chunk_starting_row_numbers;
+    rstd::list<FILE*> m_child_output_fps;
+    rstd::list<uint64_t> m_chunk_starting_row_numbers;
   };
 
 public:
@@ -166,9 +166,9 @@ private:
     Mandatory_Output_Stream &m_output;
   };
   
-  void rewind_fps(std::list<FILE*> &fps) {
-    std::list<FILE*>::iterator fp_i = fps.begin();
-    std::list<FILE*>::iterator fp_iz = fps.end();
+  void rewind_fps(rstd::list<FILE*> &fps) {
+    rstd::list<FILE*>::iterator fp_i = fps.begin();
+    rstd::list<FILE*>::iterator fp_iz = fps.end();
     for (; fp_i != fp_iz; ++fp_i) {
       rewind(*fp_i);
     }    
@@ -196,7 +196,7 @@ private:
                       fixed_homogenous_heap> skip_list_type;
 
     
-    mapped_file_manager(std::list<FILE*> &fps, const std::list<uint64_t> &chunk_starting_row_numbers,
+    mapped_file_manager(rstd::list<FILE*> &fps, const rstd::list<uint64_t> &chunk_starting_row_numbers,
                         Less_Than *less_than_p)
       : m_heap(fps.size(), sizeof(typename skip_list_type::node)),
         m_current_records(m_heap) {
@@ -211,15 +211,15 @@ private:
       NP1_ASSERT(fps.size() == chunk_starting_row_numbers.size(),
                  "INTERNAL ERROR: starting row numbers unknown for some chunks");
       
-      std::list<FILE*>::iterator fp_i = fps.begin();
-      std::list<FILE*>::iterator fp_iz = fps.end();
-      std::list<uint64_t>::const_iterator starting_row_number_i = chunk_starting_row_numbers.begin();      
+      rstd::list<FILE*>::iterator fp_i = fps.begin();
+      rstd::list<FILE*>::iterator fp_iz = fps.end();
+      rstd::list<uint64_t>::const_iterator starting_row_number_i = chunk_starting_row_numbers.begin();      
       
       for (; fp_i != fp_iz; ++fp_i, ++starting_row_number_i) {
-        io::file_mapping *mapping = std::detail::mem::alloc_construct<io::file_mapping>(fileno(*fp_i));
+        io::file_mapping *mapping = rstd::detail::mem::alloc_construct<io::file_mapping>(fileno(*fp_i));
         m_mappings.push_back(mapping);
         mapped_file_type *mapped_file =
-          std::detail::mem::alloc_construct<mapped_file_type>(*mapping, *starting_row_number_i);
+          rstd::detail::mem::alloc_construct<mapped_file_type>(*mapping, *starting_row_number_i);
           
         m_mapped_files.push_back(mapped_file);
         mandatory_current_records_insert(
@@ -228,16 +228,16 @@ private:
     }
     
     ~mapped_file_manager() {
-      std::list<mapped_file_type *>::iterator mapped_file_i = m_mapped_files.begin();
-      std::list<mapped_file_type *>::iterator mapped_file_iz = m_mapped_files.end();
+      rstd::list<mapped_file_type *>::iterator mapped_file_i = m_mapped_files.begin();
+      rstd::list<mapped_file_type *>::iterator mapped_file_iz = m_mapped_files.end();
       for (; mapped_file_i != mapped_file_iz; ++mapped_file_i) {
-        std::detail::mem::destruct_and_free(*mapped_file_i);        
+        rstd::detail::mem::destruct_and_free(*mapped_file_i);        
       }
       
-      std::list<io::file_mapping *>::iterator mapping_i = m_mappings.begin();
-      std::list<io::file_mapping *>::iterator mapping_iz = m_mappings.end();
+      rstd::list<io::file_mapping *>::iterator mapping_i = m_mappings.begin();
+      rstd::list<io::file_mapping *>::iterator mapping_iz = m_mappings.end();
       for (; mapping_i != mapping_iz; ++mapping_i) {
-        std::detail::mem::destruct_and_free(*mapping_i);
+        rstd::detail::mem::destruct_and_free(*mapping_i);
       }
     }
     
@@ -280,8 +280,8 @@ private:
     
     
     
-    std::list<mapped_file_type *> m_mapped_files;
-    std::list<io::file_mapping *> m_mappings;
+    rstd::list<mapped_file_type *> m_mapped_files;
+    rstd::list<io::file_mapping *> m_mappings;
     fixed_homogenous_heap m_heap;
     skip_list_type m_current_records;
   };

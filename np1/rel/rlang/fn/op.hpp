@@ -5,8 +5,6 @@
 
 
 #include "np1/rel/rlang/fn/fn.hpp"
-#include "lib/liberal/int64/int64.hpp"
-
 
 namespace np1 {
 namespace rel {
@@ -166,10 +164,6 @@ struct string_plus : public left_assoc {
 inline static dt::integer call(dt::integer one, dt::integer two) { return one real_op__ two; } \
 inline static  dt::uinteger call(dt::uinteger one, dt::uinteger two) { return one real_op__ two; } 
 
-#define NP1_REL_RLANG_FN_OP_BINARY_ARITHMETIC_FUNCTION_METHODS(real_fn__) \
-inline static dt::integer call(dt::integer one, dt::integer two) { return real_fn__(one, two); } \
-inline static  dt::uinteger call(dt::uinteger one, dt::uinteger two) { return real_fn__(one, two); }
-
 
 
 /// Addition.
@@ -224,7 +218,7 @@ struct divide : public left_assoc {
   static const char *synonym() { return 0; }
   static const char *description() { return "Division."; }  
   static const size_t precedence = 5;
-  NP1_REL_RLANG_FN_OP_BINARY_ARITHMETIC_FUNCTION_METHODS(lib::int64::divide)
+  NP1_REL_RLANG_FN_OP_BINARY_ARITHMETIC_METHODS(/)
   inline static  dt::fdouble call(dt::fdouble one, dt::fdouble two) { return one / two; } 
 };
 
@@ -235,7 +229,7 @@ struct modulus : public left_assoc {
   static const char *synonym() { return "mod"; }
   static const char *description() { return "Modulus."; }  
   static const size_t precedence = 5;
-  NP1_REL_RLANG_FN_OP_BINARY_ARITHMETIC_FUNCTION_METHODS(lib::int64::modulus)
+  NP1_REL_RLANG_FN_OP_BINARY_ARITHMETIC_METHODS(%)
 };
 
 

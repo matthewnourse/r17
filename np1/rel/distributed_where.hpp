@@ -17,11 +17,11 @@ namespace rel {
 class distributed_where {
 public:
   template <typename Input_Stream, typename Output_Stream>
-  void operator()(const std::string &reliable_storage_local_root,
-                  const std::string &reliable_storage_remote_root,
-                  const std::string &listen_endpoint,                  
+  void operator()(const rstd::string &reliable_storage_local_root,
+                  const rstd::string &reliable_storage_remote_root,
+                  const rstd::string &listen_endpoint,                  
                   Input_Stream &input, Output_Stream &output,
-                  const std::vector<rel::rlang::token> &tokens) {
+                  const rstd::vector<rel::rlang::token> &tokens) {
     log_info("Reading headers and compiling expression against headers.");
 
     /* Get the headers. */

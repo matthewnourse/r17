@@ -5,7 +5,7 @@
 
 
 #include "np1/rel/detail/compare_spec.hpp"
-#include <vector>
+#include "rstd/vector.hpp"
 
 namespace np1 {
 namespace rel {
@@ -29,7 +29,7 @@ public:
   
   template <typename Record>
   compare_specs(const Record &headings, 
-          const std::vector<std::string> &selected_heading_names) {
+          const rstd::vector<rstd::string> &selected_heading_names) {
     size_t i;
     for (i = 0; i < selected_heading_names.size(); ++i) {
       m_specs.push_back(
@@ -39,7 +39,7 @@ public:
   
   template <typename Record>
   explicit compare_specs(const Record &headings) {
-    std::vector<std::string> heading_names = headings.fields();
+    rstd::vector<rstd::string> heading_names = headings.fields();
     
     size_t i;
     for (i = 0; i < heading_names.size(); ++i) {
@@ -74,7 +74,7 @@ public:
   }
   
 private:
-  std::vector<compare_spec> m_specs;
+  rstd::vector<compare_spec> m_specs;
 };
 
   
