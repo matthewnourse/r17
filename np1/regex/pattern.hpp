@@ -134,8 +134,8 @@ public:
 
   template <typename Heap>
   bool replace(Heap &h, const str::ref &haystack, const str::ref &replacement_spec, str::ref &result_str) {
-    char *result_c_str;
-    size_t result_c_str_length;
+    char *result_c_str = 0;
+    size_t result_c_str_length = 0;
     bool result = replace(h, haystack.ptr(), haystack.length(), replacement_spec.ptr(), replacement_spec.length(),
                           &result_c_str, &result_c_str_length);
     if (result) {

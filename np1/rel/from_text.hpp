@@ -86,8 +86,8 @@ private:
         m_on_non_matching_action(on_non_matching_action) {}
 
     bool operator()(const str::ref &line, uint64_t line_number) {
-      char *result_str;
-      size_t result_length;
+      char *result_str = 0;
+      size_t result_length = 0;
       if (!m_compiled_pattern.replace(m_heap, line.ptr(), line.length(), m_replacement_string.c_str(),
                                         m_replacement_string_length, &result_str, &result_length)) {
         NP1_ASSERT(IGNORE_NON_MATCHING == m_on_non_matching_action,
