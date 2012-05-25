@@ -14,8 +14,7 @@ http://www.rseventeen.com/
 ## How to compile r17 ##
 
 ### Compilation and installation for those in a hurry ###
-./configure
-make
+./configure && make
 
 The output is one executable file: r17.  Move it to somewhere in your path and enjoy.
 
@@ -33,11 +32,11 @@ zlib:
 
 libcurl:
 * Download the the curl source, untar and cd into the resulting directory.
-* ./configure --disable-shared --enable-static --disable-ares --disable-ldap \
-  --disable-crypto-auth --disable-tls-srp --without-ssl \
-  --with-zlib=`[zlib source dir]` \
-  --without-gnutls --without-polarssl --without-nss --without-axtls \
-  --without-ca-bundle --without-ca-path --without-libssh2 --without-librtmp \
+* ./configure --disable-shared --enable-static --disable-ares --disable-ldap
+  --disable-crypto-auth --disable-tls-srp --without-ssl
+  --with-zlib=`[zlib source dir]`
+  --without-gnutls --without-polarssl --without-nss --without-axtls
+  --without-ca-bundle --without-ca-path --without-libssh2 --without-librtmp
   --without-libidn
 * make
 
@@ -48,9 +47,10 @@ PCRE:
 
 Then:
 * cd back into the r17 directory.
-* ./configure --with-zlib=`[zlib source dir]` \
-  --with-libcurl=`[libcurl source dir] \
-  --with-libpcre=`[libpcre source dir]
+* ./configure --with-zlib=`[zlib source dir]`
+  --with-libcurl=`[libcurl source dir]`
+  --with-libpcre=`[libpcre source dir]`
 * make
 
+As for the default configuration, the only output is the r17 executable.
 
