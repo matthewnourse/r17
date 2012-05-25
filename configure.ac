@@ -51,7 +51,7 @@ AC_ARG_WITH(
   libpcre,
   [  --with-libpcre=PATH   prefix for libpcre source dir. Use only if you want to statically link with libpcre],
   [ libpcre_lib="$with_libpcre/.libs/libpcre.a"
-    libpcre_inc="-I$with_libpcre/include"
+    libpcre_inc="-I$with_libpcre"
     AC_MSG_NOTICE([Using libpcre in $with_libpcre])],
   [AC_CHECK_LIB([pcre], [pcre_study], [], [AC_MSG_FAILURE([libpcre not found])])]
 )

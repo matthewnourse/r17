@@ -3913,7 +3913,7 @@ libpcre_inc=
 # Check whether --with-libpcre was given.
 if test "${with_libpcre+set}" = set; then :
   withval=$with_libpcre;  libpcre_lib="$with_libpcre/.libs/libpcre.a"
-    libpcre_inc="-I$with_libpcre/include"
+    libpcre_inc="-I$with_libpcre"
     { $as_echo "$as_me:${as_lineno-$LINENO}: Using libpcre in $with_libpcre" >&5
 $as_echo "$as_me: Using libpcre in $with_libpcre" >&6;}
 else
