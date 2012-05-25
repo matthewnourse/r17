@@ -35,7 +35,11 @@ libcurl_inc=
 AC_ARG_WITH(
   libcurl,
   [  --with-libcurl=PATH   prefix for libcurl source dir. Use only if you want to statically link with libcurl],
-  [ libcurl_lib="$with_libcurl/lib/.libs/libcurl.a -lrt"
+  [ libcurl_lib="$with_libcurl/lib/.libs/libcurl.a"
+    uname_os=`uname`
+    if test "$uname_os" = "Linux"; then
+      libcurl_lib="$libcurl_lib -lrt"
+    fi
     libcurl_inc="-I$with_libcurl/include"
     AC_MSG_NOTICE([Using libcurl in $with_libcurl])],
   [AC_CHECK_LIB([curl], [curl_easy_init], [], [AC_MSG_FAILURE([libcurl not found])])]

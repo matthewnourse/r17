@@ -3844,7 +3844,11 @@ libcurl_inc=
 
 # Check whether --with-libcurl was given.
 if test "${with_libcurl+set}" = set; then :
-  withval=$with_libcurl;  libcurl_lib="$with_libcurl/lib/.libs/libcurl.a -lrt"
+  withval=$with_libcurl;  libcurl_lib="$with_libcurl/lib/.libs/libcurl.a"
+    uname_os=`uname`
+    if test "$uname_os" = "Linux"; then
+      libcurl_lib="$libcurl_lib -lrt"
+    fi
     libcurl_inc="-I$with_libcurl/include"
     { $as_echo "$as_me:${as_lineno-$LINENO}: Using libcurl in $with_libcurl" >&5
 $as_echo "$as_me: Using libcurl in $with_libcurl" >&6;}
