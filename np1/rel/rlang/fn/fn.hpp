@@ -688,7 +688,7 @@ struct time_parse : public base {
     NP1_ASSERT(result, "strptime failed on time string: '" + time_s.to_string()
                         + "'  format string: '" + format_s.to_string() + "'");
 
-    return time::sec_to_usec(mktime(&tm_buf));
+    return time::sec_to_usec((int64_t)mktime(&tm_buf));
   }
 };
 
