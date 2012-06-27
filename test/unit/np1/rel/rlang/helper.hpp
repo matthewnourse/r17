@@ -56,7 +56,7 @@ void run_and_check_return_type(vm_type &vm, const record_type &this_r,
   vm_stack_type &stack = vm.run_heap_reset(heap, this_r.ref(), other_r.ref());
   int64_t actual_value;
   stack.pop(actual_value);
-  //printf("Expected: %lld  Actual: %lld\n", expected_value, actual_value);
+//  printf("Expected: %lld  Actual: %lld\n", (long long)expected_value, (long long)actual_value);
   NP1_TEST_ASSERT(expected_value == actual_value);
 }
 

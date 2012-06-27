@@ -731,8 +731,22 @@ void test_time_extract_second() {
 }
 
 void test_time_parse() {
-  execute_arithmetic_test("time.parse(interesting, '%d/%m/%Y %H:%M')", "string:interesting", "16/10/2010 10:21",  (int64_t)1287184860000000LL);
-  execute_arithmetic_test("time.parse(interesting, '%d/%m/%Y %H:%M')", "istring:interesting", "16/10/2010 10:21", (int64_t)1287184860000000LL);
+  struct tm tm_buf;
+  memset(&tm_buf, 0, sizeof(tm_buf));
+
+  tm_buf.tm_min = 21;
+  tm_buf.tm_hour = 10;
+  tm_buf.tm_mday = 16;
+  tm_buf.tm_mon = 9;
+  tm_buf.tm_year = 110;
+  tm_buf.tm_isdst = -1;
+  const int64_t expected_time = ::np1::time::sec_to_usec(mktime(&tm_buf));
+  
+
+  execute_arithmetic_test("time.parse(interesting, '%d/%m/%Y %H:%M')", "string:interesting", "16/10/2010 10:21 +1000",
+                          expected_time);
+  execute_arithmetic_test("time.parse(interesting, '%d/%m/%Y %H:%M')", "istring:interesting", "16/10/2010 10:21 +1000",
+                          expected_time);
 }
 
 void test_time_format() {

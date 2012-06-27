@@ -445,7 +445,7 @@ private:
 
   // HTTP GET, keep retrying to allow it time to get to the server.
   bool http_get_with_retry(const id &i, uint32_t timeout_seconds) {
-    uint64_t give_up_time = time::now_epoch_usec() + time::sec_to_usec(timeout_seconds);
+    uint64_t give_up_time = time::now_epoch_usec() + time::sec_to_usec((uint64_t)timeout_seconds);
     bool result;
     
     while (!(result = http_get(i)) && (time::now_epoch_usec() < give_up_time)) {

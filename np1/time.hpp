@@ -44,6 +44,7 @@ uint64_t usec_to_sec(uint64_t usec) { return usec/1000000; }
 
 uint64_t msec_to_usec(uint64_t msec) { return msec * 1000; }
 uint64_t sec_to_usec(uint64_t usec) { return usec * 1000000; }
+int64_t sec_to_usec(int64_t usec) { return usec * 1000000; }
 
 // Helpers data part extractions.
 #ifdef _WIN32

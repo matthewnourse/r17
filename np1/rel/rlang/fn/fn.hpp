@@ -651,7 +651,10 @@ struct time_parse : public base {
   static const char *name() { return "time.parse"; }
   static const char *description() { return "`time.parse(time_string, format_string)` parses `time_string` according "
                                             "to `format` where `format` is the format string supported by the system's "
-                                            "strptime C function.  The time is returned as number of microseconds "
+                                            "strptime C function.  Note that the time is interpreted as if it is in the "
+                                            "local time zone.  On some systems the underlying C library functions ignore "
+                                            "time zone specifications completely and in others the time zone behaviour is "
+                                            "counter-intuitive.  The time is returned as number of microseconds "
                                             "since 1/1/1970 00:00:00 GMT."; }  
   inline static dt::uinteger call(const dt::string &time_s, const dt::string &format_s) { return parse(time_s, format_s); }
   inline static dt::uinteger call(const dt::istring &time_s, const dt::string &format_s) { return parse(time_s, format_s); }
@@ -675,8 +678,7 @@ struct time_parse : public base {
     // in release mode.
     memset(&tm_buf, 0, sizeof(tm_buf));
 
-    // We need to set the daylight savings time to "I don't know" otherwise mktime will think that it _is_ in effect
-    // if the string doesn't specify what the timezone is.
+    // We need to set the daylight savings time to "I don't know" otherwise mktime will think that it _is_ in effect.
     tm_buf.tm_isdst = -1;
 
     char *result = strptime(time_ptr, format_ptr, &tm_buf);
@@ -738,8 +740,8 @@ struct io_net_url_get : public base {
   }
 
   inline static dt::string call(vm_heap &heap, const dt::string &url) {
-    char *result_str;
-    size_t result_str_length;
+    char *result_str = 0;
+    size_t result_str_length = 0;
     ::np1::io::net::curl curl;
     if (!curl.get_utf8_safe(heap, url.to_string(), '?', &result_str, &result_str_length)) {
       return dt::string();
