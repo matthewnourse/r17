@@ -647,6 +647,9 @@ ac_subst_files=''
 ac_user_opts='
 enable_option_checking
 enable_dependency_tracking
+with_zlib
+with_libcurl
+with_libpcre
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1277,6 +1280,13 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --disable-dependency-tracking  speeds up one-time build
   --enable-dependency-tracking   do not reject slow dependency extractors
+
+Optional Packages:
+  --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
+  --without-PACKAGE       do not use PACKAGE (same as --with-PACKAGE=no)
+  --with-zlib=PATH   prefix for zlib source dir. Use only if you want to statically link with zlib
+  --with-libcurl=PATH   prefix for libcurl source dir. Use only if you want to statically link with libcurl
+  --with-libpcre=PATH   prefix for libpcre source dir. Use only if you want to statically link with libpcre
 
 Some influential environment variables:
   CXX         C++ compiler command
@@ -3050,7 +3060,10 @@ fi
 
 
 
-: ${LIBS="-lz $LIBS"}
+# Can either statically link with libz and specify the zlib source dir, or dynamically link using the systemwide libz.
+zlib_lib="-lz"
+zlib_inc=
+
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -3719,7 +3732,15 @@ fi
 
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for gzbuffer in -lz" >&5
+
+# Check whether --with-zlib was given.
+if test "${with_zlib+set}" = set; then :
+  withval=$with_zlib;  zlib_lib="$with_zlib/libz.a"
+    zlib_inc="-I$with_zlib"
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Using zlib in $with_zlib" >&5
+$as_echo "$as_me: Using zlib in $with_zlib" >&6;}
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gzbuffer in -lz" >&5
 $as_echo_n "checking for gzbuffer in -lz... " >&6; }
 if test "${ac_cv_lib_z_gzbuffer+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -3810,7 +3831,29 @@ fi
 fi
 
 
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_init in -lcurl" >&5
+fi
+
+
+
+
+# Can either statically link with libcurl and specify the source dir, or dynamically link using the systemwide
+# libcurl.
+libcurl_lib="-lcurl"
+libcurl_inc=
+
+
+# Check whether --with-libcurl was given.
+if test "${with_libcurl+set}" = set; then :
+  withval=$with_libcurl;  libcurl_lib="$with_libcurl/lib/.libs/libcurl.a"
+    uname_os=`uname`
+    if test "$uname_os" = "Linux"; then
+      libcurl_lib="$libcurl_lib -lrt"
+    fi
+    libcurl_inc="-I$with_libcurl/include"
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Using libcurl in $with_libcurl" >&5
+$as_echo "$as_me: Using libcurl in $with_libcurl" >&6;}
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for curl_easy_init in -lcurl" >&5
 $as_echo_n "checking for curl_easy_init in -lcurl... " >&6; }
 if test "${ac_cv_lib_curl_curl_easy_init+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -3847,7 +3890,12 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_curl_curl_easy_init" >&5
 $as_echo "$ac_cv_lib_curl_curl_easy_init" >&6; }
 if test "x$ac_cv_lib_curl_curl_easy_init" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBCURL 1
+_ACEOF
+
   LIBS="-lcurl $LIBS"
+
 else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -3856,8 +3904,24 @@ See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
 
-: ${LIBS="-lpcre $LIBS"}
-{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcre_study in -lpcre" >&5
+fi
+
+
+
+# Can either statically link with libpcre and specify the source dir, or dynamically link using the systemwide
+# libpcre.
+libpcre_lib="-lpcre"
+libpcre_inc=
+
+
+# Check whether --with-libpcre was given.
+if test "${with_libpcre+set}" = set; then :
+  withval=$with_libpcre;  libpcre_lib="$with_libpcre/.libs/libpcre.a"
+    libpcre_inc="-I$with_libpcre"
+    { $as_echo "$as_me:${as_lineno-$LINENO}: Using libpcre in $with_libpcre" >&5
+$as_echo "$as_me: Using libpcre in $with_libpcre" >&6;}
+else
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for pcre_study in -lpcre" >&5
 $as_echo_n "checking for pcre_study in -lpcre... " >&6; }
 if test "${ac_cv_lib_pcre_pcre_study+set}" = set; then :
   $as_echo_n "(cached) " >&6
@@ -3894,7 +3958,12 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_pcre_pcre_study" >&5
 $as_echo "$ac_cv_lib_pcre_pcre_study" >&6; }
 if test "x$ac_cv_lib_pcre_pcre_study" = x""yes; then :
+  cat >>confdefs.h <<_ACEOF
+#define HAVE_LIBPCRE 1
+_ACEOF
+
   LIBS="-lpcre $LIBS"
+
 else
   { { $as_echo "$as_me:${as_lineno-$LINENO}: error: in \`$ac_pwd':" >&5
 $as_echo "$as_me: error: in \`$ac_pwd':" >&2;}
@@ -3902,6 +3971,12 @@ as_fn_error $? "libpcre not found
 See \`config.log' for more details" "$LINENO" 5 ; }
 fi
 
+
+fi
+
+
+LIBS="$zlib_lib $libcurl_lib $libpcre_lib $LIBS"
+CXXFLAGS="$zlib_inc $libcurl_inc $libpcre_inc $CXXFLAGS"
 
 ac_config_files="$ac_config_files Makefile"
 
