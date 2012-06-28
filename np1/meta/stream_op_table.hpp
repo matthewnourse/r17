@@ -27,6 +27,7 @@ const char *stream_op_table_description(size_t n);
 typedef enum {
   STREAM_OP_TABLE_IO_TYPE_R17_NATIVE,
   STREAM_OP_TABLE_IO_TYPE_TSV,
+  STREAM_OP_TABLE_IO_TYPE_CSV,
   STREAM_OP_TABLE_IO_TYPE_USV,
   STREAM_OP_TABLE_IO_TYPE_TEXT_UTF8,
   STREAM_OP_TABLE_IO_TYPE_TEXT_UTF16,
@@ -44,6 +45,9 @@ static const char *stream_op_table_io_type_to_text(stream_op_table_io_type_type 
 
   case STREAM_OP_TABLE_IO_TYPE_TSV:
     return "TAB-separated value format with typed headings";
+
+  case STREAM_OP_TABLE_IO_TYPE_CSV:
+    return "Comma-separated value format with typed headings";
 
   case STREAM_OP_TABLE_IO_TYPE_USV:
     return "Unit-separated value format with typed headings";
@@ -104,6 +108,7 @@ void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &o
 #include "np1/rel/distributed_group.hpp"
 #include "np1/rel/assert.hpp"
 #include "np1/rel/tsv_translate.hpp"
+#include "np1/rel/csv_translate.hpp"
 #include "np1/rel/usv_translate.hpp"
 #include "np1/rel/from_text.hpp"
 #include "np1/rel/generate_sequence.hpp"
@@ -668,6 +673,51 @@ struct rel_to_tsv_wrap : public stream_op_wrap_base {
   }
 } rel_to_tsv_instance;
 
+
+struct rel_from_csv_wrap : public stream_op_wrap_base {
+  virtual const char *name() const { return "rel.from_csv"; }
+  virtual const char *description() const {
+    return "`rel.from_csv()` translates the input stream from Comma-separated-value format to native record format.  "
+            "The input stream must have headings. If a heading has no type tag then a type of 'string' is assumed.  "
+            "Non-alphanumeric characters are replaced with an _ character.  "
+            "`rel.from_csv(\"heading_name_1\", \"heading_name_2\")` will ignore any heading names in the input stream and use the supplied heading names instead.  This allows parsing of input streams that have no heading names.  ";
+  }
+
+  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_CSV; }
+  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
+
+
+  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+                    io::unbuffered_stream_base &output,
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
+    buffered_output_type buffered_output(output);
+    mandatory_buffered_output_type mandatory_output(buffered_output);
+    
+    rel::csv_translate translator;
+    translator.from_csv(input, mandatory_output, tokens);
+  }
+} rel_from_csv_instance;
+
+
+struct rel_to_csv_wrap : public stream_op_wrap_base {
+  virtual const char *name() const { return "rel.to_csv"; }
+  virtual const char *description() const {
+    return "`rel.to_csv()` translates the input stream from native record format to Comma-separated-value format.";
+  }
+
+  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
+  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_CSV; }
+
+  virtual void call(bool is_recordset_stream,
+                    mandatory_delimited_input_type &mandatory_delimited_input,
+                    mandatory_buffered_output_type &mandatory_output,
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
+    rel::csv_translate translator;
+    translator.to_csv(mandatory_delimited_input, mandatory_output, tokens);
+  }
+} rel_to_csv_instance;
 
 
 struct rel_from_usv_wrap : public stream_op_wrap_base {
@@ -1505,6 +1555,8 @@ private:
       &rel_assert_nonempty_instance,
       &rel_from_tsv_instance,
       &rel_to_tsv_instance,
+      &rel_from_csv_instance,
+      &rel_to_csv_instance,
       &rel_from_usv_instance,
       &rel_to_usv_instance,
       &rel_from_text_instance,
