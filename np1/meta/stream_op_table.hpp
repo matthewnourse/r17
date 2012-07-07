@@ -632,7 +632,7 @@ struct rel_from_tsv_wrap : public stream_op_wrap_base {
   virtual const char *name() const { return "rel.from_tsv"; }
   virtual const char *description() const {
     return "`rel.from_tsv()` translates the input stream from TAB-separated-value format to native record format.  "
-            "The input stream must have headings.  In 1.2.2+, if a heading has no type tag then a type of 'string' is assumed.  "
+            "In 1.4.3 and earlier, the input stream must have headings.  In 1.2.2+, if a heading has no type tag then a type of 'string' is assumed.  "
             "In 1.4.3+, non-alphanumeric characters are replaced with an _ character.  "
             "In 1.4.4+, `rel.from_tsv(\"heading_name_1\", \"heading_name_2\")` will ignore any heading names in the input stream and use the supplied heading names instead.  This allows parsing of input streams that have no heading names.  ";
   }
@@ -676,11 +676,14 @@ struct rel_to_tsv_wrap : public stream_op_wrap_base {
 
 struct rel_from_csv_wrap : public stream_op_wrap_base {
   virtual const char *name() const { return "rel.from_csv"; }
+  virtual const char *since() const { return "1.6.0"; }
   virtual const char *description() const {
-    return "`rel.from_csv()` translates the input stream from Comma-separated-value format to native record format.  "
-            "The input stream must have headings. If a heading has no type tag then a type of 'string' is assumed.  "
+    return "`rel.from_csv()` translates the input stream from comma-separated-value format to native record format.  "
+            "If no arguments are supplied then the input stream must have headings.  "
+            "If a heading has no type tag then a type of 'string' is assumed.  "
             "Non-alphanumeric characters are replaced with an _ character.  "
-            "`rel.from_csv(\"heading_name_1\", \"heading_name_2\")` will ignore any heading names in the input stream and use the supplied heading names instead.  This allows parsing of input streams that have no heading names.  ";
+            "`rel.from_csv(\"heading_name_1\", \"heading_name_2\")` will ignore any heading names in the input stream and use the supplied heading names instead.  "
+            "This allows parsing of input streams that have no heading names.";
   }
 
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_CSV; }
@@ -703,7 +706,7 @@ struct rel_from_csv_wrap : public stream_op_wrap_base {
 struct rel_to_csv_wrap : public stream_op_wrap_base {
   virtual const char *name() const { return "rel.to_csv"; }
   virtual const char *description() const {
-    return "`rel.to_csv()` translates the input stream from native record format to Comma-separated-value format.";
+    return "`rel.to_csv()` translates the input stream from native record format to comma-separated-value format.";
   }
 
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }

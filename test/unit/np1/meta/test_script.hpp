@@ -46,7 +46,7 @@ void run_script(const rstd::string &script, const rstd::string &test_data, const
   size_t bytes_read = 0;
   output.read(&actual_output[0], actual_output.size(), &bytes_read);
   actual_output[bytes_read] = '\0';
-//  printf("EXPECTED\n%s\n\nACTUAL\n%s\n", expected_output.c_str(), &actual_output[0]);
+//  fprintf(stderr, "EXPECTED\n'%s'\n\nACTUAL\n'%s'\n", expected_output.c_str(), &actual_output[0]);
   NP1_TEST_ASSERT(bytes_read == expected_output_length);
   NP1_TEST_ASSERT(memcmp(&actual_output[0], expected_output.c_str(), expected_output_length) == 0);
 }
@@ -722,6 +722,66 @@ void test_from_tsv() {
 }
 
 
+void test_from_csv() {
+  // Test header name safe-ifying.
+  run_script(
+    "rel.from_csv() | rel.to_csv();",
+
+    "name,istring:value,un&s Afe,int:un safe,notatype:u n s a f e\n"
+    "fred,mary,jane,1,alphonse\n",
+
+    "string:name,istring:value,string:un_s_Afe,int:un_safe,string:notatype_u_n_s_a_f_e\n"
+    "fred,mary,jane,1,alphonse\n"
+  );
+    
+  // Test auto-type-tag.
+  run_script(
+    "rel.from_csv('istring:name', 'value') | rel.to_csv();",
+    
+    "fred,ten\n"
+    "mary,eleven\n",
+    
+    "istring:name,string:value\n"
+    "fred,ten\n"
+    "mary,eleven\n"
+  );
+    
+  // Test that quote character handling is consistent across parsing and generating.
+  // This test supplied by Gyuchang, the author of CSV parsing code.
+  run_script(
+    "rel.from_csv() | rel.to_csv();",
+
+    "int:year,string:make,string:model,string:description,double:price\n"
+    "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
+    "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",\"\",4900.00\n"
+    "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",\"\",5000.00\n"
+    "1996,Jeep,Grand Cherokee,\"MUST SELL!\\nair, moon roof, loaded\",4799.00\n",
+
+    "int:year,string:make,string:model,string:description,double:price\n"
+    "1997,Ford,E350,\"ac, abs, moon\",3000.00\n"
+    "1999,Chevy,\"Venture \"\"Extended Edition\"\"\",,4900.00\n"
+    "1999,Chevy,\"Venture \"\"Extended Edition, Very Large\"\"\",,5000.00\n"
+    "1996,Jeep,Grand Cherokee,\"MUST SELL!\\nair, moon roof, loaded\",4799.00\n"
+  );
+  
+  // Test varied quote placement and special characters.
+  run_script(
+    "rel.from_csv() | rel.to_csv();",
+    
+    "string:value1,string:value2\n"
+    "\"fred\", $+*\n"
+    "jane,\",,,,\"\n"
+    "\"fred\",\"jane\"\n",
+    
+    "string:value1,string:value2\n"
+    "fred, $+*\n"
+    "jane,\",,,,\"\n"
+    "fred,jane\n"    
+  );
+}
+
+
+
 void test_from_usv_and_to_usv() {
   run_script(
     "rel.from_tsv() | rel.to_usv() | rel.from_usv() | rel.to_tsv();",
@@ -1143,6 +1203,7 @@ void test_script() {
   NP1_TEST_RUN_TEST(test_record_split);
   NP1_TEST_RUN_TEST(test_str_split);
   NP1_TEST_RUN_TEST(test_from_tsv);
+  NP1_TEST_RUN_TEST(test_from_csv); 
   NP1_TEST_RUN_TEST(test_from_usv_and_to_usv);
   NP1_TEST_RUN_TEST(test_from_text);
   NP1_TEST_RUN_TEST(test_from_text_ignore_non_matching);
@@ -1164,8 +1225,7 @@ void test_script() {
   NP1_TEST_RUN_TEST(test_distributed_group_min);
   NP1_TEST_RUN_TEST(test_distributed_group_max);
   NP1_TEST_RUN_TEST(test_distributed_group_avg);
-  NP1_TEST_RUN_TEST(test_distributed_group_sum);
-
+  NP1_TEST_RUN_TEST(test_distributed_group_sum);                                    
 
   //TODO: add some more tests with some large data.
 
