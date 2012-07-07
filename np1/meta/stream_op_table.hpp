@@ -683,7 +683,10 @@ struct rel_from_csv_wrap : public stream_op_wrap_base {
             "If a heading has no type tag then a type of 'string' is assumed.  "
             "Non-alphanumeric characters are replaced with an _ character.  "
             "`rel.from_csv(\"heading_name_1\", \"heading_name_2\")` will ignore any heading names in the input stream and use the supplied heading names instead.  "
-            "This allows parsing of input streams that have no heading names.";
+            "This allows parsing of input streams that have no heading names.  "
+            "Values that contain commas must be enclosed in double quotes (\"s).  "
+            "Escape \" characters with a second \" character, like this: \"\".  "
+            "Use \\n to represent newlines.";
   }
 
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_CSV; }
