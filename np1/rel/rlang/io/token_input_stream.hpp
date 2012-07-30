@@ -47,6 +47,8 @@ public:
       read_identifier_token(tok);
     } else if (isdigit(c)) {
       read_number_token(tok, false);
+    } else if (is_unparsed_code_block_char(c)) {
+      read_unparsed_code_block(tok);
     } else {
       read_special_char_token(tok);
     }
@@ -225,6 +227,38 @@ private:
     m_stream.unget(c);
   }
 
+
+  void read_unparsed_code_block(token &tok) {
+    np1::io::string_output_stream tok_stream(tok.writeable_text());
+
+    const size_t delim_length = strlen(NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER);
+    const char *delim_start = NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER;
+    const char *delim_p = delim_start;
+    const char *delim_end = delim_start + delim_length;
+
+    /* Read the start delimiter. */
+    for (; delim_p < delim_end; ++delim_p) {
+      const int c = m_stream.read();
+      NP1_ASSERT((c >= 0) && (c == *delim_p), "Incomplete unparsed code block delimiter");
+    }
+
+    /* Read up to the end delimiter. */
+    delim_p = delim_start;
+    while (delim_p < delim_end) {
+      const int c = m_stream.read();
+      NP1_ASSERT((c >= 0), "Unterminated unparsed code block");
+      if (c == *delim_p) {
+        ++delim_p;
+      } else {
+        tok_stream.write(delim_start, delim_p - delim_start);
+        delim_p = delim_start;
+        tok_stream.write((char)c);
+      }
+    }
+
+    tok.type(token::TYPE_UNPARSED_CODE_BLOCK);
+  }
+
   char mandatory_read() {
     int c = m_stream.read();    
     NP1_ASSERT(c >= 0, error_message("Unterminated operator"));
@@ -239,6 +273,10 @@ private:
   
   bool is_initial_identifier_char(char c) {
     return isalpha(c) || ('_' == c);  
+  }
+
+  bool is_unparsed_code_block_char(char c) {
+    return (NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER[0] == c);  
   }
 
 private:

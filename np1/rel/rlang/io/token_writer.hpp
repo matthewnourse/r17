@@ -61,6 +61,10 @@ public:
       case token::TYPE_OPERATOR:
         os.write(token_i->text());
         break;
+
+      case token::TYPE_UNPARSED_CODE_BLOCK:
+        write_unparsed_code_block(os, token_i->text());
+        break;
       }
 
       if (token_i + 1 < token_iz) {
@@ -83,6 +87,13 @@ private:
     }
 
     os.write('"');
+  }
+
+  template <typename Mandatory_Output_Stream>
+  static void write_unparsed_code_block(Mandatory_Output_Stream &os, const char *str) {
+    os.write(NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER);
+    os.write(str);
+    os.write(NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER);
   }
 
 };

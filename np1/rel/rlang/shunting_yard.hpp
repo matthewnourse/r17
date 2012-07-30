@@ -65,6 +65,7 @@ public:
       case token::TYPE_DOUBLE:
       case token::TYPE_BOOL_TRUE:
       case token::TYPE_BOOL_FALSE:
+      case token::TYPE_UNPARSED_CODE_BLOCK:
         postfix.push_back(parsed_token_info(*tok));
         break;
 

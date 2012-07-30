@@ -126,7 +126,9 @@ void test_all_legal_tokens() {
     { "not", token_type::TYPE_OPERATOR, 0, 1 },
     { "&", token_type::TYPE_OPERATOR, 0, 1 },
     { "|", token_type::TYPE_OPERATOR, 0, 1 },
-    { "~", token_type::TYPE_OPERATOR, 0, 1 }
+    { "~", token_type::TYPE_OPERATOR, 0, 1 },
+
+    { "@@@unparsed!@#@$%@^&*()_+:><>/';=-@@@", token_type::TYPE_UNPARSED_CODE_BLOCK, "unparsed!@#@$%@^&*()_+:><>/';=-", 1}
   };
 
   const token_expected_results_definition *definition_p = definitions;

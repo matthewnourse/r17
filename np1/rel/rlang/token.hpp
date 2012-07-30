@@ -14,6 +14,7 @@ NP1_ASSERT((cond__), "line " + str::to_dec_str((tok__).line_number()) + ": " + r
 #define NP1_TOKEN_ASSERT_NO_TOKEN_TEXT(cond__, tok__, message__) \
 NP1_ASSERT((cond__), "line " + str::to_dec_str((tok__).line_number()) + ": " + rstd::string(message__))
 
+#define NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER "@@@"
 
 namespace np1 {
 namespace rel {
@@ -36,7 +37,8 @@ public:
     TYPE_CLOSE_PAREN,
     TYPE_COMMA,
     TYPE_SEMICOLON,
-    TYPE_OPERATOR
+    TYPE_OPERATOR,
+    TYPE_UNPARSED_CODE_BLOCK
   } type_type;
 
 public:
