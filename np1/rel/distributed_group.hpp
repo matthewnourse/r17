@@ -43,7 +43,7 @@ public:
     // we can calculate the average from.
     if (str::cmp(original_aggregator, NP1_REL_GROUP_AGGREGATOR_AVG) == 0) {
       //TODO: something cleaner than this!
-      strcpy(for_distribution_tokens[0].text(), NP1_REL_GROUP_AGGREGATOR_SUM_COUNT);
+      for_distribution_tokens[0].writeable_text() = NP1_REL_GROUP_AGGREGATOR_SUM_COUNT;
       for_distribution_aggregator = NP1_REL_GROUP_AGGREGATOR_SUM_COUNT;        
     }
 

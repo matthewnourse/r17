@@ -6,7 +6,7 @@
 
 #include "np1/rel/rlang/token.hpp"
 #include "np1/io/text_input_stream.hpp"
-#include "np1/io/ext_static_buffer_output_stream.hpp"
+#include "np1/io/string_output_stream.hpp"
 
 namespace np1 {
 namespace rel {
@@ -74,32 +74,21 @@ private:
 
   // Read a string in double or single quotes.
   void read_quoted_string_token(token &tok, char quote_char) {
-    np1::io::ext_static_buffer_output_stream temp_stream(
-                                              (unsigned char *)tok.text(), tok.max_text_length());
-    NP1_ASSERT(str::read_quoted_string(m_stream, temp_stream),
-                error_message("Incomplete string"));
-
-    NP1_ASSERT(temp_stream.size() < tok.max_text_length() - 1, error_message("String too long"));
-    temp_stream.write('\0');
+    np1::io::string_output_stream temp_stream(tok.writeable_text());
+    NP1_ASSERT(str::read_quoted_string(m_stream, temp_stream), error_message("Incomplete string"));
     tok.type(token::TYPE_STRING);
   }
 
   // Read an identifier.
   void read_identifier_token(token &tok) {
-    char *token_p = tok.text();
-    char *token_end = token_p + tok.max_text_length();
+    np1::io::string_output_stream tok_stream(tok.writeable_text());
     int c = 0;
 
     tok.type(token::TYPE_IDENTIFIER_VARIABLE);
 
-    for (;
-        ((c = m_stream.read()) > 0) && (token_p < token_end) && is_identifier_char(c);
-        ++token_p) {
-      *token_p = c;      
+    while (((c = m_stream.read()) > 0) && is_identifier_char(c)) {
+      tok_stream.write((char)c);
     }
-
-    NP1_ASSERT(token_p < token_end, error_message("Identifier token too long"));
-    *token_p = '\0';
 
     m_stream.unget(c);
 
@@ -122,15 +111,13 @@ private:
   // Special-char tokens will be read greedily using the supplied function
   // objects to decide when to stop.
   void read_special_char_token(token &tok) {
-    char *token_p = tok.text();
-    char *token_end = token_p + tok.max_text_length();
-    memset(token_p, 0, tok.max_text_length());
+    np1::io::string_output_stream tok_stream(tok.writeable_text());
 
     tok.type(token::TYPE_UNKNOWN);
 
     // One-char symbols.    
     char first_char = m_stream.read();
-    *token_p++ = first_char;
+    tok_stream.write(first_char);
     switch (first_char) {
     case '(':
       tok.type(token::TYPE_OPEN_PAREN);      
@@ -153,18 +140,16 @@ private:
         int c = 0;
       
         // Keep reading until it's not a valid operator any more.
-        while ((token_p < token_end)
-                && Fn_Table::is_valid_partial_match(str::ref(tok.text()))
+        while (Fn_Table::is_valid_partial_match(str::ref(tok.text()))
                 && ((c = m_stream.read()) >= 0)) {
-          *token_p++ = (char)c;
+          tok_stream.write((char)c);
         }
   
-        NP1_ASSERT(token_p < token_end, "Special-char token is too long.");
         if (c >= 0) {        
-          m_stream.unget(*--token_p);
+          m_stream.unget(tok.text()[tok.text_length() - 1]);
+          tok.text_remove_last();
         }
   
-        *token_p = '\0';
         size_t first_matching_fn_id = Fn_Table::find_first(str::ref(tok.text()));
         tok.assert(first_matching_fn_id != (size_t)-1, "Unknown special-char token");
         tok.first_matching_sym_op_fn_id(first_matching_fn_id);
@@ -177,8 +162,7 @@ private:
 
   // Read a number.
   void read_number_token(token &tok, bool is_negative) {
-    char *token_p = tok.text();
-    char *token_end = token_p + tok.max_text_length();
+    np1::io::string_output_stream tok_stream(tok.writeable_text());
     int c = 0;
     bool is_fp = false;
     bool is_valid_number = true;
@@ -187,10 +171,10 @@ private:
     tok.type(token::TYPE_INT);
 
     if (is_negative) {
-      *token_p++ = '-';
+      tok_stream.write('-');
     }
 
-     while ((token_p < token_end) && is_valid_number && ((c = m_stream.read()) > 0)) {      
+     while (is_valid_number && ((c = m_stream.read()) > 0)) {      
       if (!is_fp) {
         if ('.' == c) {
           is_fp = true;
@@ -214,19 +198,16 @@ private:
       }
       
       if (is_valid_number) {
-        *token_p++ = c;
+        tok_stream.write((char)c);
       }
     }
-
-    NP1_ASSERT(token_p < token_end, error_message("Number token too long"));
-  
-    *token_p = '\0';
   
     if (is_fp) {
       // Check that this is a valid-looking floating-point number.
       char *endptr = NULL;
-      str::partial_dec_to_double(tok.text(), token_p, &endptr);
-      NP1_ASSERT((endptr == token_p),
+      const char *token_end = tok.text() + tok.text_length();
+      str::partial_dec_to_double(tok.text(), token_end, &endptr);
+      NP1_ASSERT((endptr == token_end),
                  error_message("Invalid floating-point number.  Token: " + rstd::string(tok.text())));
       tok.type(token::TYPE_DOUBLE);      
     }

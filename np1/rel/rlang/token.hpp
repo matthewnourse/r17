@@ -22,8 +22,6 @@ namespace rlang {
 /// An input token.
 class token {
 public:
-  enum { MAX_TOKEN_LENGTH = 1024 };  
-
   typedef enum {
     TYPE_UNKNOWN = -1,
     TYPE_STRING,
@@ -38,20 +36,14 @@ public:
     TYPE_CLOSE_PAREN,
     TYPE_COMMA,
     TYPE_SEMICOLON,
-    TYPE_OPERATOR,
+    TYPE_OPERATOR
   } type_type;
 
 public:
-  token() : m_line_number(0), m_type(TYPE_UNKNOWN), m_first_matching_sym_op_fn_id(-1) {
-    m_text[0] = '\0';
-  }
+  token() : m_line_number(0), m_type(TYPE_UNKNOWN), m_first_matching_sym_op_fn_id(-1) {}
 
-  token(const char *text, type_type type) : m_line_number(0), m_type(type), m_first_matching_sym_op_fn_id(-1) {
-    size_t text_length = strlen(text);
-    NP1_ASSERT(text_length <= MAX_TOKEN_LENGTH, "Text '" + rstd::string(text) + "' is too long to be a token");
-    memcpy(m_text, text, text_length);
-    m_text[text_length] = '\0';
-  }
+  token(const char *text, type_type type)
+    : m_line_number(0), m_type(type), m_first_matching_sym_op_fn_id(-1), m_text(text) {}
 
   void assert(bool condition, const char *message) const {
     NP1_TOKEN_ASSERT(condition, *this, message);
@@ -69,18 +61,18 @@ public:
     m_first_matching_sym_op_fn_id = first_matching_sym_op_fn_id;
   }
 
-  bool is_minus() const { return (('-' == m_text[0]) && ('\0' == m_text[1])); }
+  bool is_minus() const { return ((m_text.length() == 1) && ('-' == m_text[0])); }
 
-  const char *text() const { return m_text; }
-  char *text() { return m_text; }
-
-  size_t max_text_length() const { return sizeof(m_text) - 1; }
+  const char *text() const { return m_text.c_str(); }
+  size_t text_length() const { return m_text.length(); }
+  void text_remove_last() { m_text = m_text.substr(0, m_text.length() - 1); }
+  rstd::string &writeable_text() { return m_text; }
 
 private:
   size_t m_line_number;
   type_type m_type;
   int m_first_matching_sym_op_fn_id;
-  char m_text[MAX_TOKEN_LENGTH + 1];
+  rstd::string m_text;
 };
 
 } // namespaces

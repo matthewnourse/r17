@@ -85,6 +85,8 @@ public:
     return s;
   }
 
+  char operator[] (size_t offset) const { return m_vector[offset]; }
+
 private:
   vector<char> m_vector;
 };
