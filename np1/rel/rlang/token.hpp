@@ -65,7 +65,11 @@ public:
 
   bool is_minus() const { return ((m_text.length() == 1) && ('-' == m_text[0])); }
 
-  const char *text() const { return m_text.c_str(); }
+  const char *text() const {
+    const char *p = m_text.c_str();
+    return p ? p : "";
+  }
+  
   size_t text_length() const { return m_text.length(); }
   void text_remove_last() { m_text = m_text.substr(0, m_text.length() - 1); }
   rstd::string &writeable_text() { return m_text; }
