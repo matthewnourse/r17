@@ -15,7 +15,12 @@ public:
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
                   const rstd::vector<rel::rlang::token> &tokens) {
     rstd::string command = rel::rlang::compiler::eval_to_string_only(tokens);
+    run(input, output, command);
+  }
 
+  static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
+                  const rstd::string &command) {
+  
     // Set stdin to be the supplied input stream.
     int saved_stdin = dup(0);
     dup2(input.handle(), 0);

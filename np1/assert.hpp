@@ -209,10 +209,7 @@ void write_pre_crash_message(const char *failed_assertion_text, const char *expl
 /// Crash unconditionally.
 void crash(const char *failed_assertion_text, const char *explanation) {
   write_pre_crash_message(failed_assertion_text, explanation);
-  if (global_info::pre_crash_handler_top()) {
-    global_info::pre_crash_handler_top()->call("Assertion failure");
-  }
-
+  global_info::pre_crash_handlers_call("Assertion failure");
   exit(-1);
 }
 

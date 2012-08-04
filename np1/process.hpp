@@ -21,7 +21,8 @@ namespace process {
 
 
 // Kill all children and ourselves.
-void kill_all() {
+void kill_all(const char *crash_msg) {
+  global_info::pre_crash_handlers_call(crash_msg);
   sigset_t new_mask;
   sigset_t old_mask;
   sigfillset(&new_mask);
@@ -39,8 +40,9 @@ pid_t mandatory_fork() {
 
   pid_t pid = fork();
   if (-1 == pid) {
-    np1::assert::write_pre_crash_message("fork() != -1", "fork() failed");
-    kill_all();  
+    const char *crash_msg = "fork() failed";
+    np1::assert::write_pre_crash_message("fork() != -1", crash_msg);
+    kill_all(crash_msg);  
   }
 
   // Trash the rand64 state to ensure that 2 processes don't generate the same random numbers.
@@ -58,8 +60,9 @@ bool mandatory_wait_for_child(pid_t child_pid, bool hang = true) {
   int status;
   pid_t pid = ::waitpid(child_pid, &status, hang ? 0 : WNOHANG);
   if (-1 == pid) {
-    np1::assert::write_pre_crash_message("pid != -1", "Unable to wait for child process");
-    process::kill_all();
+    const char *crash_msg = "Unable to wait for child process";
+    np1::assert::write_pre_crash_message("pid != -1", crash_msg);
+    process::kill_all(crash_msg);
   }
 
   if (0 == pid) {
@@ -72,7 +75,7 @@ bool mandatory_wait_for_child(pid_t child_pid, bool hang = true) {
     np1::assert::write_pre_crash_message(
           "WIFEXITED(status) && (WEXITSTATUS(status) == 0)",
           ("Terminating- error in child process " + str::to_dec_str(child_pid) + ": " + detail).c_str());
-    process::kill_all();
+    process::kill_all("Terminating due to error in child process");
   }
 
   return true;

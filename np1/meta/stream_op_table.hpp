@@ -120,6 +120,7 @@ void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &o
 #include "np1/meta/remote.hpp"
 #include "np1/meta/shell.hpp"
 #include "np1/meta/parallel_explicit_mapping.hpp"
+#include "np1/lang/python.hpp"
 #include "np1/io/directory.hpp"
 
 
@@ -1327,6 +1328,27 @@ struct help_version_wrap : public stream_op_wrap_base {
 } help_version_instance;
 
 
+struct lang_python_wrap : public stream_op_wrap_base {
+  virtual const char *name() const { return "lang.python"; }
+  virtual const char *description() const {
+    return "`lang.python(" NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER " python " NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER ")` "
+            "executes Python code using the python interpreter in the shell's path.  "
+            "The input stream becomes the Python script's standard input.  "
+            "The output of the Python script is written to the output stream.  ";
+  }
+
+  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
+  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
+
+  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+                    io::unbuffered_stream_base &output,
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
+    lang::python::run(input, output, tokens);
+  }
+} lang_python_instance;
+
+
 
 #define NP1_META_SCRIPT_NAME "meta.script"
 
@@ -1580,6 +1602,7 @@ private:
       &io_ls_instance,
       &io_directory_list_recurse_instance,
       &io_ls_r_instance,
+      &lang_python_instance,
       &meta_script_instance,
       &meta_remote_instance,
       &meta_shell_instance,

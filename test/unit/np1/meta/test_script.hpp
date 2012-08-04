@@ -229,6 +229,21 @@ void test_variable_record_lengths() {
 }
 
 
+void test_python() {  
+  run_script(
+    "rel.from_tsv() | lang.python(@@@\nfor inputR in r17InputStream:\n    r17OutputStream.write(inputR)\n\n@@@) | rel.to_tsv();",
+
+    "string:v1\tistring:v2\tint:v3\tuint:v4\tdouble:v5\tbool:v6\tipaddress:v7\n"
+    "fred\twilma\t-1\t1\t1.0\ttrue\t192.168.1.1\n"
+    "barney\tbetty\t1\t10\t0.0\tfalse\t127.0.0.1\n",
+
+    // Python has no "ipaddress", "istring" or "uint" types.
+    "string:v1\tstring:v2\tint:v3\tint:v4\tdouble:v5\tbool:v6\tstring:v7\n"
+    "fred\twilma\t-1\t1\t1.0\ttrue\t192.168.1.1\n"
+    "barney\tbetty\t1\t10\t0.0\tfalse\t127.0.0.1\n"
+  );
+}
+
 
 void test_order_by(const rstd::string &op_name, const char *expected_results) {
   printf("  order_by op: %s\n", op_name.c_str());
@@ -1192,6 +1207,8 @@ void test_script() {
   NP1_TEST_RUN_TEST(test_multiple_pipelines);
   NP1_TEST_RUN_TEST(test_inline_script);
   NP1_TEST_RUN_TEST(test_variable_record_lengths);
+
+  NP1_TEST_RUN_TEST(test_python);
 
   //TODO: test more operators.
   NP1_TEST_RUN_TEST(test_order_by);

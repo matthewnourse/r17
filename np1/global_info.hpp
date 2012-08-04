@@ -74,8 +74,8 @@ public:
     return get_pre_crash_handlers().pop();
   }
 
-  static pre_crash_handler *pre_crash_handler_top() {
-    return get_pre_crash_handlers().top();
+  static void pre_crash_handlers_call(const char *s) {
+    get_pre_crash_handlers().call(s);
   }
 
 
@@ -104,6 +104,13 @@ private:
       }
 
       return 0;
+    }
+
+    void call(const char *crash_msg) {
+      size_t i;
+      for (i = m_number_handlers; i > 0; ++i) {
+        m_handlers[i-1]->call(crash_msg);
+      }
     }
 
     pre_crash_handler *pop() {
