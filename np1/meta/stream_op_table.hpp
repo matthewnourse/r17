@@ -1330,6 +1330,7 @@ struct help_version_wrap : public stream_op_wrap_base {
 
 struct lang_python_wrap : public stream_op_wrap_base {
   virtual const char *name() const { return "lang.python"; }
+  virtual const char *since() const { return "1.7.0"; }
   virtual const char *description() const {
     return "`lang.python(" NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER " python " NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER ")` "
             "executes Python code using the python interpreter in the shell's path.  "
