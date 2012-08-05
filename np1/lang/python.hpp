@@ -56,6 +56,23 @@ public:
     global_info::pre_crash_handler_pop();        
   }
 
+  static rstd::string python_helper_code_markdown() {
+    rstd::string md = "    ";
+
+    const char *p = python_helper_code();
+    for (; *p; ++p) {
+      if ('\n' == *p) {
+        md.append("  \n    ");
+      } else {
+        md.push_back(*p);
+      }
+    }
+
+    md.push_back('\n');
+
+    return md;
+  }
+
 private:
   static const char *python_helper_code() {
     return 
@@ -87,7 +104,7 @@ private:
       "        return self\n"
       "\n" 
       "    def next(self):\n"
-      "        return InputRecord(self.inCsvReader.next())\n"
+      "        return R17InputRecord(self.inCsvReader.next())\n"
       "\n" 
       "r17InputStream = R17InputStream()\n"
       "\n"
@@ -149,7 +166,7 @@ private:
 
   static rstd::string python_input_record_code(const rel::record_ref &headings) {
     rstd::string code =
-      "class InputRecord:\n"
+      "class R17InputRecord:\n"
       "    def __init__(self, row):\n";
 
     size_t field_number;

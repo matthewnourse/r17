@@ -1332,10 +1332,45 @@ struct lang_python_wrap : public stream_op_wrap_base {
   virtual const char *name() const { return "lang.python"; }
   virtual const char *since() const { return "1.7.0"; }
   virtual const char *description() const {
-    return "`lang.python(" NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER " python " NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER ")` "
-            "executes Python code using the python interpreter in the shell's path.  "
-            "The input stream becomes the Python script's standard input.  "
-            "The output of the Python script is written to the output stream.  ";
+    static const rstd::string desc =
+      "`lang.python(" NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER " python " NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER ")` "
+      "executes Python code using the python interpreter in the shell's path.  "
+      "The Python script's standard input is the input stream.  "
+      "The Python script's standard output is the output stream.  "
+      "R17 prepends helper Python code to the Python script before passing it to the system's Python interpreter.  "
+      "R17's helper code supplies 2 stream-like global variables: `r17InputStream` and `r17OutputStream`.  "
+      "Each call to `r17InputStream.next()` returns an object with member variables of the same type and name as "
+      "the r17 input columns.  `r17OutputStream.write(v)` writes an r17 record row with column names and types "
+      "inferred from `v` where `v` is an object or dictionary.  \n"
+      "The simplest possible example is copying the input stream to the output stream:  \n\n"
+      "    lang.python(@@@  \n"
+      "    for inputR in r17InputStream:  \n"
+      "        r17OutputStream.write(inputR)  \n"
+      "    @@@);  \n  \n"
+      "Note that r17 does not add or remove whitespace to the Python script because indentation is so important "
+      "in Python.  So you need to indent inline Python code as if the Python code was in its own file.  \n\n"
+      "This example assumes that the input stream contains a `value` column that is some kind of number:  \n\n"
+      "    lang.python(@@@  \n"
+      "    for inputR in r17InputStream:  \n"
+      "        r17OutputStream.write({value: inputR.value + 1})  \n"
+      "    @@@);  \n  \n"
+      "Below is almost all the Python code that r17 prepends to the inline script before passing to Python.  \n\n"
+      + lang::python::python_helper_code_markdown() +
+      "Underneath this code, r17 creates an R17InputRecord class that's tailored to the input stream columns.  "
+      "For example, the R17InputRecord class for an r17 input stream with columns...  \n"
+      "`string:v1 istring:v2 int:v3 uint:v4 double:v5 bool:v6 ipaddress:v7`  \n"
+      "...is  \n\n"
+      "    class R17InputRecord:  \n"
+      "        def __init__(self, row):  \n"
+      "        self.v1 = str(row[0])      # r17 istring -> Python string  \n"
+      "        self.v2 = str(row[1])      # r17 string -> Python string  \n"
+      "        self.v3 = long(row[2])     # r17 int -> Python long  \n"
+      "        self.v4 = long(row[3])     # r17 uint -> Python long  \n"
+      "        self.v5 = float(row[4])    # r17 double -> Python float  \n"
+      "        self.v6 = row[5] == 'true' # r17 bool -> Python boolean  \n"
+      "        self.v7 = str(row[6])      # r17 ipaddress -> Python string  \n  \n";
+
+    return desc.c_str();
   }
 
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
