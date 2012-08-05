@@ -1369,7 +1369,7 @@ struct lang_python_wrap : public stream_op_wrap_base {
       "        self.v4 = long(row[3])     # r17 uint -> Python long  \n"
       "        self.v5 = float(row[4])    # r17 double -> Python float  \n"
       "        self.v6 = row[5] == 'true' # r17 bool -> Python boolean  \n"
-      "        self.v7 = str(row[6])      # r17 ipaddress -> Python string  \n  \n";
+      "        self.v7 = str(row[6])      # r17 ipaddress -> Python string  \n  \n  \n";
 
     return desc.c_str();
   }

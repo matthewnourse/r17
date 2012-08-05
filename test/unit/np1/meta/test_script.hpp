@@ -263,7 +263,6 @@ void test_r() {
     all_types_input
   );
 
-
   const char *no_bool_types_input =
     "string:v1\n"
     "fred\n";
