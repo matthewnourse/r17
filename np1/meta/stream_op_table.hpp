@@ -121,6 +121,7 @@ void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &o
 #include "np1/meta/shell.hpp"
 #include "np1/meta/parallel_explicit_mapping.hpp"
 #include "np1/lang/python.hpp"
+#include "np1/lang/r.hpp"
 #include "np1/io/directory.hpp"
 
 
@@ -1385,6 +1386,39 @@ struct lang_python_wrap : public stream_op_wrap_base {
 } lang_python_instance;
 
 
+struct lang_r_wrap : public stream_op_wrap_base {
+  virtual const char *name() const { return "lang.R"; }
+  virtual const char *since() const { return "1.7.1"; }
+  virtual const char *description() const {
+    static const rstd::string desc =
+      "`lang.R(" NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER " R code " NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER ")` "
+      "executes R code using the Rscript interpreter in the shell's path.  "
+      "The R script's standard input is the input stream.  "
+      "The R script's standard output is the output stream.  "
+      "R17 prepends helper R code to the R script before passing it to the system's R interpreter.  "
+      "R17's helper code supplies an `r17InputTable` table and an `r17WriteTable` function.  "
+      "`r17InputTable` contains the entire stream contents.  The table's column names match the r17 stream headings.  "
+      "The definition of `r17WriteTable` is:  \n\n"
+      + lang::r::r_helper_code_markdown() +
+      "  \n"
+      "R17 can't infer the output table column types so you need to include the r17 types in the column names, for example: \n"
+      "`r17WriteTable(c(\"string:name\", \"int:value\"), table)`  \n";
+
+    return desc.c_str();
+  }
+
+  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
+  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
+
+  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+                    io::unbuffered_stream_base &output,
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
+    lang::r::run(input, output, tokens);
+  }
+} lang_r_instance;
+
+
 
 #define NP1_META_SCRIPT_NAME "meta.script"
 
@@ -1639,6 +1673,7 @@ private:
       &io_directory_list_recurse_instance,
       &io_ls_r_instance,
       &lang_python_instance,
+      &lang_r_instance,
       &meta_script_instance,
       &meta_remote_instance,
       &meta_shell_instance,

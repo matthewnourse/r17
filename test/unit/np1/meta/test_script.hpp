@@ -46,7 +46,7 @@ void run_script(const rstd::string &script, const rstd::string &test_data, const
   size_t bytes_read = 0;
   output.read(&actual_output[0], actual_output.size(), &bytes_read);
   actual_output[bytes_read] = '\0';
-//  fprintf(stderr, "EXPECTED\n'%s'\n\nACTUAL\n'%s'\n", expected_output.c_str(), &actual_output[0]);
+  //fprintf(stderr, "EXPECTED\n'%s'\n\nACTUAL\n'%s'\n", expected_output.c_str(), &actual_output[0]);
   NP1_TEST_ASSERT(bytes_read == expected_output_length);
   NP1_TEST_ASSERT(memcmp(&actual_output[0], expected_output.c_str(), expected_output_length) == 0);
 }
@@ -234,14 +234,55 @@ void test_python() {
     "rel.from_tsv() | lang.python(@@@\nfor inputR in r17InputStream:\n    r17OutputStream.write(inputR)\n\n@@@) | rel.to_tsv();",
 
     "string:v1\tistring:v2\tint:v3\tuint:v4\tdouble:v5\tbool:v6\tipaddress:v7\n"
-    "fred\twilma\t-1\t1\t1.0\ttrue\t192.168.1.1\n"
-    "barney\tbetty\t1\t10\t0.0\tfalse\t127.0.0.1\n",
+    "fred\twilma\t-1\t1\t1.1\ttrue\t192.168.1.1\n"
+    "barney\tbetty\t1\t10\t-1.1\tfalse\t127.0.0.1\n",
 
     // Python has no "ipaddress", "istring" or "uint" types.
     "string:v1\tstring:v2\tint:v3\tint:v4\tdouble:v5\tbool:v6\tstring:v7\n"
-    "fred\twilma\t-1\t1\t1.0\ttrue\t192.168.1.1\n"
-    "barney\tbetty\t1\t10\t0.0\tfalse\t127.0.0.1\n"
+    "fred\twilma\t-1\t1\t1.1\ttrue\t192.168.1.1\n"
+    "barney\tbetty\t1\t10\t-1.1\tfalse\t127.0.0.1\n"
   );
+}
+
+
+void test_r() {
+  const char *all_types_input =
+    "string:v1\tistring:v2\tint:v3\tuint:v4\tdouble:v5\tbool:v6\tipaddress:v7\n"
+    "fred\twilma\t-1\t1\t1.1\ttrue\t192.168.1.1\n"
+    "barney\tbetty\t1\t10\t-1.1\tfalse\t127.0.0.1\n";
+
+  fprintf(stderr, "first\n");
+
+  run_script(
+    "rel.from_tsv() "
+      "| lang.R(@@@\n"
+        "r17WriteTable(c(\"string:v1\", \"istring:v2\", \"int:v3\", \"uint:v4\", \"double:v5\", \"bool:v6\", \"ipaddress:v7\"), r17InputTable)\n"
+      "@@@) "
+      "| rel.to_tsv();",
+
+    all_types_input,
+
+    all_types_input
+  );
+
+  fprintf(stderr, "second\n");
+
+
+  const char *no_bool_types_input =
+    "string:v1\n"
+    "fred\n";
+
+  run_script(
+    "rel.from_tsv() "
+      "| lang.R(@@@\n"
+        "r17WriteTable(c(\"string:v1\"), r17InputTable)\n"
+      "@@@) "
+      "| rel.to_tsv();",
+
+    no_bool_types_input,
+
+    no_bool_types_input
+  ); 
 }
 
 
@@ -1209,6 +1250,7 @@ void test_script() {
   NP1_TEST_RUN_TEST(test_variable_record_lengths);
 
   NP1_TEST_RUN_TEST(test_python);
+  NP1_TEST_RUN_TEST(test_r);
 
   //TODO: test more operators.
   NP1_TEST_RUN_TEST(test_order_by);

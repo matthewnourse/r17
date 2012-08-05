@@ -3,6 +3,8 @@
 #ifndef NP1_LANG_PYTHON_HPP
 #define NP1_LANG_PYTHON_HPP
 
+#include "np1/io/named_temp_file.hpp"
+#include "np1/lang/detail/helper.hpp"
 
 namespace np1 {
 namespace lang {
@@ -27,19 +29,10 @@ public:
     rstd::string combined_python_code =
       python_helper_code() + python_input_record_code(headers.ref()) + user_python_code;
 
-    char temp_file_name[256];
-    strcpy(temp_file_name, "/tmp/tmpXXXXXX");
-    int temp_fd;
-    NP1_ASSERT(((temp_fd = mkstemp(temp_file_name)) != -1), "Unable to create temporary file for lang.python");
-
-    // Add a pre-crash handler to ensure that the temporary file is deleted if we die.
-    temp_file_erase_pre_crash_handler pch(temp_file_name);
-    global_info::pre_crash_handler_push(&pch);
-
+    io::named_temp_file temp_file;    
+  
     // Write out the python code to the temp file.
-    io::file temp_file;
-    temp_file.from_handle(temp_fd);
-    io::mandatory_output_stream<io::file> temp_stream(temp_file);
+    io::mandatory_output_stream<io::file> temp_stream(temp_file.real_file());
     temp_stream.write(combined_python_code.c_str());
     temp_stream.close();
 
@@ -47,30 +40,13 @@ public:
     // It's weird that we can just pass through the input stream without headers intact but rel.to_tsv doesn't care
     // if there are headers or not.
     rstd::string r17_script =
-      "rel.to_tsv() | meta.shell('python " + rstd::string(temp_file_name) + "') | rel.from_tsv();";
+      "rel.to_tsv() | meta.shell('python " + rstd::string(temp_file.file_name()) + "') | rel.from_tsv();";
 
     meta::script_run(input, output, r17_script, false);
-
-    // Clean up.
-    io::file::erase(temp_file_name);
-    global_info::pre_crash_handler_pop();        
   }
 
   static rstd::string python_helper_code_markdown() {
-    rstd::string md = "    ";
-
-    const char *p = python_helper_code();
-    for (; *p; ++p) {
-      if ('\n' == *p) {
-        md.append("  \n    ");
-      } else {
-        md.push_back(*p);
-      }
-    }
-
-    md.push_back('\n');
-
-    return md;
+    return detail::helper::code_to_markdown(python_helper_code());
   }
 
 private:
@@ -211,17 +187,6 @@ private:
   static rstd::string make_python_row_access_code(size_t field_number) {
     return "row[" + str::to_dec_str(field_number) + "]";
   }
-
-  struct temp_file_erase_pre_crash_handler : public global_info::pre_crash_handler {
-    temp_file_erase_pre_crash_handler(const rstd::string &temp_file_name) : m_file_name(temp_file_name) {}
-
-    virtual void call(const char *crash_msg) {
-      io::file::erase(m_file_name.c_str());
-    }
-
-    rstd::string m_file_name;
-  };
-
 };
 
 } /// namespaces
