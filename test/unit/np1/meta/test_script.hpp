@@ -251,8 +251,6 @@ void test_r() {
     "fred\twilma\t-1\t1\t1.1\ttrue\t192.168.1.1\n"
     "barney\tbetty\t1\t10\t-1.1\tfalse\t127.0.0.1\n";
 
-  fprintf(stderr, "first\n");
-
   run_script(
     "rel.from_tsv() "
       "| lang.R(@@@\n"
@@ -264,8 +262,6 @@ void test_r() {
 
     all_types_input
   );
-
-  fprintf(stderr, "second\n");
 
 
   const char *no_bool_types_input =
