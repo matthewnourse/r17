@@ -60,8 +60,10 @@ If you want to run all the r17 unit tests, you need:
 * automatic SSH access to the local machine beacuse some of the tests try to SSH to localhost as the current user.
 * a local WebDAV server.  I've only tested with Apache's mod_dav.
 * an empty `[WebDAV document root]/np1_test_reliable_storage_remote_root` directory.
+* Python.
 
-These prerequisites are not required to run r17 normally unless you want to use the relevant distributed-computation styles.
+These prerequisites are not required to run r17 normally unless you want to use the relevant distributed-computation
+styles or inline Python.
 
 
 ### Apache configuration for the unit tests ###
