@@ -85,14 +85,14 @@ private:
   static const char *r_helper_code() {
     return
       "r17WriteTable <- function(colNames, t) {\n"
-      "    write.table(sep=\"\t\", quote=FALSE, row.names=FALSE, col.names=colNames, t)\n"
+      "    write.table(sep=\"\\t\", quote=FALSE, row.names=FALSE, col.names=colNames, t)\n"
       "}\n";
   }
       
 
   static rstd::string r_input_table_code(const rel::record_ref &headings) {
     rstd::string code =
-      "r17InputTable <- read.table(header=FALSE, file=\"stdin\", sep=\"\t\", quote=\"\", col.names=c(";
+      "r17InputTable <- read.table(header=FALSE, file=\"stdin\", sep=\"\\t\", quote=\"\", col.names=c(";
 
     // Column names.
     size_t heading_i;
