@@ -123,14 +123,6 @@ T *clone(const T &src) {
 
 
 
-/// Destruct all the objects in the buffer, then free the buffer.
-template <typename T>
-void destruct_and_free(T *ptr, size_t length) {
-  destruct(ptr, length);
-  free(ptr);
-}
-
-
 /// Destruct the object without freeing the pointer.
 //TODO: more overloads or cheeky metaprogramming to cover all POD types.
 void destruct(char *p) {}
@@ -158,6 +150,14 @@ void destruct(T *ptr, size_t length) {
     destruct(p);
   }
 }
+
+/// Destruct all the objects in the buffer, then free the buffer.
+template <typename T>
+void destruct_and_free(T *ptr, size_t length) {
+  destruct(ptr, length);
+  free(ptr);
+}
+
 
 
 } // namespaces

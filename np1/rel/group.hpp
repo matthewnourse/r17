@@ -473,7 +473,7 @@ private:
       typedef typename detail::record_multihashmap<pair_type>::equal_list_type eq_list_type;
       eq_list_type *eq_list;
         
-      Number_Type sum;
+      Number_Type sum = 0;
       sum = get_number(r.mandatory_field(m_sum_field_id), sum);
       int64_t count = str::dec_to_int64(r.mandatory_field(m_count_field_id));
       eq_list = m_map.find(r);    
