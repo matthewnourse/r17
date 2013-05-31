@@ -123,7 +123,7 @@ public:
    * Must ONLY be called after sort().
    */
   template <typename Callback>
-  void walk_sorted(Callback callback) const {
+  void walk_sorted(Callback &callback) const {
     const list_element *list = m_head;
     while (list) {
       callback(list->r);

@@ -77,6 +77,33 @@ private:
   rstd::vector<compare_spec> m_specs;
 };
 
+
+#define NP1_REL_DETAIL_COMPARE_SPECS_SORT_OPERATOR(name__, op__, reverse_op__) \
+  struct name__ { \
+    explicit name__(const detail::compare_specs &cs) : m_compare_specs(cs) {}  \
+    bool operator()(const record_ref &r1, const record_ref &r2) { \
+      detail::compare_specs::const_iterator spec = m_compare_specs.begin(); \
+      detail::compare_specs::const_iterator spec_iz = m_compare_specs.end(); \
+      for (; spec != spec_iz; ++spec) { \
+        const str::ref f1 = r1.field(spec->field_number()); \
+        const str::ref f2 = r2.field(spec->field_number()); \
+        int result = spec->compare_function()(f1.ptr(), f1.length(), f2.ptr(), f2.length()); \
+        if (result op__ 0) { \
+          return true; \
+        } \
+        if (result reverse_op__ 0) { \
+          return false; \
+        } \
+      } \
+      return (r1.record_number() op__ r2.record_number()); \
+    } \
+    detail::compare_specs m_compare_specs; \
+  }
+
+NP1_REL_DETAIL_COMPARE_SPECS_SORT_OPERATOR(compare_specs_less_than_sort_operator, <, >);
+NP1_REL_DETAIL_COMPARE_SPECS_SORT_OPERATOR(compare_specs_greater_than_sort_operator, >, <);
+
+
   
 } // namespaces
 }

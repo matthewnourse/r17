@@ -4,6 +4,8 @@
 #define NP1_IO_HEAP_BUFFER_OUTPUT_STREAM_HPP
 
 
+#include "np1/io/ext_heap_buffer_output_stream.hpp"
+
 namespace np1 {
 namespace io {
 

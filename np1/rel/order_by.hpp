@@ -40,8 +40,8 @@ public:
     // Write out the headings then do the actual sorting.
     headings.write(output);
 
-    less_than lt(comp_specs);
-    greater_than gt(comp_specs);
+    detail::compare_specs_less_than_sort_operator lt(comp_specs);
+    detail::compare_specs_greater_than_sort_operator gt(comp_specs);
     switch (sort_type) {
     case TYPE_MERGE_SORT:
       switch (sort_order) {
@@ -80,33 +80,20 @@ private:
     typename sort_manager_type::sort_state sort_state(op);
     sort_manager_type sorter(sort_state);
     input.parse_records(sorter);
-    sorter.finalize(output);
+    record_output_walker<Output> output_walker(output);
+    sorter.finalize(output_walker);
   }
 
-#define NP1_REL_ORDER_BY_SORT_OPERATOR(name__, op__, reverse_op__) \
-  struct name__ { \
-    explicit name__(const detail::compare_specs &cs) : m_compare_specs(cs) {}  \
-    bool operator()(const record_ref &r1, const record_ref &r2) { \
-      detail::compare_specs::const_iterator spec = m_compare_specs.begin(); \
-      detail::compare_specs::const_iterator spec_iz = m_compare_specs.end(); \
-      for (; spec != spec_iz; ++spec) { \
-        const str::ref f1 = r1.field(spec->field_number()); \
-        const str::ref f2 = r2.field(spec->field_number()); \
-        int result = spec->compare_function()(f1.ptr(), f1.length(), f2.ptr(), f2.length()); \
-        if (result op__ 0) { \
-          return true; \
-        } \
-        if (result reverse_op__ 0) { \
-          return false; \
-        } \
-      } \
-      return (r1.record_number() op__ r2.record_number()); \
-    } \
-    detail::compare_specs m_compare_specs; \
-  }
+  template <typename Output_Stream>
+  struct record_output_walker {
+    explicit record_output_walker(Output_Stream &o) : m_output(o) {}
+    void operator()(const record_ref &r) {
+      r.write(m_output);
+    }
 
-NP1_REL_ORDER_BY_SORT_OPERATOR(less_than, <, >);
-NP1_REL_ORDER_BY_SORT_OPERATOR(greater_than, >, <);
+    Output_Stream &m_output;
+  };
+
 };
 
 

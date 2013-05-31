@@ -201,7 +201,8 @@ struct rel_group_wrap : public stream_op_wrap_base {
       "`rel.group(avg header_name)` is equivalent to SQL's `SELECT AVG(header_name) FROM ... GROUP BY ...`.  The new heading is called `int:_avg`.  \n"
       "`rel.group(min header_name)` is equivalent to SQL's `SELECT MIN(header_name) FROM ... GROUP BY ...`.  No new column is created, the `header_name` column is used to hold the minimum value.  \n"
       "`rel.group(max header_name)` is equivalent to SQL's `SELECT MAX(header_name) FROM ... GROUP BY ...`.  No new column is created, the `header_name` column is used to hold the maximum value.  \n"
-      "`rel.group(sum header_name)` is equivalent to SQL's `SELECT SUM(header_name) FROM ... GROUP BY ...`.  The new heading is called `int:_sum`.  \n";
+      "`rel.group(sum header_name)` is equivalent to SQL's `SELECT SUM(header_name) FROM ... GROUP BY ...`.  The new heading is called `int:_sum`.  \n"
+      "`rel.group(median header_name)` finds the median in the same way that `rel.group(avg header_name)` finds the average.  The new heading is called `int:_median`.  The `median` aggregator is only in r17 1.8.0 and later.  \n";
   };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }

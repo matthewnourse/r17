@@ -13,6 +13,7 @@
 #include "rstd/list.hpp"
 #include "np1/io/log.hpp"
 #include "np1/skip_list.hpp"
+#include "np1/math.hpp"
 
 namespace np1 {
 namespace process {

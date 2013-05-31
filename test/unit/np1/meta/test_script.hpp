@@ -46,7 +46,7 @@ void run_script(const rstd::string &script, const rstd::string &test_data, const
   size_t bytes_read = 0;
   output.read(&actual_output[0], actual_output.size(), &bytes_read);
   actual_output[bytes_read] = '\0';
-  //fprintf(stderr, "EXPECTED\n'%s'\n\nACTUAL\n'%s'\n", expected_output.c_str(), &actual_output[0]);
+//  fprintf(stderr, "EXPECTED\n'%s'\n\nACTUAL\n'%s'\n", expected_output.c_str(), &actual_output[0]);
   NP1_TEST_ASSERT(bytes_read == expected_output_length);
   NP1_TEST_ASSERT(memcmp(&actual_output[0], expected_output.c_str(), expected_output_length) == 0);
 }
@@ -588,6 +588,38 @@ void test_group() {
     
     "double:value\n"
     "3.3\n");
+
+  // median, test 1
+  run_script(
+    "rel.from_tsv() | rel.group(median value) | rel.to_tsv();",
+
+    "int:value\n"
+    "2\n"
+    "1\n"
+    "3\n"
+    "5\n",
+
+    "int:_median\n"
+    "2\n");
+
+  // median, test 2
+  run_script(
+    "rel.from_tsv() | rel.group(median value) | rel.to_tsv();",
+
+    "string:name\tint:value\n"
+    "fred\t2\n"
+    "barney\t1\n"
+    "fred\t3\n"
+    "barney\t3\n"
+    "barney\t-1\n"
+    "barney\t3\n"
+    "barney\t10\n"
+    "wilma\t5\n",
+
+    "string:name\tint:_median\n"
+    "barney\t3\n"
+    "fred\t2\n"
+    "wilma\t5\n");
 
   //TODO: much more group testing!
   
@@ -1250,7 +1282,7 @@ void test_script() {
   //TODO: test more operators.
   NP1_TEST_RUN_TEST(test_order_by);
   NP1_TEST_RUN_TEST(test_join);
-  NP1_TEST_RUN_TEST(test_group);
+  NP1_TEST_RUN_TEST(test_group);  
   NP1_TEST_RUN_TEST(test_unique);
   NP1_TEST_RUN_TEST(test_select);
   NP1_TEST_RUN_TEST(test_record_count);

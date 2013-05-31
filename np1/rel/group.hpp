@@ -5,6 +5,8 @@
 
 
 #include "np1/rel/detail/record_multihashmap.hpp"
+#include "np1/rel/detail/sort_manager.hpp"
+#include "np1/rel/detail/merge_sort.hpp"
 #include "np1/rel/rlang/rlang.hpp"
 
 namespace np1 {
@@ -32,11 +34,14 @@ namespace detail {
 #define NP1_REL_GROUP_AGGREGATOR_AVG "avg"
 #define NP1_REL_GROUP_AGGREGATOR_SUM "sum"
 #define NP1_REL_GROUP_AGGREGATOR_SUM_COUNT "sum_count"
+#define NP1_REL_GROUP_AGGREGATOR_MEDIAN "median"
+
 
 // Output heading names.
 #define NP1_REL_GROUP_OUTPUT_HEADING_COUNT "uint:_count"
 #define NP1_REL_GROUP_OUTPUT_HEADING_AVG "_avg"
 #define NP1_REL_GROUP_OUTPUT_HEADING_SUM "_sum"
+#define NP1_REL_GROUP_OUTPUT_HEADING_MEDIAN "_median"
 
 
 
@@ -75,6 +80,8 @@ public:
       group_min(input_headings, output_headings, aggregator_heading_name, input, output);
     } else if (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MAX) == 0) {                   
       group_max(input_headings, output_headings, aggregator_heading_name, input, output);
+    } else if (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MEDIAN) == 0) {                   
+      group_median(input_headings, output_headings, aggregator_heading_name, input, output);
     } else {
       NP1_ASSERT(false, "Unknown aggregator: " + rstd::string(aggregator));
     }
@@ -244,6 +251,33 @@ public:
     }
   }
   
+  // Median
+  template <typename Input_Stream, typename Output_Stream>
+  static void group_median(const record &input_headings, const record &output_headings,
+                           const char *aggregator_heading_name, Input_Stream &input, Output_Stream &output) {
+    // group_count as well as sort the whole input then walk the sorted records and pick the middle one.
+    // Sorting everything wastes space, but the alternative (storing a list of aggregator input values for each
+    // matching record) runs the risk of fragmenting RAM with resulting horrible performance or even the dreaded
+    // OOM.  The sorting code is built for large data sets and can run in parallel.
+    rstd::vector<rstd::string> count_heading_names = input_headings.fields();
+    size_t aggregator_heading_id = input_headings.mandatory_find_heading(aggregator_heading_name);
+    count_heading_names.erase(count_heading_names.begin() + aggregator_heading_id);
+    detail::compare_specs count_specs(input_headings, count_heading_names);
+    validate_specs(count_specs);
+    detail::record_multihashmap<uint64_t> count_group_map(count_specs);
+
+    rstd::vector<rstd::string> sort_heading_names = input_headings.fields();
+    detail::compare_specs sort_specs(input_headings, sort_heading_names);
+    detail::compare_specs_less_than_sort_operator lt(sort_specs);
+    typedef detail::sort_manager<detail::compare_specs_less_than_sort_operator, detail::merge_sort> sort_manager_type;
+    typename sort_manager_type::sort_state sort_state(lt);
+    sort_manager_type sorter(sort_state);
+
+    input.parse_records(median_record_callback<sort_manager_type>(count_group_map, sorter));
+    output_headings.write(output);
+    output_median_aggregated_record_callback<Output_Stream> aggregated_callback(count_group_map, count_specs, output);
+    sorter.finalize(aggregated_callback);
+  }
 
 
   // Helper for AVG, SUM and SUM_COUNT
@@ -306,7 +340,8 @@ public:
         && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MIN) != 0)
         && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MAX) != 0)
         && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM) != 0)
-        && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) != 0)) {       
+        && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) != 0)
+        && (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MEDIAN) != 0)) {       
       NP1_ASSERT(false, "Unknown aggregator: " + rstd::string(aggregator));
     }
     
@@ -314,7 +349,8 @@ public:
           || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MIN) == 0)
           || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MAX) == 0)
           || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM) == 0)
-          || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) == 0))
+          || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) == 0)
+          || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MEDIAN) == 0))
         && !aggregator_heading_name) {
       NP1_ASSERT(false, "The aggregator '" + rstd::string(aggregator)
                           + "' requires a heading name");
@@ -334,7 +370,8 @@ public:
     // Get the headings.
     if ((str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_AVG) == 0)
         || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM) == 0)
-        || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) == 0)) {
+        || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_SUM_COUNT) == 0)
+        || (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MEDIAN) == 0)) {
       get_fields_except(
         header_fields, input_headings, input_headings.number_fields(),
         field_id_list<1>(detail::compare_spec(input_headings, aggregator_heading_name).field_number()));
@@ -363,6 +400,10 @@ public:
         detail::helper::make_typed_heading_name(aggregator_type_name, NP1_REL_GROUP_OUTPUT_HEADING_SUM);
       header_fields.push_back(str::ref(typed_heading_name));        
       header_fields.push_back(str::ref(NP1_REL_GROUP_OUTPUT_HEADING_COUNT));        
+    } else if (str::cmp(aggregator, NP1_REL_GROUP_AGGREGATOR_MEDIAN) == 0) {
+      typed_heading_name =
+        detail::helper::make_typed_heading_name(aggregator_type_name, NP1_REL_GROUP_OUTPUT_HEADING_MEDIAN);
+      header_fields.push_back(str::ref(typed_heading_name));
     }
       
     return record(header_fields, 0);
@@ -545,6 +586,21 @@ private:
   typedef selector_record_callback<max_operator, int64_t> max_int64_record_callback;
   typedef selector_record_callback<max_operator, double> max_double_record_callback;
   
+  // Callback for the median aggregator.
+  template <typename Sort_Manager>
+  struct median_record_callback {
+    median_record_callback(detail::record_multihashmap<uint64_t> &cgm, Sort_Manager &sm)
+      : m_count_callback(cgm), m_sorter(sm) {}
+
+    bool operator()(const record_ref &r) const {
+      m_count_callback(r);
+      m_sorter(r);
+      return true;
+    }
+    
+    count_record_callback m_count_callback;
+    Sort_Manager &m_sorter;
+  };
   
   
   // The callback for writing out the records & aggregation for the count 
@@ -704,6 +760,55 @@ private:
     
     Output_Stream &m_output;
   };
+
+
+  // The callback for finalizing the median aggregation.
+  template <typename Output_Stream>
+  struct output_median_aggregated_record_callback {
+    output_median_aggregated_record_callback(detail::record_multihashmap<uint64_t> &cgm,
+                                             const detail::compare_specs &cs,
+                                             Output_Stream &o)
+      : m_is_first(true), m_count_group_map(cgm), m_count_specs(cs), m_output(o), m_current_group_median_offset(0),
+        m_current_group_counter(0) {}
+
+    bool operator()(const record_ref &r) {
+      if (!m_is_first && (detail::record_compare(m_current_group_example, r, m_count_specs) == 0)) {
+        m_current_group_counter++;
+        if (m_current_group_counter == m_current_group_median_offset) {
+          r.write(m_output);          
+        }
+        
+        return true;
+      }
+
+      m_is_first = false;
+
+      // A new group!
+      detail::record_multihashmap<uint64_t>::equal_list_type *equal_list = m_count_group_map.find(r);
+      NP1_ASSERT(equal_list, "Failed to find equal_list in count_group_map!");
+      uint64_t count = equal_list->front().second;
+      m_current_group_median_offset = (count+1)/2;
+      m_current_group_example.assign(r);
+      m_current_group_counter = 1;
+
+      // This first record might actually be the median.
+      if (m_current_group_counter == m_current_group_median_offset) {
+        r.write(m_output);
+      }
+
+      return true;
+    }
+
+    bool m_is_first;
+    detail::record_multihashmap<uint64_t> &m_count_group_map;
+    const detail::compare_specs &m_count_specs;
+    Output_Stream &m_output;
+    record m_current_group_example;
+    uint64_t m_current_group_median_offset;
+    uint64_t m_current_group_counter;
+  };
+
+  
 };
 
 

@@ -111,12 +111,12 @@ public:
   }
 
   // Complete the sort.
-  template <typename Mandatory_Output_Stream>
-  void finalize(Mandatory_Output_Stream &output) {        
+  template <typename Record_Handler>
+  void finalize(Record_Handler &record_handler) {        
     // Sort the current chunk.  If there are no child processes then we can just write it out and we're done.
     m_state.m_sorter.sort(m_state.m_less_than);
     if (m_state.m_child_output_fps.empty()) {
-      m_state.m_sorter.walk_sorted(record_output_walker<Mandatory_Output_Stream>(output));
+      m_state.m_sorter.walk_sorted(record_handler);
       return;
     }
     
@@ -132,7 +132,7 @@ public:
     mapped_file_manager mfm(m_state.m_child_output_fps, m_state.m_chunk_starting_row_numbers, &m_state.m_less_than);
     record_ref r;
     while (mfm.read_next_record(r)) {
-      r.write(output);
+      record_handler(r);
     }
   }
 
@@ -144,7 +144,8 @@ private:
     output_f.from_handle(output_fp);
     buffered_output_type buffered_output_f(output_f);
     mandatory_buffered_output_type mandatory_buffered_output_f(buffered_output_f);
-    sorter.walk_sorted(record_output_walker<mandatory_buffered_output_type>(mandatory_buffered_output_f));
+    record_output_walker<mandatory_buffered_output_type> walker(mandatory_buffered_output_f);
+    sorter.walk_sorted(walker);
     mandatory_buffered_output_f.hard_flush();
     output_f.release();
   }
