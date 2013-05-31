@@ -124,12 +124,28 @@ public:
         reason = "A file error occurred";
         break;
 
+      case Z_DATA_ERROR:
+        reason = "Data error";
+        break;
+
+      case Z_MEM_ERROR:
+        reason = "Memory error";
+        break;        
+
+      case Z_BUF_ERROR:
+        reason = "Buffer error";
+        break;        
+
+      case Z_VERSION_ERROR:
+        reason = "Version error";
+        break;        
+
       default:
         reason = "Strange things are afoot at the circle K";
         break;
       }
 
-      fprintf(stderr, "Unable to close gzfile because: %s\n", reason);
+      fprintf(stderr, "Unable to close gzfile.  Error code: %d: %s\n", int_result, reason);
     }
 
     m_file.release();
