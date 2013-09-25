@@ -56,9 +56,19 @@ struct wrap0_base : public wrap_base<Return, Target, 0> {
               0, 0, dt::to_data_type_enum<Return>::value);
   }
 
+  static bool is_name_and_arg_count_match(
+                  const str::ref &name, const simulated_stack &available_args,
+                  size_t called_arg_count) {
+    if (!wrap_base<Return, Target, 0>::is_name_match(name)) {
+      return false;
+    }
+
+    return (0 == called_arg_count);
+  }
+  
   static bool is_match(const str::ref &name, const simulated_stack &available_args,
                         size_t called_arg_count) {      
-    return wrap_base<Return, Target, 0>::is_name_and_arg_count_match(
+    return wrap0_base<Return, Target>::is_name_and_arg_count_match(
                                           name, available_args, called_arg_count);
   }
 };
@@ -234,7 +244,7 @@ struct wrap_push_literal : public wrap_base<Return, Target, 0> {
 
   static bool is_match(const str::ref &name, const simulated_stack &available_args,
                         size_t called_arg_count) {      
-    return wrap_base<Return, Target, 0>::is_name_and_arg_count_match(
+    return wrap0_base<Return, Target>::is_name_and_arg_count_match(
                                           name, available_args, called_arg_count);
   }
 
@@ -260,7 +270,7 @@ struct wrap_push_this : public wrap_base<Return, Target, 0> {
 
   static bool is_match(const str::ref &name, const simulated_stack &available_args,
                         size_t called_arg_count) {      
-    return wrap_base<Return, Target, 0>::is_name_and_arg_count_match(
+    return wrap0_base<Return, Target>::is_name_and_arg_count_match(
                                             name, available_args, called_arg_count);
   }
 
@@ -286,7 +296,7 @@ struct wrap_push_other : public wrap_base<Return, Target, 0> {
 
   static bool is_match(const str::ref &name, const simulated_stack &available_args,
                         size_t called_arg_count) {      
-    return wrap_base<Return, Target, 0>::is_name_and_arg_count_match(
+    return wrap0_base<Return, Target>::is_name_and_arg_count_match(
                                             name, available_args, called_arg_count);
   }
 
@@ -310,7 +320,7 @@ struct wrap_branch : public wrap_base<Return, Target, 0> {
 
   static bool is_match(const str::ref &name, const simulated_stack &available_args,
                         size_t called_arg_count) {      
-    return wrap_base<Return, Target, 0>::is_name_and_arg_count_match(
+    return wrap0_base<Return, Target>::is_name_and_arg_count_match(
                                             name, available_args, called_arg_count);
   }
 

@@ -155,6 +155,7 @@ public:
       return m_file.write_some(buf, bytes_to_write, bytes_written_p);
     }
 
+    using detail::stream_helper<stream>::write; // Pacify clang.
     bool write(const id &i) {
       NP1_ASSERT(i.is_valid(), "Attempt to write invalid reliable_storage id");
       str::ref s = i.to_str_ref();
