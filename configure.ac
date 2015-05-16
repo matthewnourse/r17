@@ -1,4 +1,4 @@
-AC_INIT([r17], [1.8.0], [bug-report@rseventeen.com], [r17], [http://www.rseventeen.com/])
+AC_INIT([r17], [1.9.0], [bug-report@rseventeen.com], [r17], [http://www.rseventeen.com/])
 AM_INIT_AUTOMAKE([-Wall -Werror foreign])
 AC_CONFIG_HEADERS([config.h])
 : ${CXXFLAGS=-Wall -Werror -Wfatal-errors -fno-strict-aliasing -Wstrict-aliasing -std=c++0x -fno-rtti -fno-exceptions -fno-threadsafe-statics -O3}

@@ -5,7 +5,7 @@
 
 #include "np1/meta/stream_op_table.hpp"
 #include "np1/process.hpp"
-
+#include "np1/io/path.hpp"
 
 namespace np1 {
 namespace meta {
@@ -20,12 +20,16 @@ public:
 
 private:
   struct stream_op_call {  
-    size_t stream_op_id;
+    // -1 if it's not a call to a builtin.
+    size_t builtin_stream_op_id;    
+    rel::rlang::token stream_op_token;    
     rstd::vector<rel::rlang::token> arguments;
     bool output_is_recordset_stream;
+    stream_op_table_io_type_type output_type;
+    stream_op_table_io_type_type input_type;
     size_t script_line_number;
   };
-
+  
   class pipeline {
   public:
     void push_back(const stream_op_call &call, const rel::rlang::token &tok) {
@@ -33,11 +37,11 @@ private:
       // If the existing pipeline is empty then we just have to trust that the user knows what they are
       // doing- maybe they are piping data in from an external source.      
       if (!m_calls.empty()) {
-        stream_op_table_io_type_type pline_output_type = stream_op_table_output_type(m_calls.back().stream_op_id);
-        const char *pline_last_name = stream_op_table_name(m_calls.back().stream_op_id);
+        stream_op_table_io_type_type pline_output_type = m_calls.back().output_type;
+        const char *pline_last_name = m_calls.back().stream_op_token.text();
 
-        stream_op_table_io_type_type next_stream_op_input_type = stream_op_table_input_type(call.stream_op_id);
-        const char *next_stream_op_name = stream_op_table_name(call.stream_op_id);
+        stream_op_table_io_type_type next_stream_op_input_type = call.input_type;
+        const char *next_stream_op_name = call.stream_op_token.text();
         bool valid = (pline_output_type == next_stream_op_input_type)
                       || ((pline_output_type == STREAM_OP_TABLE_IO_TYPE_ANY)
                             && (next_stream_op_input_type != STREAM_OP_TABLE_IO_TYPE_NONE))
@@ -47,7 +51,7 @@ private:
           tok.assert(false,
                       ("Incompatible stream I/O types.  "  + rstd::string(pline_last_name) + "'s output ("
                         + rstd::string(stream_op_table_io_type_to_text(pline_output_type)) + ") is not compatible with "
-                        + rstd::string(next_stream_op_name) + "'s input ("
+                        + next_stream_op_name + "'s input ("
                         + rstd::string(stream_op_table_io_type_to_text(next_stream_op_input_type)) + ")").c_str());
         }
       }
@@ -67,12 +71,12 @@ private:
              const rstd::string &script_file_name) {
       NP1_ASSERT(m_calls.size() > 0, "Attempt to run an empty pipeline!");
 
-      // If there is only one thing in the pipeline then there is no need
+      // If there is only one thing in the pipeline and that thing is a builtin then there is no need
       // to fork, just call the operator directly.
-      if (m_calls.size() == 1) {
+      if ((m_calls.size() == 1) && ((size_t)-1 != m_calls[0].builtin_stream_op_id)) {
         stream_op_table::call(
-            m_calls[0].stream_op_id, input, output, m_calls[0].arguments, false, is_worker, script_file_name,
-            m_calls[0].script_line_number);
+          m_calls[0].builtin_stream_op_id, input, output, m_calls[0].arguments, false, is_worker, script_file_name,
+          m_calls[0].script_line_number);        
         return;
       } 
 
@@ -120,11 +124,20 @@ private:
             stdout_f.from_handle(child_stdout);
             stdout_stream = &stdout_f;
           }
-
-          stream_op_table::call(
-              i->stream_op_id, *stdin_stream, *stdout_stream, i->arguments, 
-              (i > first_i) ? (i-1)->output_is_recordset_stream : false,
-              is_worker, script_file_name, i->script_line_number);
+          
+          if ((size_t)-1 == i->builtin_stream_op_id) {
+            script::run(
+              *stdin_stream,
+              *stdout_stream,
+              compound_op_find(script_file_name, i->script_line_number, i->stream_op_token),
+              false);
+          } else {
+            stream_op_table::call(
+                i->builtin_stream_op_id, *stdin_stream, *stdout_stream, i->arguments, 
+                (i > first_i) ? (i-1)->output_is_recordset_stream : false,
+                is_worker, script_file_name, i->script_line_number);
+          }
+          
           exit(0);
         } else {
           // Parent.
@@ -161,15 +174,15 @@ private:
       rstd::string prev_op_name;
   
       for (; i < iz; ++i) {
-        prev_output_is_recordset_stream = 
-          stream_op_table_outputs_recordset_stream(i->stream_op_id, i->arguments,
-                                                    prev_output_is_recordset_stream);
-        prev_op_name = stream_op_table_name(i->stream_op_id);
+        prev_output_is_recordset_stream =
+          (i->builtin_stream_op_id != (size_t)-1)
+            && stream_op_table_outputs_recordset_stream(i->builtin_stream_op_id, i->arguments,
+                                                        prev_output_is_recordset_stream);
+        prev_op_name = i->stream_op_token.text_str();
       }
   
       return prev_output_is_recordset_stream;
     }
-
 
   private:
     rstd::vector<stream_op_call> m_calls;
@@ -239,9 +252,9 @@ private:
                     "Expected identifier but found non-identifier token");
       rstd::vector<rel::rlang::token>::const_iterator stream_op_tok_i = tok_i;
 
-      size_t stream_op_id = stream_op_table_find(stream_op_tok_i->text(), is_worker);
-      tok_i->assert(stream_op_id != (size_t)-1, "Unknown stream operator");
-
+      size_t builtin_stream_op_id = stream_op_table_find(stream_op_tok_i->text(), is_worker);
+      rel::rlang::token stream_op_token(*stream_op_tok_i);
+      
       // Check that the next thing is an open parenthesis.
       tok_i->assert(tok_i + 1 < tok_end, "Unexpected end of file, expected '('");
       ++tok_i;
@@ -272,7 +285,8 @@ private:
       // accept recordset streams then we need to insert an operator that
       // can convert the stream.
       bool prev_output_is_recordset_stream = pline.get_output_is_recordset_stream();
-      bool accepts_recordset_stream = stream_op_table_accepts_recordset_stream(stream_op_id, tokens);
+      bool accepts_recordset_stream =
+        (builtin_stream_op_id != (size_t)-1) && stream_op_table_accepts_recordset_stream(builtin_stream_op_id, tokens);
       if (!accepts_recordset_stream && prev_output_is_recordset_stream) {
         append_recordset_stream_to_data_stream_translator(pline, is_worker, *tok_i);
         prev_output_is_recordset_stream = false;
@@ -281,10 +295,23 @@ private:
 
       // Add the stream operator call to the pipeline.
       bool output_is_recordset_stream =
-        stream_op_table_outputs_recordset_stream(stream_op_id, arguments,
-                                                  prev_output_is_recordset_stream);
+        (builtin_stream_op_id != (size_t)-1)
+          && stream_op_table_outputs_recordset_stream(builtin_stream_op_id, arguments, prev_output_is_recordset_stream);
       
-      stream_op_call so_call = { stream_op_id, arguments, output_is_recordset_stream, stream_op_tok_i->line_number() };      
+      stream_op_call so_call = {
+        builtin_stream_op_id,
+        stream_op_token,
+        arguments,
+        output_is_recordset_stream,
+        (builtin_stream_op_id != (size_t)-1)
+          ? stream_op_table_output_type(builtin_stream_op_id)
+          : STREAM_OP_TABLE_IO_TYPE_ANY,
+        (builtin_stream_op_id != (size_t)-1)
+          ? stream_op_table_input_type(builtin_stream_op_id)
+          : STREAM_OP_TABLE_IO_TYPE_ANY,
+        stream_op_tok_i->line_number()
+      };
+      
       pline.push_back(so_call, *tok_i);
 
       // Figure out if this is the end of the pipeline or if there is more to
@@ -313,11 +340,33 @@ private:
   static void append_recordset_stream_to_data_stream_translator(pipeline &pline, bool is_worker,
                                                                 const rel::rlang::token &tok) {
     rstd::vector<rel::rlang::token> empty_arguments;
-    stream_op_call so_call = { stream_op_table_find(NP1_REL_RECORDSET_TRANSLATE_NAME, is_worker),
-                               empty_arguments,
-                               false,
-                               tok.line_number() };
+    size_t builtin_stream_op_id = stream_op_table_find(NP1_REL_RECORDSET_TRANSLATE_NAME, is_worker);
+    stream_op_call so_call = {
+      builtin_stream_op_id,
+      rel::rlang::token(NP1_REL_RECORDSET_TRANSLATE_NAME, rel::rlang::token::TYPE_IDENTIFIER_FUNCTION),
+      empty_arguments,
+      false,
+      stream_op_table_output_type(builtin_stream_op_id),
+      stream_op_table_input_type(builtin_stream_op_id),
+      tok.line_number() };
     pline.push_back(so_call, tok);
+  }
+  
+  static rstd::string compound_op_find(const rstd::string &calling_script_file_name,
+                                       const size_t calling_script_line_number,
+                                       const rel::rlang::token &compound_op_token) {
+    io::path path(environment::r17_path());
+    
+    path.push_front(io::file::parse_directory(calling_script_file_name));
+    const rstd::string compound_op_file_name = path.find(compound_op_token.text_str());
+    if (compound_op_file_name.length() > 0) {
+      return compound_op_file_name;
+    }
+    
+    // Not found.
+    rstd::string message("Stream operator is not a builtin and was not found on this path: " + path.to_string());
+    compound_op_token.assert(false, message.c_str());
+    return rstd::string("UNREACHABLE");
   }
 };
 

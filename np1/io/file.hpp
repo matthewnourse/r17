@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <sys/syscall.h>
 #include "rstd/string.hpp"
+#include "np1/str.hpp"
 
 
 
@@ -409,6 +410,21 @@ public:
     return (::rename(from, to) == 0);
   }
 
+  /// Get the directory component of a file name.  Returns a string that means "the current directory" if there
+  /// is no directory component.  The return value includes the trailing slash.
+  static rstd::string parse_directory(const rstd::string &file_name) {
+#ifdef _WIN32
+#error parse_directory not implemented for Windows
+#else
+    const char *last_slash = str::find_last(file_name, '/');
+    if (!last_slash) {
+      return rstd::string("./");
+    }
+    
+    return rstd::string(file_name, last_slash - file_name.c_str() + 1); // include the /
+#endif    
+  }
+  
   /// Is the file actually a std file?
   bool is_std() {
     return ((stdout_handle() == m_handle)

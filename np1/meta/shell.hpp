@@ -30,7 +30,12 @@ public:
     dup2(output.handle(), 1);
 
     // Execute the command.
-    NP1_ASSERT(system(command.c_str()) >= 0, "system() failed for meta.shell stream operator.");
+    int system_result = system(command.c_str());
+    if (system_result < 0) {
+      rstd::string message("meta.shell failed.  command: ");
+      message.append(command);
+      NP1_ASSERT(false, message);
+    }
 
     // Set stdin & stdout back to what they were.
     dup2(saved_stdin, 0);

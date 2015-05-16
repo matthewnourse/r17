@@ -578,6 +578,21 @@ inline bool iends_with(const str::ref &r1, const str::ref &r2) {
   return iends_with(r1.ptr(), r1.length(), r2.ptr(), r2.length());
 }
 
+/// Find the last occurrence of a character in another string.
+inline const char *find_last(const char *haystack, size_t haystack_length, const char needle) {
+  const char *p = haystack + haystack_length - 1;
+  for (; p >= haystack; --p) {
+    if (needle == *p) {
+      return p;
+    }
+  }
+  
+  return 0;
+}
+
+inline const char *find_last(const rstd::string &haystack, const char needle) {
+  return find_last(haystack.c_str(), haystack.length(), needle);
+}
 
 /// Does a string contain another string?
 inline bool contains(const char *haystack, size_t haystack_length,
@@ -617,6 +632,28 @@ inline bool icontains(const str::ref &r1, const str::ref &r2) {
   return icontains(r1.ptr(), r1.length(), r2.ptr(), r2.length());
 }
 
+
+rstd::string trim(const char *s) {
+  const char *start = s;  
+  while (isspace(*start)) {
+    ++start;
+  }
+  
+  const char *end = start + strlen(start) - 1;
+  if (end <= start) {
+    return rstd::string(start);
+  }
+  
+  while (isspace(*end) && (end > start)) {
+    --end;
+  }
+  
+  return rstd::string(start, end - start + 1);
+}
+
+rstd::string trim(const rstd::string &s) {
+  return trim(s.c_str());
+}
 
 
 rstd::vector<rstd::string> argv_to_string_vector(int argc, const char **argv) {

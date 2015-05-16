@@ -220,6 +220,28 @@ void test_to_hex_str_pad_64() {
   }
 }
 
+void test_find_last() {
+  NP1_TEST_ASSERT(::np1::str::find_last(::rstd::string(""), '/') == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::find_last(::rstd::string("/"), '/'), "/") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::find_last(::rstd::string("/fred"), '/'), "/fred") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::find_last(::rstd::string("fred/"), '/'), "/") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::find_last(::rstd::string("f/red/"), '/'), "/") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::find_last(::rstd::string("f/red/jane"), '/'), "/jane") == 0);
+}
+
+
+void test_trim() {
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string("")), "") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string(" ")), "") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string("  ")), "") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string(" a")), "a") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string("a ")), "a") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string(" ab ")), "ab") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string("  a b c")), "a b c") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string("a b c  ")), "a b c") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string(" a b c ")), "a b c") == 0);
+  NP1_TEST_ASSERT(::np1::str::cmp(::np1::str::trim(::rstd::string("  a b c  ")), "a b c") == 0);
+}
 
 void test_is_valid_utf8() {
   NP1_TEST_ASSERT(::np1::str::is_valid_utf8("fred"));
@@ -393,6 +415,8 @@ void test_str() {
   NP1_TEST_RUN_TEST(test_to_hex_str_pad_12);
   NP1_TEST_RUN_TEST(test_to_hex_str_pad_16);
   NP1_TEST_RUN_TEST(test_to_hex_str_pad_64);
+  NP1_TEST_RUN_TEST(test_find_last);
+  NP1_TEST_RUN_TEST(test_trim);
   NP1_TEST_RUN_TEST(test_is_valid_utf8);
   NP1_TEST_RUN_TEST(test_replace_invalid_utf8_sequences);
   NP1_TEST_RUN_TEST(test_to_dec_str_unsigned);

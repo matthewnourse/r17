@@ -17,6 +17,7 @@ public:
   string() {}
   string(const char *s) : m_vector(s, s ? strlen(s)+1 : 0) {}
   string(const char *s, size_t len) : m_vector(s, len) { m_vector.push_back('\0'); }
+  string(const string &s, size_t len) : m_vector(s.c_str(), len) { m_vector.push_back('\0'); }
   string(size_t n, char c) {
     //TODO: something faster than this.
     size_t i;

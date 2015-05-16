@@ -47,23 +47,29 @@ public:
   // Read the whole file and return it as a vector of lines.
   //TODO: detect errors!
   void read_all(rstd::vector<rstd::string> &lines) {
-    rstd::string line;
-    lines.clear();
+    read_all(lines, '\n');
+  }
+  
+  // Read the whole file and return it as a vector, using the supplied delimiter.
+  void read_all(rstd::vector<rstd::string> &values, const char delim) {
+    rstd::string value;
+    values.clear();
     int c;
     // Stop on NUL as well as on EOF & error.
     while ((c = read()) > 0) {
-      if ('\n' == c) {
-        lines.push_back(line);
-        line.clear();
+      if (delim == c) {
+        values.push_back(value);
+        value.clear();
       } else {
-        line.push_back((char)c);
+        value.push_back((char)c);
       }
     }
 
-    if (line.length() > 0) {
-      lines.push_back(line);
+    if (value.length() > 0) {
+      values.push_back(value);
     }
   }
+  
 
   // Read the whole file, calling a callback for each line.  This is MUCH faster
   // than read_all().  Returns false if the callback returns false.

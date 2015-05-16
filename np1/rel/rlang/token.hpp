@@ -70,6 +70,8 @@ public:
     return p ? p : "";
   }
   
+  const rstd::string &text_str() const { return m_text; }
+  
   size_t text_length() const { return m_text.length(); }
   void text_remove_last() { m_text = m_text.substr(0, m_text.length() - 1); }
   rstd::string &writeable_text() { return m_text; }

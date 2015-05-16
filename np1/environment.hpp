@@ -14,6 +14,7 @@
 #define NP1_ENVIRONMENT_DEFAULT_SORT_CHUNK_SIZE "104857600"
 #define NP1_ENVIRONMENT_SORT_INITIAL_NUMBER_THREADS "NP1_SORT_INITIAL_NUMBER_THREADS"
 #define NP1_ENVIRONMENT_DEFAULT_SORT_INITIAL_NUMBER_THREADS "5"
+#define NP1_ENVIRONMENT_R17_PATH "NP1_R17_PATH"
 
 namespace np1 {
 
@@ -45,6 +46,11 @@ public:
   static size_t sort_initial_number_threads() {
     const char *value = getenv(NP1_ENVIRONMENT_SORT_INITIAL_NUMBER_THREADS);
     return str::dec_to_int64(value ? value : NP1_ENVIRONMENT_DEFAULT_SORT_INITIAL_NUMBER_THREADS);    
+  }
+  
+  static rstd::string r17_path() {
+    const char *value = getenv(NP1_ENVIRONMENT_R17_PATH);
+    return rstd::string(value);
   }
 
 private:

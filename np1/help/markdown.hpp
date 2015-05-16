@@ -42,7 +42,8 @@ public:
 
     usage(output);
 
-    stream_operators(output);
+    builtin_stream_operators(output);
+    compound_stream_operators(output);
 
     output.write("#### Expressions ####\n\n");
     output.write(
@@ -80,8 +81,8 @@ public:
   }
 
   template <typename Mandatory_Output_Stream>
-  static void stream_operators(Mandatory_Output_Stream &output) {
-    output.write("#### Stream operators ####\n");
+  static void builtin_stream_operators(Mandatory_Output_Stream &output) {
+    output.write("#### Builtin stream operators ####\n");
     size_t num_ops = meta::stream_op_table_size();
     size_t i;
     for (i = 0; i < num_ops; ++i) {
@@ -98,7 +99,14 @@ public:
       output.write(meta::stream_op_table_description(i));
       output.write("  \n  \n  \n");
     }
-    output.write('\n');  
+    output.write('\n');    
+  }
+  
+  template <typename Mandatory_Output_Stream>
+  static void compound_stream_operators(Mandatory_Output_Stream &output) {
+    output.write("#### Compound stream operators (new in 1.9.0)####\n");
+    output.write("To write a stream operator, create a file of r17 code.  Name the file using the characters supported for stream operator names: `a-z`, `A-Z`, `0-9`, `.` and `_`.  Put the file in the same directory as the calling script, or set the `" NP1_ENVIRONMENT_R17_PATH "` environment variable with a list of directories to search for r17 scripts.");
+    output.write('\n');
   }
 
   template <typename Mandatory_Output_Stream>
@@ -224,7 +232,8 @@ public:
     output.write("`" NP1_ENVIRONMENT_DISTRIBUTED_SCRIPT_IP_PORT_START_NAME "` (mandatory for clients): the local IP address and starting port for the client in IP:port format eg 127.0.0.1:22222.  The client will search for a free port starting with this port.  \n  \n");    
     output.write("`" NP1_ENVIRONMENT_MAX_RECORD_HASH_TABLE_SIZE "` (optional): The maximum number of slots in the record hash table that's used for rel.join.*, rel.unique and rel.group.  Default is " NP1_ENVIRONMENT_DEFAULT_MAX_RECORD_HASH_TABLE_SIZE " slots.  \n  \n");
     output.write("`" NP1_ENVIRONMENT_SORT_CHUNK_SIZE_NAME "` (optional): The size of the chunks used for sorting, in bytes.  The default is " NP1_ENVIRONMENT_DEFAULT_SORT_CHUNK_SIZE " bytes.\n  \n");
-    output.write("`" NP1_ENVIRONMENT_SORT_INITIAL_NUMBER_THREADS "` (optional): The initial number of threads used for parallel sorting.  Each thread will sort a single chunk.  R17 will adjust the actual number of threads based on throughput after sorting each chunk.  The default is " NP1_ENVIRONMENT_DEFAULT_SORT_INITIAL_NUMBER_THREADS " threads.\n");
+    output.write("`" NP1_ENVIRONMENT_SORT_INITIAL_NUMBER_THREADS "` (optional): The initial number of threads used for parallel sorting.  Each thread will sort a single chunk.  R17 will adjust the actual number of threads based on throughput after sorting each chunk.  The default is " NP1_ENVIRONMENT_DEFAULT_SORT_INITIAL_NUMBER_THREADS " threads.\n  \n");
+    output.write("`" NP1_ENVIRONMENT_R17_PATH "` (optional): The path to use for searching for r17 scripts.  If a stream operator is not a known builtin, r17 will search the directory of the current script then search `" NP1_ENVIRONMENT_R17_PATH "` for the first file with the same name as the stream operator.  r17 will then interpret that file as an r17 script.\n");
   }
 
 private:
