@@ -38,9 +38,14 @@ public:
     TYPE_COMMA,
     TYPE_SEMICOLON,
     TYPE_OPERATOR,
-    TYPE_UNPARSED_CODE_BLOCK
+    TYPE_UNPARSED_CODE_BLOCK,
+    TYPE_SCRIPT_ARGUMENT_REFERENCE,
   } type_type;
 
+  typedef enum {
+    INITIAL_CHAR_SCRIPT_ARGUMENT_REFERENCE = '$'
+  } initial_char_type;
+  
 public:
   token() : m_line_number(0), m_type(TYPE_UNKNOWN), m_first_matching_sym_op_fn_id(-1) {}
 

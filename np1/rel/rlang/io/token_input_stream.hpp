@@ -49,6 +49,8 @@ public:
       read_number_token(tok, false);
     } else if (is_unparsed_code_block_char(c)) {
       read_unparsed_code_block(tok);
+    } else if (is_initial_script_argument_reference_char(c)) {
+      read_script_argument_reference(tok);
     } else {
       read_special_char_token(tok);
     }
@@ -259,6 +261,20 @@ private:
     tok.type(token::TYPE_UNPARSED_CODE_BLOCK);
   }
 
+  void read_script_argument_reference(token &tok) {
+    int first_char = m_stream.read();
+    NP1_ASSERT(is_initial_script_argument_reference_char(first_char),
+               "Unexpected first char of script argument reference");
+    
+    read_number_token(tok, false);
+    
+    tok.assert((tok.type() == token::TYPE_INT) && (tok.text_str().length() > 0),
+               "Script argument references must be an integer");
+    
+    tok.type(token::TYPE_SCRIPT_ARGUMENT_REFERENCE);
+  }
+
+  
   char mandatory_read() {
     int c = m_stream.read();    
     NP1_ASSERT(c >= 0, error_message("Unterminated operator"));
@@ -277,6 +293,10 @@ private:
 
   bool is_unparsed_code_block_char(char c) {
     return (NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER[0] == c);  
+  }
+  
+  bool is_initial_script_argument_reference_char(char c) {
+    return (token::INITIAL_CHAR_SCRIPT_ARGUMENT_REFERENCE == c);
   }
 
 private:

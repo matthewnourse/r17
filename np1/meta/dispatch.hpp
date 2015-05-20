@@ -52,11 +52,9 @@ private:
     rstd::string op_name = args[0];    
 
     size_t stream_op_id = stream_op_table::find(op_name.c_str(), false);
-    // If the operator name is not found maybe this is the file name of a script.
+    // If the operator name is not found maybe this is the file name of a script or the script itself.
     if ((size_t)-1 == stream_op_id) {
-      rstd::vector<rstd::string> fake_args = args;
-      fake_args.push_front(NP1_META_SCRIPT_NAME);
-      script::run(input, output, fake_args, false);
+      script::run(input, output, args[0], ((args.size() > 1) ? args[1] : rstd::string()), false);
     } else {      
       stream_op_table::call(stream_op_id, input, output, args, false, false, "[command-line-argument]", 1);
     }

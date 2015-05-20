@@ -45,7 +45,7 @@ enum { MAX_NUM_STR_LENGTH = 64 };
 /* Don't be tempted to use strtoll, it sets things to LONG_MAX on overflow and
    does other useless crap. */
 int64_t partial_dec_to_int64(const char *s, const char *s_end,
-                              char **end_of_number_p) {
+                             char **end_of_number_p) {
   while ((s < s_end) && isspace(*s)) {
     ++s;
   }
@@ -75,7 +75,7 @@ int64_t partial_dec_to_int64(const char *s, const char *s_end,
 
 
 int64_t partial_dec_to_int64(const char *s, size_t s_length,
-                              size_t &number_length) {
+                             size_t &number_length) {
   char *endptr;
   int64_t num = partial_dec_to_int64(s, s + s_length, &endptr);
   number_length = endptr - s;
@@ -84,7 +84,7 @@ int64_t partial_dec_to_int64(const char *s, size_t s_length,
 
 
 int64_t partial_hex_to_int64(const char *s, const char *s_end,
-                              char **end_of_number_p) {
+                            char **end_of_number_p) {
   while ((s < s_end) && isspace(*s)) {
     ++s;
   }

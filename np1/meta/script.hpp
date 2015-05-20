@@ -130,6 +130,7 @@ private:
               *stdin_stream,
               *stdout_stream,
               compound_op_find(script_file_name, i->script_line_number, i->stream_op_token),
+              rel::rlang::compiler::split_expressions(i->arguments),
               false);
           } else {
             stream_op_table::call(
@@ -191,22 +192,27 @@ private:
 
 public:
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                  const rstd::vector<rstd::string> &args, bool is_worker) {
-    NP1_ASSERT(args.size() == 2, "Usage: " + args[0] + " file_name_or_inline_script");
-    run(input, output, args[1], is_worker);
+                  const rstd::string &file_name_or_inline_script,
+                  const rstd::string &script_arguments_string,
+                  bool is_worker) {
+    rstd::vector<rstd::vector<rel::rlang::token> > script_arguments;
+    parse_script_arguments(script_arguments_string, script_arguments);
+    run(input, output, file_name_or_inline_script, script_arguments, is_worker);
   }
-
+  
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                  const rstd::string &file_name_or_inline_script, bool is_worker) {
+                  const rstd::string &file_name_or_inline_script,
+                  const rstd::vector<rstd::vector<rel::rlang::token> > &script_arguments,
+                  bool is_worker) {
     NP1_ASSERT(str::is_valid_utf8(file_name_or_inline_script),
-                "File name or script '" + file_name_or_inline_script + "' is not valid UTF-8");
+              "File name or script '" + file_name_or_inline_script + "' is not valid UTF-8");
 
     io::file script_file;
     if (!script_file.open_ro(file_name_or_inline_script.c_str())) {
       io::string_input_stream script_stream(file_name_or_inline_script);
-      run_from_stream(input, output, script_stream, is_worker, "[inline]");
+      run_from_stream(input, output, script_stream, is_worker, "[inline]", script_arguments);
     } else {
-      run_from_stream(input, output, script_file, is_worker, file_name_or_inline_script);
+      run_from_stream(input, output, script_file, is_worker, file_name_or_inline_script, script_arguments);
     }
   }
 
@@ -215,10 +221,11 @@ public:
                               io::unbuffered_stream_base &output,
                               Script_Input_Stream &script_file,
                               bool is_worker,
-                              const rstd::string &script_file_name) {
+                              const rstd::string &script_file_name,
+                              const rstd::vector<rstd::vector<rel::rlang::token> > &script_arguments) {
     //TODO: should the script file be checked for valid UTF-8?
     rstd::vector<pipeline> pipelines;
-    compile(script_file, pipelines, is_worker);
+    compile(script_file, pipelines, is_worker, script_arguments);
 
     rstd::vector<pipeline>::iterator pipeline_i = pipelines.begin();
     rstd::vector<pipeline>::iterator pipeline_iz = pipelines.end();
@@ -233,13 +240,16 @@ private:
   // Do a basic compile step, crashes on error.
   template <typename Script_Input_Stream>
   static void compile(Script_Input_Stream &script_file, rstd::vector<pipeline> &pipelines,
-                      bool is_worker) {
+                      bool is_worker, const rstd::vector<rstd::vector<rel::rlang::token> > &arguments) {
     rstd::vector<rel::rlang::token> tokens;
 
     // Use the rlang compiler to get a list of tokens, still in prefix format.
     // We only use symbols that the rlang compiler knows about, even if they
     // have different semantics.
     rel::rlang::compiler::compile_single_expression_to_prefix(script_file, tokens);
+    
+    // Replace any script argument references with the script arguments.
+    expand_script_arguments(tokens, arguments);
     
     // Now break up the list of tokens into pipelines.
     pipeline pline;
@@ -368,12 +378,47 @@ private:
     compound_op_token.assert(false, message.c_str());
     return rstd::string("UNREACHABLE");
   }
+  
+  static void expand_script_arguments(rstd::vector<rel::rlang::token> &script_tokens,
+                                      const rstd::vector<rstd::vector<rel::rlang::token> > &arguments) {
+    rstd::vector<rel::rlang::token> new_script_tokens;    
+    rstd::vector<rel::rlang::token>::const_iterator script_tokens_i = script_tokens.begin();
+    rstd::vector<rel::rlang::token>::const_iterator script_tokens_iz = script_tokens.end();
+    
+    for (; script_tokens_i != script_tokens_iz; ++script_tokens_i) {
+      if (script_tokens_i->type() == rel::rlang::token::TYPE_SCRIPT_ARGUMENT_REFERENCE) {
+        int64_t argument_number = str::dec_to_int64(script_tokens_i->text_str()) - 1;
+        script_tokens_i->assert((argument_number >= 0) && (argument_number < (int64_t)arguments.size()),
+                               "Invalid script argument reference");
+        rstd::vector<rel::rlang::token>::const_iterator argument_i = arguments[argument_number].begin();
+        rstd::vector<rel::rlang::token>::const_iterator argument_iz = arguments[argument_number].end();
+        for (; argument_i != argument_iz; ++argument_i) {
+          new_script_tokens.push_back(*argument_i);
+        }
+      } else {
+        new_script_tokens.push_back(*script_tokens_i);
+      }
+    }
+    
+    rel::rlang::compiler::update_tokens_with_info_from_surrounding_tokens(new_script_tokens);
+    script_tokens.swap(new_script_tokens);
+  }
+  
+  static void parse_script_arguments(const rstd::string &arguments_string,
+                                     rstd::vector<rstd::vector<rel::rlang::token> > &arguments) {
+    rstd::vector<rel::rlang::token> tokens;
+    io::string_input_stream arguments_stream(arguments_string);
+    rel::rlang::compiler::compile_single_expression_to_prefix(arguments_stream, tokens);
+    rstd::vector<rstd::vector<rel::rlang::token>> parsed_arguments(rel::rlang::compiler::split_expressions(tokens));
+    arguments.swap(parsed_arguments);
+  }
 };
 
 /// Helper function to avoid circular #includes.
 void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
                 const rstd::string &file_name, bool is_worker) {
-  script::run(input, output, file_name, is_worker);
+  rstd::vector<rstd::vector<rel::rlang::token> > empty_script_arguments;
+  script::run(input, output, file_name, empty_script_arguments, is_worker);
 }
 
 

@@ -61,9 +61,14 @@ public:
       case token::TYPE_OPERATOR:
         os.write(token_i->text());
         break;
-
+        
       case token::TYPE_UNPARSED_CODE_BLOCK:
         write_unparsed_code_block(os, token_i->text());
+        break;
+
+      case token::TYPE_SCRIPT_ARGUMENT_REFERENCE:
+        os.write(token::INITIAL_CHAR_SCRIPT_ARGUMENT_REFERENCE);
+        os.write(token_i->text());
         break;
       }
 

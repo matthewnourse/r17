@@ -36,7 +36,10 @@ void run_script(const rstd::string &script, const rstd::string &test_data, const
 
   create_test_files(input, output, test_data);
 
-  ::np1::meta::script::run_from_stream(input, output, script_file, false, "[test]");
+  //TODO: test with arguments
+  typedef ::np1::rel::rlang::token token_type;
+  ::rstd::vector<rstd::vector<token_type> > empty_arguments;
+  ::np1::meta::script::run_from_stream(input, output, script_file, false, "[test]", empty_arguments);
 
   output.rewind();
 
@@ -186,7 +189,11 @@ void test_inline_script() {
 
   create_test_files(input, output, basic_flintstones_data());
 
-  ::np1::meta::script::run(input, output, "rel.from_tsv() | rel.where(name = 'fred') | rel.to_tsv();", false);
+  //TODO: test with non-empty arguments.
+  typedef ::np1::rel::rlang::token token_type;
+  ::rstd::vector<rstd::vector<token_type> > empty_arguments;
+  ::np1::meta::script::run(input, output, "rel.from_tsv() | rel.where(name = 'fred') | rel.to_tsv();",
+                           empty_arguments, false);
 
   const char *expected_output =
     "string:name\tuint:value1\tint:value2\n"
@@ -1195,6 +1202,41 @@ void test_directory_list() {
 }
 
 
+void test_compound_operators() {
+  rstd::string test_root = "/tmp/np1_test_reliable_storage_local_root/test_compound_operators";
+  rstd::string compound_op_name = "test_compound_operators_test_op";
+  rstd::string compound_op_file_name = test_root + "/test_compound_operators_test_op";
+  rstd::string compound_op_code = "$1($2);";  
+  
+  ::np1::io::file::mkdir(test_root.c_str());
+  ::np1::io::file compound_op_file;
+  NP1_TEST_ASSERT(compound_op_file.create_or_open_wo_trunc(compound_op_file_name.c_str()));
+  NP1_TEST_ASSERT(compound_op_file.write(compound_op_code.c_str(), compound_op_code.length()));
+  compound_op_file.close();
+  
+  rstd::string old_path = ::np1::environment::r17_path();
+  ::np1::environment::r17_path(test_root);
+  
+  run_script(
+    "rel.from_csv() | test_compound_operators_test_op(rel.where, name = 'fred') | rel.to_csv();",
+    
+    "string:name,int:value\n"
+    "fred,1\n"
+    "fred,2\n"
+    "jane,1\n"
+    "fred,3\n",
+    
+    "string:name,int:value\n"
+    "fred,1\n"
+    "fred,2\n"
+    "fred,3\n"
+  );
+    
+  ::np1::io::file::erase(compound_op_file_name.c_str());
+  ::np1::environment::r17_path(old_path);
+}
+
+
 void test_recordset_create_from_data_stream() {
   //TODO: test with a bigger dataset
   reliable_storage_type::id recordset_id = reliable_storage_type::id::generate();
@@ -1301,6 +1343,7 @@ void test_script() {
   NP1_TEST_RUN_TEST(test_parallel);
   NP1_TEST_RUN_TEST(test_file_read);
   NP1_TEST_RUN_TEST(test_directory_list);
+  NP1_TEST_RUN_TEST(test_compound_operators);
 
   NP1_TEST_RUN_TEST(test_recordset_create_from_data_stream);
   //TODO: test recordset create from recordset stream.

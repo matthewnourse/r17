@@ -59,7 +59,9 @@ private:
       io::string_input_stream script_input(script_text_str);
       
       log_info("About to execute script.", script_text, input_resource_id, output_resource_id);
-      script::run_from_stream(rs_input_stream.file_ref(), rs_output_stream.file_ref(), script_input, true, "[worker]");
+      rstd::vector<rstd::vector<rel::rlang::token> > empty_arguments;
+      script::run_from_stream(
+        rs_input_stream.file_ref(), rs_output_stream.file_ref(), script_input, true, "[worker]", empty_arguments);
       log_info("Finished executing script.", script_text, input_resource_id, output_resource_id);
 
       // The return value of close is very important because if the close fails

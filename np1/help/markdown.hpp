@@ -66,9 +66,9 @@ public:
       "#### Usage ####\n\n"
       "`r17 stream_op expression`  \n"
       "OR  \n"
-      "`r17 script_file_name`  \n"
+      "`r17 script_file_name ['script_arguments']`  \n"
       "OR  \n"
-      "`r17 'inline_script'`  \n"
+      "`r17 'inline_script' ['script_arguments']`  \n"
       "where `stream_op` is one of:  \n");
 
     size_t num_ops = meta::stream_op_table_size();
@@ -77,7 +77,9 @@ public:
       output.write("`");
       output.write(meta::stream_op_table_name(i));
       output.write("`  \n");
-    }    
+    }
+    
+    output.write("...or a programmer-defined compound stream operator (see \"Compund stream operators\" below)  \n");
   }
 
   template <typename Mandatory_Output_Stream>

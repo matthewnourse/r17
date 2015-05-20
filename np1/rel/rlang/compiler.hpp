@@ -255,6 +255,17 @@ public:
     do_compile_select(tokens, this_headings, vm_infos);
   }
 
+  // Update tokens in infix format with information that's not available to the
+  // token parser.
+  static void update_tokens_with_info_from_surrounding_tokens(
+                                                  rstd::vector<token> &infix) {
+    size_t i;
+    for (i = 0; i < infix.size(); ++i) {
+      update_if_unary_minus(infix, i);
+      update_if_function(infix, i);
+    }          
+  }
+  
 private:
   // For use within compile_select.
   struct expression_info {
@@ -424,18 +435,6 @@ private:
     }
 
     update_tokens_with_info_from_surrounding_tokens(output);
-  }
-
-
-  // Update tokens in infix format with information that's not available to the
-  // token parser.
-  static void update_tokens_with_info_from_surrounding_tokens(
-                                                  rstd::vector<token> &infix) {
-    size_t i;
-    for (i = 0; i < infix.size(); ++i) {
-      update_if_unary_minus(infix, i);
-      update_if_function(infix, i);
-    }          
   }
 
   // If the token is a minus and it's actually a unary minus, update it.

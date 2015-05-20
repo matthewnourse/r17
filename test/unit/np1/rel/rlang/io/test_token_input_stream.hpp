@@ -128,7 +128,11 @@ void test_all_legal_tokens() {
     { "|", token_type::TYPE_OPERATOR, 0, 1 },
     { "~", token_type::TYPE_OPERATOR, 0, 1 },
 
-    { "@@@unparsed!@#@$%@^&*()_+:><>/';=-@@@", token_type::TYPE_UNPARSED_CODE_BLOCK, "unparsed!@#@$%@^&*()_+:><>/';=-", 1}
+    { "@@@unparsed!@#@$%@^&*()_+:><>/';=-@@@", token_type::TYPE_UNPARSED_CODE_BLOCK, "unparsed!@#@$%@^&*()_+:><>/';=-", 1},
+    
+    { "$0", token_type::TYPE_SCRIPT_ARGUMENT_REFERENCE, "0", 1 },
+    { "$1", token_type::TYPE_SCRIPT_ARGUMENT_REFERENCE, "1", 1 },
+    { "$2", token_type::TYPE_SCRIPT_ARGUMENT_REFERENCE, "2", 1 }
   };
 
   const token_expected_results_definition *definition_p = definitions;
