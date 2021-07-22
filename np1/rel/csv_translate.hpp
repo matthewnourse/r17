@@ -152,6 +152,7 @@ private:
           default:
             // If we've seen a slash then it's not an escape we accept, just put the slash and the character in there
             // as-is.
+            parsed_field.push_back('\\');
             parsed_field.push_back(c);
             break;
           }

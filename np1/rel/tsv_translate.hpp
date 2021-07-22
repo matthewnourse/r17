@@ -148,6 +148,7 @@ private:
           // as-is.
           if (seen_slash) {
             parsed_field.push_back('\\');
+            seen_slash = false;
           }  
           parsed_field.push_back(c);
           break;

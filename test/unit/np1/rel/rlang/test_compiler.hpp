@@ -768,7 +768,7 @@ void test_time_format() {
 
 void test_io_net_url_get() {
   //TODO: more servers, more URL types.
-  execute_string_function_test("str.regex_replace(\".*(January 1994).*\", io.net.url.get(interesting), \"FOUND IT\")", "string:interesting", "http://www.nplus1.com.au/home.html", "FOUND IT");
+  execute_string_function_test("str.regex_replace(\".*([Cc]omputing).*\", io.net.url.get(interesting), \"FOUND IT\")", "string:interesting", "https://www.nplus1.com.au/", "FOUND IT");
 }
 
 void test_io_file_read() {

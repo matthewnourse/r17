@@ -788,7 +788,7 @@ void test_str_split() {
 
 void test_from_tsv() {
   // from_tsv is mostly tested throughout the rest of this file.  Here we just check the auto-type-tag,
-  // header name safe-ifying and explicit header name specification.
+  // header name safe-ifying, explicit header name specification and escaping.
   run_script(
     "rel.from_tsv() | rel.to_tsv();",
 
@@ -808,6 +808,16 @@ void test_from_tsv() {
     "istring:name\tstring:value\n"
     "fred\tten\n"
     "mary\televen\n"
+  );
+
+  run_script(
+    "rel.from_tsv() | rel.to_tsv();",
+    
+    "string:value\n"
+    "\\n\\r\\t\\Xabc\n",
+    
+    "string:value\n"
+    "\\n\\r\\t\\Xabc\n"    
   );
 }
 
@@ -868,6 +878,18 @@ void test_from_csv() {
     "jane,\",,,,\"\n"
     "fred,jane\n"    
   );
+
+  // Test escaping
+  run_script(
+    "rel.from_csv() | rel.to_csv();",
+    
+    "string:value\n"
+    "\\n\\r\\t\\Xabc\n",
+    
+    "string:value\n"
+    "\\n\\r\\t\\Xabc\n"    
+  );
+
 }
 
 
