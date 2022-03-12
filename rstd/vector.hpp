@@ -7,6 +7,7 @@
 #include "np1/simple_types.hpp"
 #include "rstd/detail/mem.hpp"
 #include "rstd/swap.hpp"
+#include "rstd/move.hpp"
 
 namespace rstd {
 
@@ -121,7 +122,12 @@ public:
     NP1_ASSERT(((i >= begin()) && (i < end())),
                 "vector::erase called on with invalid iterator");
     detail::mem::destruct(i);
-    memmove(i, i+1, (end() - (i+1)) * sizeof(*i));  //TODO: is memmove ok here?
+    iterator move_i = i;
+    iterator last_i = end() - 1;
+    for (; move_i < last_i; ++move_i) {
+      move(*move_i, *(move_i + 1));
+    }
+    
     --m_size;
   }
 
@@ -146,6 +152,14 @@ public:
     rstd::swap(m_ptr, other.m_ptr);
     rstd::swap(m_size, other.m_size);
     rstd::swap(m_capacity, other.m_capacity);
+  }
+
+  void move_from(vector &other) {
+    m_ptr = other.m_ptr;
+    m_size = other.m_size;
+    m_capacity = other.m_capacity;
+    other.m_ptr = 0;
+    other.m_size = other.m_capacity = 0;
   }
 
   vector &operator = (const vector &other) {

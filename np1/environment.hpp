@@ -53,9 +53,14 @@ public:
     return rstd::string(value);
   }
   
-  static void r17_path(const rstd::string new_path) {
-    NP1_ASSERT((setenv(NP1_ENVIRONMENT_R17_PATH, new_path.c_str(), 1) == 0),
-               "Unable to set " NP1_ENVIRONMENT_R17_PATH " environment variable");
+  static void r17_path(const rstd::string &new_path) {
+    if (new_path.empty()) {
+      NP1_ASSERT((unsetenv(NP1_ENVIRONMENT_R17_PATH) == 0),
+                 "Unable to unset " NP1_ENVIRONMENT_R17_PATH " environment variable");
+    } else {
+      NP1_ASSERT((setenv(NP1_ENVIRONMENT_R17_PATH, new_path.c_str(), 1) == 0),
+                 "Unable to set " NP1_ENVIRONMENT_R17_PATH " environment variable");
+    }
   }
 
 private:

@@ -74,6 +74,10 @@ public:
     m_vector.swap(other.m_vector);  
   }
 
+  void move_from(string &other) {
+    m_vector.move_from(other.m_vector);
+  }
+
   string &operator = (const string &other) {
     string s(other);
     swap(s);

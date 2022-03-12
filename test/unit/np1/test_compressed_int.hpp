@@ -23,8 +23,8 @@ uint64_t TEST_INTEGERS[] = {
 
 void test_compressed_int_assumptions() {
   uint64_t i = 0;
-  NP1_TEST_ASSERT(!!i == 0);
-  NP1_TEST_ASSERT(!i == 1);
+  NP1_TEST_ASSERT((!!i) == 0);
+  NP1_TEST_ASSERT((!i) == 1);
 
   i = 1;
   NP1_TEST_ASSERT(!i == 0);
