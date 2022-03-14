@@ -24,7 +24,6 @@ private:
     size_t builtin_stream_op_id;    
     rel::rlang::token stream_op_token;    
     rstd::vector<rel::rlang::token> arguments;
-    bool output_is_recordset_stream;
     stream_op_table_io_type_type output_type;
     stream_op_table_io_type_type input_type;
     size_t script_line_number;
@@ -67,15 +66,14 @@ private:
       NP1_ASSERT(false, "Pipelines not implemented on Windows yet.");      
     }
 #else
-    void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output, bool is_worker,
-             const rstd::string &script_file_name) {
+    void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output, const rstd::string &script_file_name) {
       NP1_ASSERT(m_calls.size() > 0, "Attempt to run an empty pipeline!");
 
       // If there is only one thing in the pipeline and that thing is a builtin then there is no need
       // to fork, just call the operator directly.
       if ((m_calls.size() == 1) && ((size_t)-1 != m_calls[0].builtin_stream_op_id)) {
         stream_op_table::call(
-          m_calls[0].builtin_stream_op_id, input, output, m_calls[0].arguments, false, is_worker, script_file_name,
+          m_calls[0].builtin_stream_op_id, input, output, m_calls[0].arguments, script_file_name,
           m_calls[0].script_line_number);        
         return;
       } 
@@ -130,13 +128,11 @@ private:
               *stdin_stream,
               *stdout_stream,
               compound_op_find(script_file_name, i->script_line_number, i->stream_op_token),
-              rel::rlang::compiler::split_expressions(i->arguments),
-              false);
+              rel::rlang::compiler::split_expressions(i->arguments));
           } else {
             stream_op_table::call(
-                i->builtin_stream_op_id, *stdin_stream, *stdout_stream, i->arguments, 
-                (i > first_i) ? (i-1)->output_is_recordset_stream : false,
-                is_worker, script_file_name, i->script_line_number);
+                i->builtin_stream_op_id, *stdin_stream, *stdout_stream, i->arguments, script_file_name, 
+                i->script_line_number);
           }
           
           exit(0);
@@ -168,23 +164,6 @@ private:
 #endif
 
 
-    bool get_output_is_recordset_stream() {
-      rstd::vector<stream_op_call>::const_iterator i = m_calls.begin();
-      rstd::vector<stream_op_call>::const_iterator iz = m_calls.end();
-      bool prev_output_is_recordset_stream = false;
-      rstd::string prev_op_name;
-  
-      for (; i < iz; ++i) {
-        prev_output_is_recordset_stream =
-          (i->builtin_stream_op_id != (size_t)-1)
-            && stream_op_table_outputs_recordset_stream(i->builtin_stream_op_id, i->arguments,
-                                                        prev_output_is_recordset_stream);
-        prev_op_name = i->stream_op_token.text_str();
-      }
-  
-      return prev_output_is_recordset_stream;
-    }
-
   private:
     rstd::vector<stream_op_call> m_calls;
   };
@@ -193,26 +172,24 @@ private:
 public:
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
                   const rstd::string &file_name_or_inline_script,
-                  const rstd::string &script_arguments_string,
-                  bool is_worker) {
+                  const rstd::string &script_arguments_string) {
     rstd::vector<rstd::vector<rel::rlang::token> > script_arguments;
     parse_script_arguments(script_arguments_string, script_arguments);
-    run(input, output, file_name_or_inline_script, script_arguments, is_worker);
+    run(input, output, file_name_or_inline_script, script_arguments);
   }
   
   static void run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
                   const rstd::string &file_name_or_inline_script,
-                  const rstd::vector<rstd::vector<rel::rlang::token> > &script_arguments,
-                  bool is_worker) {
+                  const rstd::vector<rstd::vector<rel::rlang::token> > &script_arguments) {
     NP1_ASSERT(str::is_valid_utf8(file_name_or_inline_script),
               "File name or script '" + file_name_or_inline_script + "' is not valid UTF-8");
 
     io::file script_file;
     if (!script_file.open_ro(file_name_or_inline_script.c_str())) {
       io::string_input_stream script_stream(file_name_or_inline_script);
-      run_from_stream(input, output, script_stream, is_worker, "[inline]", script_arguments);
+      run_from_stream(input, output, script_stream, "[inline]", script_arguments);
     } else {
-      run_from_stream(input, output, script_file, is_worker, file_name_or_inline_script, script_arguments);
+      run_from_stream(input, output, script_file, file_name_or_inline_script, script_arguments);
     }
   }
 
@@ -220,18 +197,17 @@ public:
   static void run_from_stream(io::unbuffered_stream_base &input,
                               io::unbuffered_stream_base &output,
                               Script_Input_Stream &script_file,
-                              bool is_worker,
                               const rstd::string &script_file_name,
                               const rstd::vector<rstd::vector<rel::rlang::token> > &script_arguments) {
     //TODO: should the script file be checked for valid UTF-8?
     rstd::vector<pipeline> pipelines;
-    compile(script_file, pipelines, is_worker, script_arguments);
+    compile(script_file, pipelines, script_arguments);
 
     rstd::vector<pipeline>::iterator pipeline_i = pipelines.begin();
     rstd::vector<pipeline>::iterator pipeline_iz = pipelines.end();
     
     for (; pipeline_i < pipeline_iz; ++pipeline_i) {
-      pipeline_i->run(input, output, is_worker, script_file_name);
+      pipeline_i->run(input, output, script_file_name);
     }
   }
 
@@ -240,7 +216,7 @@ private:
   // Do a basic compile step, crashes on error.
   template <typename Script_Input_Stream>
   static void compile(Script_Input_Stream &script_file, rstd::vector<pipeline> &pipelines,
-                      bool is_worker, const rstd::vector<rstd::vector<rel::rlang::token> > &arguments) {
+                      const rstd::vector<rstd::vector<rel::rlang::token> > &arguments) {
     rstd::vector<rel::rlang::token> tokens;
 
     // Use the rlang compiler to get a list of tokens, still in prefix format.
@@ -262,7 +238,7 @@ private:
                     "Expected identifier but found non-identifier token");
       rstd::vector<rel::rlang::token>::const_iterator stream_op_tok_i = tok_i;
 
-      size_t builtin_stream_op_id = stream_op_table_find(stream_op_tok_i->text(), is_worker);
+      size_t builtin_stream_op_id = stream_op_table_find(stream_op_tok_i->text());
       rel::rlang::token stream_op_token(*stream_op_tok_i);
       
       // Check that the next thing is an open parenthesis.
@@ -291,28 +267,12 @@ private:
         (tok_i-1)->assert(false, "Unexpected end of file, mismatched parentheses or missing ';'");
       }
 
-      // The pipeline might output a recordset stream.  If the operator doesn't
-      // accept recordset streams then we need to insert an operator that
-      // can convert the stream.
-      bool prev_output_is_recordset_stream = pline.get_output_is_recordset_stream();
-      bool accepts_recordset_stream =
-        (builtin_stream_op_id != (size_t)-1) && stream_op_table_accepts_recordset_stream(builtin_stream_op_id, tokens);
-      if (!accepts_recordset_stream && prev_output_is_recordset_stream) {
-        append_recordset_stream_to_data_stream_translator(pline, is_worker, *tok_i);
-        prev_output_is_recordset_stream = false;
-      }
-
 
       // Add the stream operator call to the pipeline.
-      bool output_is_recordset_stream =
-        (builtin_stream_op_id != (size_t)-1)
-          && stream_op_table_outputs_recordset_stream(builtin_stream_op_id, arguments, prev_output_is_recordset_stream);
-      
       stream_op_call so_call = {
         builtin_stream_op_id,
         stream_op_token,
         arguments,
-        output_is_recordset_stream,
         (builtin_stream_op_id != (size_t)-1)
           ? stream_op_table_output_type(builtin_stream_op_id)
           : STREAM_OP_TABLE_IO_TYPE_ANY,
@@ -327,12 +287,7 @@ private:
       // Figure out if this is the end of the pipeline or if there is more to
       // come.
       if (tok_i->type() == rel::rlang::token::TYPE_SEMICOLON) {
-        // End of pipeline.  If the final output is a recordset stream then
-        // we need to translate it.
-        if (pline.get_output_is_recordset_stream()) {
-          append_recordset_stream_to_data_stream_translator(pline, is_worker, *tok_i);
-        }
-
+        // End of pipeline.  
         // Now we can add the pipeline to the list of pipelines.  
         pipelines.push_back(pline);
         pline.clear();        
@@ -347,20 +302,6 @@ private:
     }
   }
 
-  static void append_recordset_stream_to_data_stream_translator(pipeline &pline, bool is_worker,
-                                                                const rel::rlang::token &tok) {
-    rstd::vector<rel::rlang::token> empty_arguments;
-    size_t builtin_stream_op_id = stream_op_table_find(NP1_REL_RECORDSET_TRANSLATE_NAME, is_worker);
-    stream_op_call so_call = {
-      builtin_stream_op_id,
-      rel::rlang::token(NP1_REL_RECORDSET_TRANSLATE_NAME, rel::rlang::token::TYPE_IDENTIFIER_FUNCTION),
-      empty_arguments,
-      false,
-      stream_op_table_output_type(builtin_stream_op_id),
-      stream_op_table_input_type(builtin_stream_op_id),
-      tok.line_number() };
-    pline.push_back(so_call, tok);
-  }
   
   static rstd::string compound_op_find(const rstd::string &calling_script_file_name,
                                        const size_t calling_script_line_number,
@@ -416,9 +357,9 @@ private:
 
 /// Helper function to avoid circular #includes.
 void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                const rstd::string &file_name, bool is_worker) {
+                const rstd::string &file_name) {
   rstd::vector<rstd::vector<rel::rlang::token> > empty_script_arguments;
-  script::run(input, output, file_name, empty_script_arguments, is_worker);
+  script::run(input, output, file_name, empty_script_arguments);
 }
 
 

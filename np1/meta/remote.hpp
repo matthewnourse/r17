@@ -58,7 +58,7 @@ public:
       if (str::cmp(hostname, "localhost") == 0) {
         io::file output_file;
         dup2(stderr_pipe[1], 2);
-        script_run(input, output, r17_script, false);
+        script_run(input, output, r17_script);
         exit(0);
       } else {
         process::mandatory_execvp(exec_args, input.handle(), output.handle(), stderr_pipe[1]);

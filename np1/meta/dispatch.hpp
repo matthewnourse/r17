@@ -5,7 +5,6 @@
 
 #include "np1/meta/stream_op_table.hpp"
 #include "np1/meta/script.hpp"
-#include "np1/meta/worker.hpp"
 
 namespace np1 {
 namespace meta {
@@ -51,12 +50,12 @@ private:
                         const rstd::vector<rstd::string> &args) {
     rstd::string op_name = args[0];    
 
-    size_t stream_op_id = stream_op_table::find(op_name.c_str(), false);
+    size_t stream_op_id = stream_op_table::find(op_name.c_str());
     // If the operator name is not found maybe this is the file name of a script or the script itself.
     if ((size_t)-1 == stream_op_id) {
-      script::run(input, output, args[0], ((args.size() > 1) ? args[1] : rstd::string()), false);
+      script::run(input, output, args[0], ((args.size() > 1) ? args[1] : rstd::string()));
     } else {      
-      stream_op_table::call(stream_op_id, input, output, args, false, false, "[command-line-argument]", 1);
+      stream_op_table::call(stream_op_id, input, output, args, "[command-line-argument]", 1);
     }
   }
 };

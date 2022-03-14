@@ -52,7 +52,7 @@ public:
       close(translation_pipe[0]);
       io::file translation_file;
       translation_file.from_handle(translation_pipe[1]);
-      meta::script_run(input, translation_file, r17_script, false);
+      meta::script_run(input, translation_file, r17_script);
       return;
     }
 

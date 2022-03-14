@@ -148,10 +148,6 @@ public:
 
   template <typename Mandatory_Output_Stream>
   static void distribution(Mandatory_Output_Stream &output) {
-    output.write("##### Distribution #####\n");
-    output.write("R17 provides 2 ways of distributing load across multiple servers:  \n");
-    output.write("1.  Explicit SSH-based distribution. The script writer explicitly defines which parts of the script are distributed.  This style provides more control, less setup/config and less disk write load for once-off queries.  \n");
-    output.write("2.  Semi-automatic WebDAV-based distribution.  R17 figures out which parts of the script can be distributed and sends script fragments to pre-started workers via UDP.  This style provides automatic caching.  It offers better performance when running a query multiple times over a large incrementally changing data set.  May require a cluster of WebDAV servers.  \n\n");
     output.write("##### Explicit SSH-based Distribution #####\n");
     output.write("The key stream operators for SSH-based distribution are `rel.record_split`, `rel.join.consistent_hash` and `meta.parallel_explicit_mapping`.  The recommended procedure is:  \n");
     output.write("1.  Use `rel.record_split` to split a large data set into individual files.  For best results aim for chunk sizes of 100MB to 500MB.  \n");
@@ -185,43 +181,6 @@ public:
     output.write("`| rel.order_by(_count)`  \n");
     output.write("`| io.file.overwrite('user_by_activity.r17_native');`  \n");
 
-    output.write("##### Semi-automatic WebDAV-based Distribution #####\n");
-    output.write("R17 implements semi-automatic distributed operation by splitting work across data stream fragments that together are called a 'recordset'.  ");
-    output.write("To create a recordset, pipe a data stream into `rel.recordset.create`.  ");
-    output.write("If an operator is able to distribute its workload then it will do so if its input is a recordset stream (ie the output of `rel.recordset.read`).\n");
-    output.write("If an operator does not support distribution then the recordset stream will be automatically translated to a normal data stream.  ");
-    output.write("Recordset streams can also be manually translated using `rel.recordset.translate`.  \n   \n");
-    output.write("Recordsets are stored in 'reliable storage' and are identified with a 64-digit hexadecimal id.  ");
-    output.write("There's currently no command to create a recordset id.  One way to create a suitable recordset id is:  \n");
-    output.write("$ `cat /dev/urandom | head -n 100 | sha512sum | head --bytes 64`  \n  \n");
-    output.write("The 'reliable storage' is a WebDAV-capable web server, specified by a URL in the ");
-    output.write("`" NP1_ENVIRONMENT_RELIABLE_STORAGE_REMOTE_ROOT_NAME "`");
-    output.write(" environment variable.  The web server is responsible for its own scaling & replication.  The local reliable storage cache is is specified by a path in the ");
-    output.write("`" NP1_ENVIRONMENT_RELIABLE_STORAGE_LOCAL_ROOT_NAME "`");
-    output.write(" environment variable.  Distributed scripts also require the ");
-    output.write("`" NP1_ENVIRONMENT_DISTRIBUTED_SCRIPT_IP_PORT_START_NAME"`" );
-    output.write(" environment variable to specify a start point for searching for an unused IP address/port combination.  \n  \n");
-    output.write("R17 expects two special files inside the reliable storage: a list of 'client' IP address/port combinations and a list of 'worker' IP address/port combinations.  ");
-    output.write("R17 expects the 'client' list at  \n");
-    output.write("`00/00/00/0000000000000000000000000000000000000000000000000000000000`  \n");
-    output.write("and the 'worker' list at  \n");
-    output.write("`00/00/00/0000000000000000000000000000000000000000000000000000000001`.  \n  \n");
-    output.write("In distributed mode, r17 will not delete any of its temporary files so they can be used as a query cache later.  This is safe because reliable storage data can never be updated.  All temporary files have an id beginning with 't'.  \n  \n");
-    output.write("###### Example ######\n");
-    output.write("In this example a script's work is distributed across two local processes and the reliable storage is at http://very_reliable/.  \n  \n");
-    output.write("Contents of `http://very_reliable/00/00/00/0000000000000000000000000000000000000000000000000000000000`:  \n");
-    output.write("127.0.0.1:22222  \n  \n");
-    output.write("Contents of `http://very_reliable/00/00/00/0000000000000000000000000000000000000000000000000000000001`:  \n");
-    output.write("127.0.0.1:22223  \n");
-    output.write("127.0.0.1:22224  \n  \n");
-    output.write("To start both workers and then run the distributed script:  \n");
-    output.write("`$ export " NP1_ENVIRONMENT_RELIABLE_STORAGE_REMOTE_ROOT_NAME "=http://very_reliable`  \n");
-    output.write("`$ export " NP1_ENVIRONMENT_RELIABLE_STORAGE_LOCAL_ROOT_NAME "=/tmp/inf_rs`  \n");
-    output.write("`$ r17 meta.worker \"'127.0.0.1:22223'\" &`  \n");
-    output.write("`$ r17 meta.worker \"'127.0.0.1:22224'\" &`  \n");
-    output.write("`$ export " NP1_ENVIRONMENT_DISTRIBUTED_SCRIPT_IP_PORT_START_NAME "=127.0.0.1:22222`  \n");
-    output.write("`$ r17 script_file_name.r17`  \n  \n");
-
     output.write("  \n  \n");
   }
 
@@ -229,9 +188,6 @@ public:
   template <typename Mandatory_Output_Stream>
   static void environment_variables(Mandatory_Output_Stream &output) {
     output.write("##### Environment Variables #####\n");
-    output.write("`" NP1_ENVIRONMENT_RELIABLE_STORAGE_LOCAL_ROOT_NAME "` (mandatory for workers & clients): the directory for the local copy of the reliable storage, without trailing slash.  \n  \n");
-    output.write("`" NP1_ENVIRONMENT_RELIABLE_STORAGE_REMOTE_ROOT_NAME "` (mandatory for workers & clients): the URL for the canonical remote copy of the reliable storage, without trailing slash.  \n  \n");
-    output.write("`" NP1_ENVIRONMENT_DISTRIBUTED_SCRIPT_IP_PORT_START_NAME "` (mandatory for clients): the local IP address and starting port for the client in IP:port format eg 127.0.0.1:22222.  The client will search for a free port starting with this port.  \n  \n");    
     output.write("`" NP1_ENVIRONMENT_MAX_RECORD_HASH_TABLE_SIZE "` (optional): The maximum number of slots in the record hash table that's used for rel.join.*, rel.unique and rel.group.  Default is " NP1_ENVIRONMENT_DEFAULT_MAX_RECORD_HASH_TABLE_SIZE " slots.  \n  \n");
     output.write("`" NP1_ENVIRONMENT_SORT_CHUNK_SIZE_NAME "` (optional): The size of the chunks used for sorting, in bytes.  The default is " NP1_ENVIRONMENT_DEFAULT_SORT_CHUNK_SIZE " bytes.\n  \n");
     output.write("`" NP1_ENVIRONMENT_SORT_INITIAL_NUMBER_THREADS "` (optional): The initial number of threads used for parallel sorting.  Each thread will sort a single chunk.  R17 will adjust the actual number of threads based on throughput after sorting each chunk.  The default is " NP1_ENVIRONMENT_DEFAULT_SORT_INITIAL_NUMBER_THREADS " threads.\n  \n");

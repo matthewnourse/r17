@@ -42,7 +42,7 @@ public:
     rstd::string r17_script =
       "rel.to_tsv() | meta.shell('python " + rstd::string(temp_file.file_name()) + "') | rel.from_tsv();";
 
-    meta::script_run(input, output, r17_script, false);
+    meta::script_run(input, output, r17_script);
   }
 
   static rstd::string python_helper_code_markdown() {

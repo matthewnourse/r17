@@ -18,12 +18,6 @@ namespace unit {
 namespace np1 {
 
 void test_all() {
-  // Set up stuff used by multiple tests in here.
-  ::np1::io::file::mkdir(NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_LOCAL_ROOT);
-  setenv("NP1_RELIABLE_STORAGE_LOCAL_ROOT", NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_LOCAL_ROOT, 1);
-  setenv("NP1_RELIABLE_STORAGE_REMOTE_ROOT", NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_REMOTE_ROOT, 1);
-  setenv("NP1_DISTRIBUTED_SCRIPT_IP_PORT_START", "127.0.0.1:22222", 1);
-
   np1::test_str();
   np1::test_skip_list();
   np1::test_consistent_hash_table();

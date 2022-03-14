@@ -5,8 +5,6 @@
 
 #include "test/unit/np1/io/helper.hpp"
 #include "test/unit/np1/io/test_gzfile.hpp"
-#include "test/unit/np1/io/test_reliable_storage.hpp"
-#include "test/unit/np1/io/test_ordered_work_distributor.hpp"
 #include "test/unit/np1/io/test_ext_heap_buffer_output_stream.hpp"
 #include "test/unit/np1/io/test_path.hpp"
 #include "test/unit/np1/io/net/test_all.hpp"
@@ -20,8 +18,6 @@ namespace io {
 void test_all() {
   test_ext_heap_buffer_output_stream();
   test_gzfile();
-  test_reliable_storage();
-  test_ordered_work_distributor();
   test_path();
   net::test_all();
 }

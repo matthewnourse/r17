@@ -70,13 +70,9 @@ static const char *stream_op_table_io_type_to_text(stream_op_table_io_type_type 
 }
 
 
-size_t stream_op_table_find(const char *name, bool is_worker);
-bool stream_op_table_accepts_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens);
-bool stream_op_table_outputs_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens,
-                                              bool input_is_recordset_stream);
-
+size_t stream_op_table_find(const char *name);
 void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &output,
-                const rstd::string &args, bool is_worker);
+                const rstd::string &args);
 
 
 
@@ -101,20 +97,12 @@ void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &o
 #include "np1/rel/unique.hpp"
 #include "np1/rel/str_split.hpp"
 #include "np1/rel/where.hpp"
-#include "np1/rel/distributed.hpp"
-#include "np1/rel/distributed_where.hpp"
-#include "np1/rel/distributed_select.hpp"
-#include "np1/rel/distributed_str_split.hpp"
-#include "np1/rel/distributed_group.hpp"
 #include "np1/rel/assert.hpp"
 #include "np1/rel/tsv_translate.hpp"
 #include "np1/rel/csv_translate.hpp"
 #include "np1/rel/usv_translate.hpp"
 #include "np1/rel/from_text.hpp"
 #include "np1/rel/generate_sequence.hpp"
-#include "np1/rel/recordset/create.hpp"
-#include "np1/rel/recordset/read.hpp"
-#include "np1/rel/recordset/translate.hpp"
 #include "np1/text/utf16_to_utf8.hpp"
 #include "np1/text/strip_cr.hpp"
 #include "np1/meta/remote.hpp"
@@ -161,31 +149,19 @@ struct stream_op_wrap_base {
     return STREAM_OP_TABLE_IO_TYPE_ANY;
   }
 
-  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
-                                        bool is_input_recordset_stream) const {
-    return false;
-  }
-
-  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
-    return false;
-  }
-
-  virtual bool is_usable_in_distributed_operation() const { return false; }
-
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
     mandatory_delimited_input_type mandatory_delimited_input(input);
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
-    call(is_recordset_stream, mandatory_delimited_input, mandatory_output, tokens);
+    call(mandatory_delimited_input, mandatory_output, tokens);
   }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(false, "Stream operator wrapper has no call(rs_root, is_recordset_stream, delimited, mandatory, tokens) method!");
+    NP1_ASSERT(false, "Stream operator wrapper has no call(delimited, mandatory, tokens) method!");
   }
 };
 
@@ -206,29 +182,12 @@ struct rel_group_wrap : public stream_op_wrap_base {
   };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual bool is_usable_in_distributed_operation() const { return true; }
 
-  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
-    return true;
-  }
-
-  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
-                                        bool is_input_recordset_stream) const {
-    return false;
-  }
-
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    if (is_recordset_stream) {
-      rel::distributed_group op;
-      op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
-          environment::distributed_script_ip_port_start(), mandatory_delimited_input, mandatory_output, tokens);
-    } else {
-      rel::group op;
-      op(mandatory_delimited_input, mandatory_output, tokens);    
-    }
+    rel::group op;
+    op(mandatory_delimited_input, mandatory_output, tokens);    
   }  
 } rel_group_instance;
 
@@ -239,11 +198,9 @@ struct rel_join_natural_wrap : public stream_op_wrap_base {
   virtual const char *description() const { return "`rel.join.natural('other_file_name')` joins the input to `other_file_name`."; };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_natural op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
   }  
@@ -255,11 +212,9 @@ struct rel_join_left_wrap : public stream_op_wrap_base {
   virtual const char *description() const { return "`rel.join.left('other_file_name')` left-joins the input to `other_file_name`."; };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_left op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
   }  
@@ -272,11 +227,9 @@ struct rel_join_anti_wrap : public stream_op_wrap_base {
   virtual const char *description() const { return "`rel.join.anti('other_file_name')` antijoins the input to `other_file_name`."; };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_anti op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
   }  
@@ -288,11 +241,9 @@ struct rel_join_consistent_hash : public stream_op_wrap_base {
   virtual const char *description() const { return "`rel.join.consistent_hash('other_file_name')` joins the input to `other_file_name` using a consistent hash (http://en.wikipedia.org/wiki/Consistent_hashing).  This operator will refuse to join two streams with common header names.  Streams may contain duplicate records.  The more times that a record appears in a stream, the more likely it is to be matched & included in the join."; };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::join_consistent_hash op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
   }  
@@ -312,12 +263,9 @@ struct rel_order_by_wrap : public stream_op_wrap_base {
   };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
         rel::order_by::TYPE_MERGE_SORT, rel::order_by::ORDER_ASCENDING);    
@@ -331,12 +279,9 @@ struct rel_order_by_desc_wrap : public stream_op_wrap_base {
   };
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
         rel::order_by::TYPE_MERGE_SORT, rel::order_by::ORDER_DESCENDING);    
@@ -367,11 +312,9 @@ struct rel_order_by_quicksort_wrap : public rel_order_by_wrap {
     return "`rel.order_by.quicksort(a, b, c)`" NP1_GENERIC_SORT_DESCRIPTION " using a stable quicksort variant.  The quicksort variant has the Sedgewick optimizations but still has the same poor worst-case running time as other quicksorts.  " NP1_GENERIC_SORT_MEMORY_USAGE;
   };
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
         rel::order_by::TYPE_QUICK_SORT, rel::order_by::ORDER_ASCENDING);    
@@ -385,11 +328,9 @@ struct rel_order_by_quicksort_desc_wrap : public rel_order_by_wrap {
     return "`rel.order_by.quicksort.desc(a, b, c)` will sort in the opposite order to `rel.order_by.quicksort(a, b, c)`.";
   };
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::order_by op;
     op(mandatory_delimited_input, mandatory_output, tokens,
         rel::order_by::TYPE_QUICK_SORT, rel::order_by::ORDER_DESCENDING);    
@@ -405,39 +346,16 @@ struct rel_select_wrap : public stream_op_wrap_base {
     return "`rel.select(expr1 as [type:]header1, expr2 as [type:]header2, ...)` will transform incoming records as specified by "
             "the expression(s).  Approximately equivalent to SQL's SELECT.  The `prev.` prefix may be used to "
             "refer to a field from the transformed previous record.  If the header name is prefixed with a type name then the "
-            "data will be coerced to that type without any extra type checking.  If the input is a recordset stream as returned by "
-            "`rel.recordset.create` AND the `prev.` prefix is not used, `rel.select` will distribute the load amongst "
-            "all available worker processes.";
+            "data will be coerced to that type without any extra type checking.";
   };
 
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-
-  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
-    return !rel::rlang::compiler::any_references_to_other_record(tokens);
-  }
-
-  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
-                                        bool is_input_recordset_stream) const {
-    // select is only distributed-safe if it doesn't refer to the previous
-    // record.
-    return (is_input_recordset_stream
-            && !rel::rlang::compiler::any_references_to_other_record(tokens));
-  }
-
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    if (outputs_recordset_stream(tokens, is_recordset_stream)) {
-      rel::distributed_select op;
-      op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
-          environment::distributed_script_ip_port_start(), mandatory_delimited_input, mandatory_output, tokens);    
-    } else {
-      rel::select op;
-      op(mandatory_delimited_input, mandatory_output, tokens);
-    }
+    rel::select op;
+    op(mandatory_delimited_input, mandatory_output, tokens);
   }  
 } rel_select_instance;
 
@@ -451,12 +369,9 @@ struct rel_record_count_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::record_count op;
     op(mandatory_delimited_input, mandatory_output, tokens);
   }  
@@ -473,12 +388,9 @@ struct rel_record_split_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool is_usable_in_distributed_operation() const { return false; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::record_split op;
     op(mandatory_delimited_input, mandatory_output, tokens);
   }  
@@ -489,35 +401,17 @@ struct rel_where_wrap : public stream_op_wrap_base {
   virtual const char *name() const { return "rel.where"; }
   virtual const char *description() const {
     return "`rel.where(expression)` will include records in the output if `expression` returns true.  "
-            "Approximately equivalent to SQL's WHERE.  If the input is a recordset stream as returned by "
-            "`rel.recordset.create`, `rel.where` will distribute the load amongst all available worker processes.";
+            "Approximately equivalent to SQL's WHERE.";
   };
 
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
-                                        bool is_input_recordset_stream) const {
-    return is_input_recordset_stream;
-  }
-
-  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
-    return true;
-  }
-  
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    if (is_recordset_stream) {
-      rel::distributed_where op;
-      op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
-          environment::distributed_script_ip_port_start(), mandatory_delimited_input, mandatory_output, tokens);    
-    } else {
-      rel::where op;
-      op(mandatory_delimited_input, mandatory_output, tokens);
-    }
+    rel::where op;
+    op(mandatory_delimited_input, mandatory_output, tokens);
   }  
 } rel_where_instance;
 
@@ -531,13 +425,9 @@ struct rel_unique_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::unique op;
     op(mandatory_delimited_input, mandatory_output, tokens);    
   }  
@@ -549,36 +439,17 @@ struct rel_str_split : public stream_op_wrap_base {
   virtual const char *description() const {
     return "`rel.str_split(header_name, 'regex')` splits the string in `header_name` using the `regex` regular "
             "expression.  It creates a new `" NP1_REL_STR_SPLIT_COUNTER_HEADING_NAME "` column to count the "
-            "newly-split string components.  If the input is a recordset stream as returned by "
-            "`rel.recordset.create`, `rel.str_split` will distribute the load amongst all available worker processes.";
+            "newly-split string components."; 
   };
 
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
-                                        bool is_input_recordset_stream) const {
-    return is_input_recordset_stream;
-  }
-
-  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
-    return true;
-  }
-
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    if (is_recordset_stream) {
-      rel::distributed_str_split op;
-      op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(),
-          environment::distributed_script_ip_port_start(), mandatory_delimited_input, mandatory_output, tokens);    
-    } else {
-      rel::str_split op;
-      op(mandatory_delimited_input, mandatory_output, tokens);
-    }
+    rel::str_split op;
+    op(mandatory_delimited_input, mandatory_output, tokens);
   }  
 } rel_str_split;
 
@@ -594,12 +465,9 @@ struct rel_assert_empty_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
 
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::assert op;
     op(mandatory_delimited_input, mandatory_output, tokens, true);    
   }  
@@ -618,12 +486,9 @@ struct rel_assert_nonempty_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
 
 
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::assert op;
     op(mandatory_delimited_input, mandatory_output, tokens, false);    
   }  
@@ -644,10 +509,9 @@ struct rel_from_tsv_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
     
@@ -666,11 +530,9 @@ struct rel_to_tsv_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_TSV; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::tsv_translate translator;
     translator.to_tsv(mandatory_delimited_input, mandatory_output, tokens);
   }
@@ -696,10 +558,9 @@ struct rel_from_csv_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
     
@@ -718,11 +579,9 @@ struct rel_to_csv_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_CSV; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::csv_translate translator;
     translator.to_csv(mandatory_delimited_input, mandatory_output, tokens);
   }
@@ -741,10 +600,9 @@ struct rel_from_usv_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
     
@@ -763,11 +621,9 @@ struct rel_to_usv_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_USV; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     rel::usv_translate translator;
     translator.to_usv(mandatory_delimited_input, mandatory_output, tokens);
   }
@@ -786,10 +642,9 @@ struct rel_from_text_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
     
@@ -811,10 +666,9 @@ struct rel_from_text_ignore_non_matching_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
     
@@ -835,113 +689,13 @@ struct rel_generate_sequence_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
     rel::generate_sequence op;
     op(mandatory_delimited_input, mandatory_output, tokens);
   }
 } rel_generate_sequence_instance;
-
-
-
-
-struct rel_recordset_create_wrap : public stream_op_wrap_base {
-  virtual const char *name() const { return "rel.recordset.create"; }
-  virtual const char *description() const {
-    return "`rel.recordset.create(recordset_id)` creates a recordset with id recordset_id from a stream "
-            "of recordset chunk ids or a stream of data.  If the input stream is a stream of recordset chunk ids then rel.recordset.create will only copy the chunk ids, not deep-copy the chunk data.  "
-            "To deep-copy the chunk data and distribute it evenly between chunks, translate the stream to a data stream before piping to rel.recordset.create, like this:  \n"
-            "`[other stream operator(s)] | rel.recordset.translate() | rel.recordset.create(recordset_id);`  \n"
-            "The optional second argument sets the approximate maximum chunk size in bytes *if* the input stream is a data stream.  If not supplied then the maximum chunk size will be approximately 100MB.  \n"
-            "`[data stream] | rel.recordset.create(recordset_id, 1024 * 1024)` will create a recordset with chunks of approximately 1MB each.";
-  };
-
-  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
-
-  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
-    return true;
-  }
-
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
-                    mandatory_buffered_output_type &mandatory_output,
-                    const rstd::vector<rel::rlang::token> &tokens) const {
-    rel::recordset::create op;
-
-    if (is_recordset_stream) {
-      op.from_recordset_stream(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(), 
-                                mandatory_delimited_input, mandatory_output,
-                                tokens);    
-    } else {
-      op.from_data_stream(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(), 
-                          mandatory_delimited_input, mandatory_output,
-                          tokens);    
-    }
-  }  
-} rel_recordset_create_instance;
-
-
-struct rel_recordset_read_wrap : public stream_op_wrap_base {
-  virtual const char *name() const { return "rel.recordset.read"; }
-  virtual const char *description() const {
-    return "`rel.recordset.read(recordset_id_1, ..recordset_id_N)` reads all recordsets with id "
-            "`recordset_id_1..recordset_id_N` and writes out a stream of recordset chunk ids.";
-  };
-
-  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
-  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-
-  virtual bool outputs_recordset_stream(const rstd::vector<rel::rlang::token> &tokens,
-                                        bool is_input_recordset_stream) const {
-    return true;
-  }
-
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
-                    mandatory_buffered_output_type &mandatory_output,
-                    const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream input stream not supported");
-    rel::recordset::read op;
-    op(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(), mandatory_delimited_input,
-        mandatory_output, tokens);    
-  }  
-} rel_recordset_read_instance;
-
-#define NP1_REL_RECORDSET_TRANSLATE_NAME "rel.recordset.translate"
-
-struct rel_recordset_translate_wrap : public stream_op_wrap_base {
-  virtual const char *name() const { return NP1_REL_RECORDSET_TRANSLATE_NAME; }
-  virtual const char *description() const {
-    return "`" NP1_REL_RECORDSET_TRANSLATE_NAME "()` translates a recordset stream to a data stream.  This is automatically invoked by meta.script as required.";
-  };
-
-  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
-
-  virtual bool accepts_recordset_stream(const rstd::vector<rel::rlang::token> &tokens) const {
-    return true;
-  }
-
-  virtual bool is_usable_in_distributed_operation() const { return true; }
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
-                    mandatory_buffered_output_type &mandatory_output,
-                    const rstd::vector<rel::rlang::token> &tokens) const {
-    rel::recordset::translate op;
-
-    if (is_recordset_stream) {
-      op.from_recordset_stream_to_data_stream(
-          environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(), 
-          mandatory_delimited_input, mandatory_output, tokens);    
-    } else {
-      NP1_ASSERT(false, "rel.recordset.translate() on data stream is not supported.");
-    }
-  }  
-} rel_recordset_translate_instance;
-
 
 
 
@@ -958,10 +712,9 @@ struct text_utf16_to_utf8_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_TEXT_UTF8; }
 
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
     
@@ -982,10 +735,9 @@ struct text_strip_cr_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_TEXT_UTF8; }
 
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     buffered_output_type buffered_output(output);
     mandatory_buffered_output_type mandatory_output(buffered_output);
     
@@ -1013,11 +765,9 @@ struct io_file_read_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
-
     io::mandatory_output_stream<io::unbuffered_stream_base> mandatory_output(output);
     rstd::vector<rstd::string> file_names(rel::rlang::compiler::eval_to_strings_only(tokens));
     NP1_ASSERT(file_names.size() > 0, "io.file.read expects at least one file name argument.");
@@ -1165,10 +915,9 @@ struct io_file_append_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     io::mandatory_input_stream<io::unbuffered_stream_base> mandatory_input(input);
     rstd::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
     mandatory_input.copy_append(file_name);
@@ -1185,10 +934,9 @@ struct io_file_overwrite_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     io::mandatory_input_stream<io::unbuffered_stream_base> mandatory_input(input);
     rstd::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
     mandatory_input.copy_overwrite(file_name);
@@ -1209,8 +957,7 @@ struct io_directory_list_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
     rstd::string directory_name(rel::rlang::compiler::eval_to_string_only(tokens));
@@ -1263,8 +1010,7 @@ struct io_directory_list_recurse_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
     rstd::string directory_name(rel::rlang::compiler::eval_to_string_only(tokens));
@@ -1305,8 +1051,7 @@ struct help_markdown_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_TEXT_UTF8; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
     help::markdown::all(mandatory_output);    
@@ -1321,8 +1066,7 @@ struct help_version_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_TEXT_UTF8; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
     mandatory_output.write(PACKAGE_VERSION "\n");    
@@ -1378,10 +1122,9 @@ struct lang_python_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     lang::python::run(input, output, tokens);
   }
 } lang_python_instance;
@@ -1411,10 +1154,9 @@ struct lang_r_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     lang::r::run(input, output, tokens);
   }
 } lang_r_instance;
@@ -1432,11 +1174,11 @@ struct meta_script_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
     rstd::string file_name(rel::rlang::compiler::eval_to_string_only(tokens));
-    script_run(input, output, file_name, false);    
+    script_run(input, output, file_name);    
   }  
 } meta_script_instance;
 
@@ -1455,10 +1197,9 @@ struct meta_remote_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
 
   //NOTE that currently the only input and output supported are stdin and stdout.
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     remote::run(input, output, tokens);
   }  
 } meta_remote_instance;
@@ -1477,10 +1218,9 @@ struct meta_shell_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_ANY; }
 
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
+  virtual void call(io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     shell::run(input, output, tokens);
   }
 } meta_shell_instance;
@@ -1500,38 +1240,14 @@ struct meta_parallel_explicit_mapping_wrap : public stream_op_wrap_base {
   virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
   virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
 
-  virtual void call(bool is_recordset_stream,
-                    mandatory_delimited_input_type &mandatory_delimited_input,
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
                     mandatory_buffered_output_type &mandatory_output,
                     const rstd::vector<rel::rlang::token> &tokens) const {
-    NP1_ASSERT(!is_recordset_stream, "Recordset stream not supported");
     parallel_explicit_mapping<mandatory_delimited_input_type, mandatory_buffered_output_type>::run(
       mandatory_delimited_input, mandatory_output, tokens);
   }
 } meta_parallel_explicit_mapping_instance;
 
-
-// Helper function to avoid circular #includes.
-void worker_run(const rstd::string &reliable_storage_local_root, const rstd::string &reliable_storage_remote_root,
-                const rstd::string &listen_endpoint);
-
-//TODO: This is not really a stream operator, but where should it go?
-struct meta_worker_wrap : public stream_op_wrap_base {
-  virtual const char *name() const { return "meta.worker"; }
-  virtual const char *description() const {
-    return "`meta.worker(a.b.c.d:x)` listens on port x on the a.b.c.d IP address for instructions from a distributed script.";
-  }
-
-  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
-  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
-
-  virtual void call(bool is_recordset_stream, io::unbuffered_stream_base &input,
-                    io::unbuffered_stream_base &output,
-                    const rstd::vector<rel::rlang::token> &tokens) const {
-    rstd::string listen_address(rel::rlang::compiler::eval_to_string_only(tokens));
-    worker_run(environment::reliable_storage_local_root(), environment::reliable_storage_remote_root(), listen_address);    
-  }  
-} meta_worker_instance;
 
 
 class stream_op_table {
@@ -1562,21 +1278,10 @@ public:
     return at(n)->output_type();  
   }
 
-  static bool accepts_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens) {
-    return at(n)->accepts_recordset_stream(tokens);
-  }
-
-  static bool outputs_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens,
-                                        bool input_is_recordset_stream) {
-    return at(n)->outputs_recordset_stream(tokens, input_is_recordset_stream);
-  }
-
 
   static void call(size_t n, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rstd::string> &args,
-                    bool input_is_recordset_stream,
-                    bool is_worker,
                     const rstd::string &script_file_name,
                     size_t script_line_number) {
     global_info::stream_op_details(at(n)->name(), script_file_name.c_str(), script_line_number);
@@ -1586,31 +1291,26 @@ public:
     io::string_input_stream args_stream(useful_args);
     rstd::vector<rel::rlang::token> tokens;
     np1::rel::rlang::compiler::compile_single_expression_to_prefix(args_stream, tokens);
-    call(n, input, output, tokens, input_is_recordset_stream, is_worker, script_file_name, script_line_number);
+    call(n, input, output, tokens, script_file_name, script_line_number);
     global_info::stream_op_details_reset();
   }
 
   static void call(size_t n, io::unbuffered_stream_base &input,
                     io::unbuffered_stream_base &output,
                     const rstd::vector<rel::rlang::token> &tokens,
-                    bool input_is_recordset_stream,
-                    bool is_worker,
                     const rstd::string &script_file_name,
                     size_t script_line_number) {
     const stream_op_wrap_base *op = at(n);
     global_info::stream_op_details(op->name(), script_file_name.c_str(), script_line_number);
 
-    validate_distributability(op, is_worker);
-    
-    op->call(input_is_recordset_stream, input, output, tokens);
+    op->call(input, output, tokens);
     global_info::stream_op_details_reset();
   }  
 
-  static size_t find(const char *needle, bool is_worker) {
+  static size_t find(const char *needle) {
     size_t i;
     for (i = 0; i < size(); ++i) {
       if (str::cmp(name(i), needle) == 0) {
-        validate_distributability(at(i), is_worker);
         return i;    
       }
     }
@@ -1619,11 +1319,6 @@ public:
   }
 
 private:
-  static void validate_distributability(const stream_op_wrap_base *op, bool is_worker) {
-    NP1_ASSERT(!is_worker || op->is_usable_in_distributed_operation(),
-                op->name() + rstd::string(" is not usable in a distributed operation."));
-  }
-  
   static const stream_op_wrap_base *at(size_t n) {
     size_t sz;
     const stream_op_wrap_base **definitions = stream_op_definitions(sz);
@@ -1661,9 +1356,6 @@ private:
       &rel_from_text_instance,
       &rel_from_text_ignore_non_matching_wrap_instance,
       &rel_generate_sequence_instance,
-      &rel_recordset_create_instance,
-      &rel_recordset_read_instance,
-      &rel_recordset_translate_instance,
       &text_utf16_to_utf8_instance,
       &text_strip_cr_instance,
       &io_file_read_instance,
@@ -1679,7 +1371,6 @@ private:
       &meta_remote_instance,
       &meta_shell_instance,
       &meta_parallel_explicit_mapping_instance,
-      &meta_worker_instance,
       &help_markdown_instance,
       &help_version_instance    
     };
@@ -1698,15 +1389,7 @@ const char *stream_op_table_description(size_t n) { return stream_op_table::desc
 stream_op_table_io_type_type stream_op_table_input_type(size_t n) { return stream_op_table::input_type(n); }
 stream_op_table_io_type_type stream_op_table_output_type(size_t n) { return stream_op_table::output_type(n); }
 
-size_t stream_op_table_find(const char *name, bool is_worker) { return stream_op_table::find(name, is_worker); }
-bool stream_op_table_accepts_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens) {
-  return stream_op_table::accepts_recordset_stream(n, tokens);
-}
-
-bool stream_op_table_outputs_recordset_stream(size_t n, const rstd::vector<rel::rlang::token> &tokens,
-                                              bool input_is_recordset_stream) {
-  return stream_op_table::outputs_recordset_stream(n, tokens, input_is_recordset_stream);
-}
+size_t stream_op_table_find(const char *name) { return stream_op_table::find(name); }
 
 
 } /// namespaces

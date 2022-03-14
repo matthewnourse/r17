@@ -5,7 +5,6 @@
 
 
 #include "test/unit/np1/io/net/test_ip_endpoint.hpp"
-#include "test/unit/np1/io/net/test_udp_messenger.hpp"
 
 namespace test {
 namespace unit {
@@ -16,7 +15,6 @@ namespace net {
 
 void test_all() {
   test_ip_endpoint();
-  test_udp_messenger();
 }
 
 } // namespaces

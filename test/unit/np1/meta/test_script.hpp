@@ -3,7 +3,7 @@
 #ifndef NP1_TEST_UNIT_NP1_REL_RLANG_TEST_SCRIPT_HPP
 #define NP1_TEST_UNIT_NP1_REL_RLANG_TEST_SCRIPT_HPP
 
-
+#define NP1_TEST_UNIT_NP1_REL_RLANG_TEST_SCRIPT_TEST_DIR "/tmp/np1_test_script/"
 
 namespace test {
 namespace unit {
@@ -39,7 +39,7 @@ void run_script(const rstd::string &script, const rstd::string &test_data, const
   //TODO: test with arguments
   typedef ::np1::rel::rlang::token token_type;
   ::rstd::vector<rstd::vector<token_type> > empty_arguments;
-  ::np1::meta::script::run_from_stream(input, output, script_file, false, "[test]", empty_arguments);
+  ::np1::meta::script::run_from_stream(input, output, script_file, "[test]", empty_arguments);
 
   output.rewind();
 
@@ -52,42 +52,6 @@ void run_script(const rstd::string &script, const rstd::string &test_data, const
 //  fprintf(stderr, "EXPECTED\n'%s'\n\nACTUAL\n'%s'\n", expected_output.c_str(), &actual_output[0]);
   NP1_TEST_ASSERT(bytes_read == expected_output_length);
   NP1_TEST_ASSERT(memcmp(&actual_output[0], expected_output.c_str(), expected_output_length) == 0);
-}
-
-
-struct meta_worker_f {
-  void operator()(const rstd::string &listen_endpoint) {
-    rstd::string script = "meta.worker('" + listen_endpoint + "');";
-    run_script(script, "", "");
-  }
-};
-
-
-
-// No need to supply a test data argument, just use one set of huge test data.
-void run_script_distributed(const rstd::string &script, const char *expected_output) {
-  write_client_peer_strings_list();
-  rstd::vector<rstd::string> worker_peer_list = write_worker_peer_strings_list();
-
-  rstd::vector<pid_t> workers = fork_distributed_workers(worker_peer_list, meta_worker_f());
-
-  reliable_storage_type::id input_recordset_id = reliable_storage_type::id::generate();
-
-  printf("  Creating test data, input recordset id is %s\n", input_recordset_id.to_string().c_str());
-  rstd::string test_data;
-  make_large_test_data_record_string(test_data);
-  ::np1::io::string_input_stream input(test_data);
-
-  printf("  Writing test data to disk and running tests\n");
-
-  rstd::string script_with_recordset_stuff =
-    "rel.from_tsv() | rel.recordset.create('" + input_recordset_id.to_string()
-    + "', 1024*1024); rel.recordset.read('" + input_recordset_id.to_string() + "') | "
-    + script;
-
-  run_script(script_with_recordset_stuff, test_data, expected_output);
-
-  kill_distributed_workers(workers);
 }
 
 
@@ -193,7 +157,7 @@ void test_inline_script() {
   typedef ::np1::rel::rlang::token token_type;
   ::rstd::vector<rstd::vector<token_type> > empty_arguments;
   ::np1::meta::script::run(input, output, "rel.from_tsv() | rel.where(name = 'fred') | rel.to_tsv();",
-                           empty_arguments, false);
+                           empty_arguments);
 
   const char *expected_output =
     "string:name\tuint:value1\tint:value2\n"
@@ -712,7 +676,7 @@ void test_record_count() {
 
 
 void test_record_split() {
-  rstd::string prefix = "/tmp/np1_test_reliable_storage_local_root/test_record_split_";
+  rstd::string prefix = "/tmp/np1_test_script/test_record_split_";
 
   run_script(
     "rel.from_tsv() | rel.record_split(1, '" + prefix + "');",
@@ -1087,7 +1051,7 @@ void test_shell() {
 
 
 void test_parallel() {
-  rstd::string file_prefix = "/tmp/np1_test_reliable_storage_local_root/test_parallel_";
+  rstd::string file_prefix = "/tmp/np1_test_script/test_parallel_";
 
   // Make the test data and write it out to a bunch of files.
   rstd::string test_data;
@@ -1116,7 +1080,7 @@ void test_parallel() {
 
 
 void test_file_read() {
-  rstd::string file_prefix = "/tmp/np1_test_reliable_storage_local_root/test_file_read_";
+  rstd::string file_prefix = "/tmp/np1_test_script/test_file_read_";
 
   // Make the test data and write it out to a bunch of files.
   rstd::string test_data;
@@ -1151,7 +1115,7 @@ void test_file_read() {
 
 
 void test_directory_list() {
-  rstd::string test_root = "/tmp/np1_test_reliable_storage_local_root/test_directory_list";
+  rstd::string test_root = "/tmp/np1_test_script/test_directory_list";
   rstd::string subdir_name = "test_subdir";
   rstd::string file1_name = "file1.txt";
   rstd::string file2_name = "file2.txt";
@@ -1225,7 +1189,7 @@ void test_directory_list() {
 
 
 void test_compound_operators() {
-  rstd::string test_root = "/tmp/np1_test_reliable_storage_local_root/test_compound_operators";
+  rstd::string test_root = "/tmp/np1_test_script/test_compound_operators";
   rstd::string compound_op_name = "test_compound_operators_test_op";
   rstd::string compound_op_file_name = test_root + "/test_compound_operators_test_op";
   rstd::string compound_op_code = "$1($2);";  
@@ -1259,80 +1223,10 @@ void test_compound_operators() {
 }
 
 
-void test_recordset_create_from_data_stream() {
-  //TODO: test with a bigger dataset
-  reliable_storage_type::id recordset_id = reliable_storage_type::id::generate();
-
-  printf("recordset id is %s\n", recordset_id.to_string().c_str());
-
-  run_script(
-    "rel.from_tsv() | rel.recordset.create('" + recordset_id.to_string() + "', 10 * 1);"
-      "rel.recordset.read('" + recordset_id.to_string() + "') | rel.to_tsv();",
-
-    basic_flintstones_data(),
-
-    basic_flintstones_data()
-  );
-}
-
-
-
-void test_distributed_where() {
-  run_script_distributed(
-    "rel.where(!str.starts_with(mul1_str, 'a')) | rel.where(mul1_int % 7 = 0) "
-    "| rel.select('a' as dummy) | rel.group(count) | rel.to_tsv();",
-    "string:dummy\tuint:_count\na\t142858\n"
-  );
-}
-
-void test_distributed_str_split() {
-  run_script_distributed(
-    "rel.str_split(mul1_str, 'name_') | rel.where(mul1_str != '') | rel.where(mul1_int % 7 = 0) "
-    "| rel.select('a' as dummy) | rel.group(count) | rel.to_tsv();",
-    "string:dummy\tuint:_count\na\t142858\n"
-  );
-}
-
-void test_distributed_group_count() {
-  run_script_distributed(
-    "rel.where(mul1_int % 7 = 0) | rel.select('a' as dummy) | rel.group(count) | rel.to_tsv();",
-    "string:dummy\tuint:_count\na\t142858\n"
-  );
-}
-
-void test_distributed_group_min() {
-  run_script_distributed(
-    "rel.select(mul1_int) | rel.group(min mul1_int) | rel.to_tsv();",
-    "int:mul1_int\n0\n"
-  );
-}
-
-void test_distributed_group_max() {
-  run_script_distributed(
-    "rel.select(mul1_int) | rel.group(max mul1_int) | rel.to_tsv();",
-    "int:mul1_int\n999999\n"
-  );
-}
-
-void test_distributed_group_avg() {
-  run_script_distributed(
-    "rel.select(mul1_int) | rel.group(avg mul1_int) | rel.to_tsv();",
-    "int:_avg\n499999\n"
-  );
-}
-
-void test_distributed_group_sum() {
-  run_script_distributed(
-    "rel.select(mul1_int) | rel.group(sum mul1_int) | rel.to_tsv();",
-    "int:_sum\n499999500000\n"
-  );
-}
-
-
 
 
 void test_script() {
-  ::np1::io::file::mkdir(NP1_TEST_UNIT_NP1_RELIABLE_STORAGE_LOCAL_ROOT);
+  ::np1::io::file::mkdir(NP1_TEST_UNIT_NP1_REL_RLANG_TEST_SCRIPT_TEST_DIR);
 
   NP1_TEST_RUN_TEST(test_single_stream_operator);
   NP1_TEST_RUN_TEST(test_multiple_stream_operators);
@@ -1366,17 +1260,6 @@ void test_script() {
   NP1_TEST_RUN_TEST(test_file_read);
   NP1_TEST_RUN_TEST(test_directory_list);
   NP1_TEST_RUN_TEST(test_compound_operators);
-
-  NP1_TEST_RUN_TEST(test_recordset_create_from_data_stream);
-  //TODO: test recordset create from recordset stream.
-
-  NP1_TEST_RUN_TEST(test_distributed_where);
-  NP1_TEST_RUN_TEST(test_distributed_str_split);
-  NP1_TEST_RUN_TEST(test_distributed_group_count);
-  NP1_TEST_RUN_TEST(test_distributed_group_min);
-  NP1_TEST_RUN_TEST(test_distributed_group_max);
-  NP1_TEST_RUN_TEST(test_distributed_group_avg);
-  NP1_TEST_RUN_TEST(test_distributed_group_sum);                                    
 
   //TODO: add some more tests with some large data.
 
