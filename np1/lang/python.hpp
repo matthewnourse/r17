@@ -40,7 +40,7 @@ public:
     // It's weird that we can just pass through the input stream without headers intact but rel.to_tsv doesn't care
     // if there are headers or not.
     rstd::string r17_script =
-      "rel.to_tsv() | meta.shell('python " + rstd::string(temp_file.file_name()) + "') | rel.from_tsv();";
+      "rel.to_tsv() | meta.shell('python3 " + rstd::string(temp_file.file_name()) + "') | rel.from_tsv();";
 
     meta::script_run(input, output, r17_script);
   }
@@ -54,7 +54,6 @@ private:
     return 
       "import sys\n"
       "import csv\n"
-      "import types\n"
       "\n"
       "class R17StreamDefinition:\n"
       "    @staticmethod\n"
@@ -79,8 +78,11 @@ private:
       "    def __iter__(self):\n"
       "        return self\n"
       "\n" 
+      "    def __next__(self):\n"
+      "        return R17InputRecord(self.inCsvReader.__next__())\n"
+      "\n"
       "    def next(self):\n"
-      "        return R17InputRecord(self.inCsvReader.next())\n"
+      "        return __next__(self)\n"
       "\n" 
       "r17InputStream = R17InputStream()\n"
       "\n"
@@ -93,21 +95,21 @@ private:
       "        self.headerWritten = False\n"
       "\n" 
       "    def write(self, outputDict):\n"
-      "        if not type(outputDict) is types.DictionaryType:\n"
+      "        if not type(outputDict) is dict:\n"
       "            outputDict = outputDict.__dict__\n"
       "\n" 
       "        if (not self.headerWritten):\n"
       "            self.headerWritten = True\n"
       "            headers = []\n"
-      "            for name, value in outputDict.iteritems():\n"
+      "            for name, value in outputDict.items():\n"
       "                headers.append(self.typeAsString(value) + ':' + name)\n"
       "\n"
       "            self.outCsvWriter.writerow(headers)\n"
       "\n"
       "        row = []\n"
-      "        for name, value in outputDict.iteritems():\n"
+      "        for name, value in outputDict.items():\n"
       "            # Python's str(boolean_value) returns True or False but r17 expects true or false.\n"
-      "            if type(value) is types.BooleanType:\n"
+      "            if type(value) is bool:\n"
       "                if value:\n"
       "                    row.append('true')\n"
       "                else:\n"
@@ -118,19 +120,16 @@ private:
       "        self.outCsvWriter.writerow(row)\n"
       "\n"
       "    def typeAsString(self, value):\n"
-      "        if type(value) is types.IntType:\n"
+      "        if type(value) is int:\n"
       "            return 'int'\n"
       "\n"
-      "        if type(value) is types.LongType:\n"
-      "            return 'int'\n"
-      "\n"
-      "        if type(value) is types.StringType:\n"
+      "        if type(value) is str:\n"
       "            return 'string'\n"
       "\n"
-      "        if type(value) is types.FloatType:\n"
+      "        if type(value) is float:\n"
       "            return 'double'\n"
       "\n"
-      "        if type(value) is types.BooleanType:\n"
+      "        if type(value) is bool:\n"
       "            return 'bool'\n"
       "\n"
       "        raise Exception('r17: unsupported type: ' + str(type(value)))\n"
@@ -161,7 +160,7 @@ private:
 
         case rel::rlang::dt::TYPE_INT: 
         case rel::rlang::dt::TYPE_UINT:
-          code.append(make_python_row_item_cast_code("long", field_number));
+          code.append(make_python_row_item_cast_code("int", field_number));
           break;
 
         case rel::rlang::dt::TYPE_DOUBLE:

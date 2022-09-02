@@ -1080,7 +1080,7 @@ struct lang_python_wrap : public stream_op_wrap_base {
   virtual const char *description() const {
     static const rstd::string desc =
       "`lang.python(" NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER " python " NP1_TOKEN_UNPARSED_CODE_BLOCK_DELIMITER ")` "
-      "executes Python code using the python interpreter in the shell's path.  "
+      "executes Python code using the python3 interpreter in the shell's path.  "
       "The Python script's standard input is the input stream.  "
       "The Python script's standard output is the output stream.  "
       "R17 prepends helper Python code to the Python script before passing it to the system's Python interpreter.  "

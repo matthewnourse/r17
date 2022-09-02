@@ -77,10 +77,12 @@ public:
   // bool f(const str::ref &line, uint64_t line_number);
   template <typename Callback>
   static bool read_all_line_by_line(Unbuffered_Stream &input, Callback line_callback) {
-    enum { BUFFER_SIZE = 256 * 1024 };
-    unsigned char buffer[BUFFER_SIZE + 1];            
-    unsigned char *buffer_end = buffer + BUFFER_SIZE;
-    unsigned char *buffer_read_pos = buffer;
+    enum { INITIAL_BUFFER_SIZE = 256 * 1024 };
+
+    rstd::vector<unsigned char> buffer;    
+    buffer.resize(INITIAL_BUFFER_SIZE);
+    unsigned char *buffer_end = &buffer[0] + buffer.size();
+    unsigned char *buffer_read_pos = &buffer[0];
     const unsigned char *start_line = buffer_read_pos;
     ssize_t number_bytes_read;
     uint64_t line_number = 1;
@@ -106,12 +108,17 @@ public:
       }
 
       // There's probably an incomplete line left in the buffer.  Move it to the start of the buffer.
-      ssize_t remainder_length = buffer_data_end - start_line; 
-      NP1_ASSERT(remainder_length < BUFFER_SIZE, "Stream " + input.name()
-                   + ": line is too long.  Remainder length: " + str::to_dec_str(remainder_length));
-      memmove(buffer, start_line, remainder_length);
-      buffer_read_pos = buffer + remainder_length;
-      start_line = buffer;
+      ssize_t remainder_length = buffer_data_end - start_line;
+      if (remainder_length >= (ssize_t)buffer.size()) {
+        size_t start_line_offset = start_line - &buffer[0];
+        buffer.resize(buffer.size() + INITIAL_BUFFER_SIZE);
+        buffer_end = &buffer[0] + buffer.size();
+        start_line = &buffer[0] + start_line_offset;
+      }
+
+      memmove(&buffer[0], start_line, remainder_length);
+      buffer_read_pos = &buffer[0] + remainder_length;
+      start_line = &buffer[0];
     }
 
     return true;
