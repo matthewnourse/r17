@@ -3,6 +3,8 @@
 #ifndef NP1_REL_RLANG_VM_HEAP_HPP
 #define NP1_REL_RLANG_VM_HEAP_HPP
 
+#include "rstd/list.hpp"
+#include "rstd/vector.hpp"
 
 namespace np1 {
 namespace rel {

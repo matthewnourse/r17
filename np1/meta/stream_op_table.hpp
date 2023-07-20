@@ -102,6 +102,7 @@ void script_run(io::unbuffered_stream_base &input, io::unbuffered_stream_base &o
 #include "np1/rel/csv_translate.hpp"
 #include "np1/rel/usv_translate.hpp"
 #include "np1/rel/from_text.hpp"
+#include "np1/rel/from_shapefile.hpp"
 #include "np1/rel/generate_sequence.hpp"
 #include "np1/text/utf16_to_utf8.hpp"
 #include "np1/text/strip_cr.hpp"
@@ -677,6 +678,23 @@ struct rel_from_text_ignore_non_matching_wrap : public stream_op_wrap_base {
   }
 } rel_from_text_ignore_non_matching_wrap_instance;
 
+
+struct rel_from_shapefile_wrap : public stream_op_wrap_base {
+  virtual const char *name() const { return "rel.from_shapefile"; }
+  virtual const char *description() const {
+    return "`rel.from_shapefile(shp_file)` translates the shapefile into a stream of geometries under the heading " NP1_REL_FROM_SHAPEFILE_GEOM_OUTPUT_HEADING_NAME ".  The input stream is ignored.  INCOMPLETE!";
+  }
+
+  virtual stream_op_table_io_type_type input_type() const { return STREAM_OP_TABLE_IO_TYPE_NONE; }
+  virtual stream_op_table_io_type_type output_type() const { return STREAM_OP_TABLE_IO_TYPE_R17_NATIVE; }
+
+  virtual void call(mandatory_delimited_input_type &mandatory_delimited_input,
+                    mandatory_buffered_output_type &mandatory_output,
+                    const rstd::vector<rel::rlang::token> &tokens) const {
+    rel::from_shapefile op;
+    op(mandatory_delimited_input, mandatory_output, tokens);
+  }
+} rel_from_shapefile_instance;
 
 
 
@@ -1354,6 +1372,7 @@ private:
       &rel_from_usv_instance,
       &rel_to_usv_instance,
       &rel_from_text_instance,
+      &rel_from_shapefile_instance,
       &rel_from_text_ignore_non_matching_wrap_instance,
       &rel_generate_sequence_instance,
       &text_utf16_to_utf8_instance,

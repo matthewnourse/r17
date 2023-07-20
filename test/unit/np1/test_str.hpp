@@ -3,6 +3,9 @@
 #ifndef NP1_TEST_UNIT_NP1_TEST_STR_HPP
 #define NP1_TEST_UNIT_NP1_TEST_STR_HPP
 
+#include "np1/str.hpp"
+#include "np1/io/static_buffer_output_stream.hpp"
+#include "test/unit/helper.hpp"
 
 namespace test {
 namespace unit {
@@ -406,6 +409,21 @@ void test_to_dec_str_signed() {
   NP1_TEST_ASSERT(::np1::str::cmp(buf, "-210301") == 0);
 }
 
+void validate_hex_decode(const char *input, const char *expected) {
+  ::np1::io::static_buffer_output_stream<100> buf_stream;
+  ::np1::str::write_decoded_hex(input, buf_stream);
+  NP1_TEST_ASSERT(::np1::str::cmp((const char *)buf_stream.ptr(), expected, buf_stream.size()) == 0);
+}
+
+void test_write_decoded_hex() {
+  validate_hex_decode("", "");
+  validate_hex_decode("41", "A");
+  validate_hex_decode("5E", "^");
+  validate_hex_decode("5e", "^");
+  validate_hex_decode("4142", "AB");
+  validate_hex_decode("41 42", "AB");
+}
+
 
 void test_str() {
   //TODO: more tests!
@@ -421,6 +439,7 @@ void test_str() {
   NP1_TEST_RUN_TEST(test_replace_invalid_utf8_sequences);
   NP1_TEST_RUN_TEST(test_to_dec_str_unsigned);
   NP1_TEST_RUN_TEST(test_to_dec_str_signed);
+  NP1_TEST_RUN_TEST(test_write_decoded_hex);
 }
 
 } // namespaces

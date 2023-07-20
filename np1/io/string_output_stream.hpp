@@ -3,6 +3,7 @@
 #ifndef NP1_IO_STRING_OUTPUT_STREAM_HPP
 #define NP1_IO_STRING_OUTPUT_STREAM_HPP
 
+#include "np1/io/detail/stream_helper.hpp"
 
 namespace np1 {
 namespace io {

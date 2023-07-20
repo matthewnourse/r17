@@ -42,6 +42,7 @@ public:
   ~file_mapping() { unmap(); }
 
   void *ptr() { return m_ptr; }
+  const void *ptr() const { return m_ptr; }
   size_t size() const { return m_size; }
 
   void unmap() {    

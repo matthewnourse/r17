@@ -236,6 +236,28 @@ namespace detail {
     return s;
   }
 
+  inline uint8_t hex_decode_nybble(char encoded_nybble) {
+    if ((encoded_nybble >= '0') && (encoded_nybble <= '9')) {
+      return encoded_nybble - '0';
+    }
+
+    if ((encoded_nybble >= 'a') && (encoded_nybble <= 'f')) {
+      return encoded_nybble - 'a' + 10;
+    }
+
+    if ((encoded_nybble >= 'A') && (encoded_nybble <= 'F')) {
+      return encoded_nybble - 'A' + 10;
+    }
+
+    NP1_ASSERT(false, "Invalid hex char: " + rstd::string(1, encoded_nybble));
+    return 0;
+  }
+
+  inline uint8_t hex_decode_2(const char *encoded, const char *encoded_end) {
+    NP1_ASSERT(encoded && (encoded_end - encoded >= 2), "Attempt to hex-decode invalid hex buffer: " + rstd::string(encoded, encoded_end - encoded));
+    return (hex_decode_nybble(encoded[0]) << 4) | hex_decode_nybble(encoded[1]);
+  }
+
   inline char *hex_encode_4(char *s, int64_t i) {
     return hex_encode_2(hex_encode_2(s, i >> 8), i);
   }
@@ -832,6 +854,25 @@ rstd::string get_as_hex_dump(const char *start, const char *end) {
   return get_as_hex_dump((const unsigned char *)start, (const unsigned char *)end);
 }
 
+template <typename Binary_Output_Stream>
+void write_decoded_hex(const char *start, const char *end, Binary_Output_Stream &output) {
+  const char *p = start;
+  while (p < end) {
+    if (isspace(*p)) {
+      p++;
+    } else {
+      //TODO: something faster than this.
+      uint8_t decoded = detail::hex_decode_2(p, end);
+      output.write(&decoded, 1);
+      p += 2;
+    }
+  }
+}
+
+template <typename Binary_Output_Stream>
+void write_decoded_hex(const char *s, Binary_Output_Stream &output) {
+  write_decoded_hex(s, s + strlen(s), output);
+} 
 
 /**************************************************************************
  * The unicode-handling code below is a MODIFIED copy of some functions from

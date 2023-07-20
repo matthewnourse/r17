@@ -3,7 +3,14 @@
 #ifndef NP1_TEST_UNIT_NP1_REL_RLANG_TEST_SCRIPT_HPP
 #define NP1_TEST_UNIT_NP1_REL_RLANG_TEST_SCRIPT_HPP
 
+#include "np1/io/named_temp_file.hpp"
+#include "np1/str.hpp"
 #define NP1_TEST_UNIT_NP1_REL_RLANG_TEST_SCRIPT_TEST_DIR "/tmp/np1_test_script/"
+
+#include "np1/io/file.hpp"
+#include "np1/rel/rlang/rlang.hpp"
+#include "np1/meta/script.hpp"
+#include "test/unit/helper.hpp"
 
 namespace test {
 namespace unit {
@@ -62,6 +69,17 @@ void check_split_file(const rstd::string &prefix, uint64_t n, const char *expect
             expected_result);
 }
 
+void check_from_shapefile(const char *hex_shp, const char *expected_result) {
+  ::np1::io::named_temp_file shp_tmp_file;
+  ::np1::str::write_decoded_hex(hex_shp, shp_tmp_file.real_file());
+  shp_tmp_file.real_file().hard_flush();
+  shp_tmp_file.real_file().rewind();
+
+  run_script(
+      "rel.from_shapefile('" + shp_tmp_file.file_name() + "') | rel.to_tsv();",
+      "",
+      expected_result);
+}
 
 const char *basic_flintstones_data() {
   return
@@ -951,6 +969,24 @@ void test_from_text_ignore_non_matching() {
   //TODO: tests with bigger files.
 }
 
+void test_from_shapefile() {
+  check_from_shapefile(
+      "0000270a000000000000000000000000000000000000000000000040e803000001000000208cac45bb1d6ac0b10ba1233e0141c0208cac45bb1d6ac0b10ba1233e0141c00000000000000000000000000000000000000000000000000000000000000000000000000000000a01000000208cac45bb1d6ac0b10ba1233e0141c0", 
+      "string:_geom\n"
+      "POINT (-208.929110 -34.009709)\n");
+
+  check_from_shapefile(
+      "0000270a00000000000000000000000000000000000000000000004ee803000001000000a513469d881d6ac0f4048862300441c067d2f969771d6ac0542c6d9acc0341c00000000000000000000000000000000000000000000000000000000000000000000000000000000a01000000a513469d881d6ac0542c6d9acc0341c0000000010000000a0100000067d2f969771d6ac0f4048862300441c0", 
+      "string:_geom\n"
+      "POINT (-208.922927 -34.029681)\n"
+      "POINT (-208.920827 -34.032727)\n");
+
+  check_from_shapefile(
+      "0000270a0000000000000000000000000000000000000000000000a0e803000005000000352fbdeb171e6ac02bb6a7b3da0241c0aff183d4981d6ac0a2e5f185880141c00000000000000000000000000000000000000000000000000000000000000000000000010000006a05000000352fbdeb171e6ac02bb6a7b3da0241c0aff183d4981d6ac0a2e5f185880141c0020000000a0000000000000005000000a22334bdfd1d6ac0a2e5f185880141c0aff183d4981d6ac04515ef548a0141c043fd0c03b31d6ac0fdecc915d70241c0352fbdeb171e6ac02bb6a7b3da0241c0a22334bdfd1d6ac0a2e5f185880141c0a5bb34bdf71d6ac0618d8e54340241c01f0d0703ef1d6ac03c0e5ca1c90141c07247c7ebb11d6ac0cb775670cb0141c03f650c03b91d6ac0b63ecadb7a0241c0a5bb34bdf71d6ac0618d8e54340241c0",
+      "string:_geom\n"
+      "MULTIPOLYGON((-208.937224 -34.011979,-208.924906 -34.012034,-208.928102 -34.022189,-208.940420 -34.022299,-208.937224 -34.011979),(-208.936492 -34.017222,-208.935426 -34.013966,-208.927969 -34.014021,-208.928834 -34.019374,-208.936492 -34.017222))\n");
+}
+
 
 void test_generate_sequence() {
   run_script(
@@ -1250,7 +1286,8 @@ void test_script() {
   NP1_TEST_RUN_TEST(test_from_csv); 
   NP1_TEST_RUN_TEST(test_from_usv_and_to_usv);
   NP1_TEST_RUN_TEST(test_from_text);
-  NP1_TEST_RUN_TEST(test_from_text_ignore_non_matching);
+  NP1_TEST_RUN_TEST(test_from_text_ignore_non_matching); 
+  NP1_TEST_RUN_TEST(test_from_shapefile);
   NP1_TEST_RUN_TEST(test_generate_sequence);
   NP1_TEST_RUN_TEST(test_utf16_to_utf8);
   NP1_TEST_RUN_TEST(test_strip_cr);
