@@ -8,6 +8,7 @@
 #include "np1/uuid.hpp"
 #include "np1/time.hpp"
 #include "np1/hash/sha256.hpp"
+#include "np1/json/parser.hpp"
 #include "np1/rel/rlang/dt.hpp"
 #include "np1/rel/rlang/vm_literals.hpp"
 #include "np1/rel/rlang/vm_stack.hpp"
@@ -546,6 +547,22 @@ private:
   }
 };
 
+
+struct str_json_get : public base {
+  static const char *since() { return "2.2.0"; }
+  static const char *name() { return "str.json.get"; }
+  static const char *description() { return "`str.json.get(json_str, member_name)` parses json_str as a serialized JSON object and returns the object's member_name member as a serialized JSON object. "
+    "Returns the empty string if the JSON string is not an object or member_name does not exist. EXPERIMENTAL."; }  
+
+  inline static dt::string call(vm_heap &heap, const dt::string &json_str, const dt::string &member_name) {
+    return get_member(heap, json_str, member_name);
+  }
+
+private:
+  inline static str::ref get_member(vm_heap &heap, const str::ref &json_str, const str::ref &member_name) {
+    return json::parser::get_member(heap, json_str, member_name);
+  }
+};
 
 
 

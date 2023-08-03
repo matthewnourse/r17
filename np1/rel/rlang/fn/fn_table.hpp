@@ -480,6 +480,8 @@ struct wrap_branch : public wrap_base<Return, Target, 0> {
   (wrap1_heap<dt::string, str_sha256, dt::boolean>), \
   (wrap1_heap<dt::string, str_sha256, dt::ipaddress>), \
 \
+  (wrap2_heap<dt::string, str_json_get, dt::string, dt::string>), \
+\
   (wrap0_noheap<dt::uinteger, math_rand64>), \
 \
   (wrap0_noheap<dt::uinteger, time_now_epoch_usec>), \

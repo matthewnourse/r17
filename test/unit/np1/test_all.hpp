@@ -6,6 +6,7 @@
 #include "test/unit/np1/helper.hpp"
 #include "test/unit/np1/test_str.hpp"
 #include "test/unit/np1/hash/test_all.hpp"
+#include "test/unit/np1/json/test_all.hpp"
 #include "test/unit/np1/test_skip_list.hpp"
 #include "test/unit/np1/test_consistent_hash_table.hpp"
 #include "test/unit/np1/test_compressed_int.hpp"
@@ -23,6 +24,7 @@ void test_all() {
   np1::test_consistent_hash_table();
   np1::test_compressed_int();
   np1::hash::test_all();
+  np1::json::test_all();
   np1::rel::test_all();
   np1::io::test_all();
   np1::meta::test_all();

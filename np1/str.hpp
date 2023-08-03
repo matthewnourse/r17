@@ -542,6 +542,10 @@ inline bool starts_with(const rstd::string &haystack, const char *needle) {
   return starts_with(str::ref(haystack.c_str()), str::ref(needle, strlen(needle)));
 }
 
+inline bool starts_with(const str::ref &r1, char c) {
+  return (r1.length() >= 1) && (r1.ptr()[0] == c);
+}
+
 
 
 /// Case-insensitive starts_with.
@@ -584,6 +588,10 @@ inline bool ends_with(const rstd::string &s1, const rstd::string &s2) {
   return ends_with(s1.c_str(), s1.length(), s2.c_str(), s2.length());
 }
 
+inline bool ends_with(const str::ref &r1, char c) {
+  return (r1.length() >= 1) && (r1.ptr()[r1.length() - 1] == c);
+}
+
 
 /// Case-insensitive ends_with.
 inline bool iends_with(const char *haystack, size_t haystack_length,
@@ -614,6 +622,10 @@ inline const char *find_last(const char *haystack, size_t haystack_length, const
 
 inline const char *find_last(const rstd::string &haystack, const char needle) {
   return find_last(haystack.c_str(), haystack.length(), needle);
+}
+
+inline const char *find(const str::ref &haystack, const char needle) {
+  return (const char *)memchr(haystack.ptr(), needle, haystack.length());
 }
 
 /// Does a string contain another string?
@@ -652,6 +664,10 @@ inline bool icontains(const char *haystack, size_t haystack_length,
 
 inline bool icontains(const str::ref &r1, const str::ref &r2) {
   return icontains(r1.ptr(), r1.length(), r2.ptr(), r2.length());
+}
+
+inline bool contains(const str::ref &s, const char c) {
+  return !!find(s, c);
 }
 
 
