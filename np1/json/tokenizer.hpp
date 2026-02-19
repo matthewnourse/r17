@@ -108,20 +108,38 @@ private:
     if ('-' == *m_p) {
       ++m_p;
       NP1_ASSERT((m_p < m_end) && isdigit(*m_p), "JSON number starting with '-' is not followed by a digit: " + debug_fragment());
-    }    
+    }
 
-    bool seen_dot = false;
-    while (m_p < m_end) {
-      if ('.' == *m_p) {
-        NP1_ASSERT(!seen_dot, "More than one '.' in JSON number: " + debug_fragment());
-        seen_dot = true;
-      } else if (!isdigit(*m_p)) {
-        NP1_ASSERT(is_stop_char(*m_p), "Invalid char at end of JSON number: " + rstd::string(1, *m_p));
-        h.on_number(str::ref(start, m_p - start));
-        return;
+    const char *int_start = m_p;
+    while ((m_p < m_end) && isdigit(*m_p)) {
+      ++m_p;
+    }
+    NP1_ASSERT(m_p > int_start, "JSON number has no integer digits: " + debug_fragment());
+
+    if ((m_p < m_end) && ('.' == *m_p)) {
+      ++m_p;
+      const char *frac_start = m_p;
+      while ((m_p < m_end) && isdigit(*m_p)) {
+        ++m_p;
+      }
+      NP1_ASSERT(m_p > frac_start, "JSON number '.' not followed by digits: " + debug_fragment());
+    }
+
+    if ((m_p < m_end) && (('e' == *m_p) || ('E' == *m_p))) {
+      ++m_p;
+      if ((m_p < m_end) && (('+' == *m_p) || ('-' == *m_p))) {
+        ++m_p;
       }
 
-      ++m_p;
+      const char *exp_start = m_p;
+      while ((m_p < m_end) && isdigit(*m_p)) {
+        ++m_p;
+      }
+      NP1_ASSERT(m_p > exp_start, "JSON number exponent has no digits: " + debug_fragment());
+    }
+
+    if ((m_p < m_end) && !is_stop_char(*m_p)) {
+      NP1_ASSERT(false, "Invalid char at end of JSON number: " + rstd::string(1, *m_p) + " number: " + rstd::string(start, m_p+1 - start));
     }
 
     h.on_number(str::ref(start, m_p - start));

@@ -18,6 +18,7 @@ void check_round_trip(const char *input, const char *expected) {
   sbos_type sbos;
 
   ::np1::json::tokenizer::raw_tokenize(::np1::str::ref(input), ::np1::json::writer::make_raw_token_writer_handler(sbos));
+  //fprintf(stderr, "check_round_trip: expected=%s actual_size=%zu actual=%.*s\n", expected, sbos.size(), (int)sbos.size(), (const char *)sbos.ptr());
   NP1_TEST_ASSERT(::np1::str::cmp(expected, (const char *)sbos.ptr(), sbos.size()) == 0);
 }
 
@@ -40,6 +41,7 @@ void test_number() {
   check_round_trip("12.34");
   check_round_trip("-12.34");
   check_round_trip("   1.2  ", "1.2");
+  check_round_trip("1.2e-1", "1.2e-1");
 }
 
 void test_string() {

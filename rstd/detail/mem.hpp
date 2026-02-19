@@ -67,11 +67,17 @@ void copy_construct_in_place(T *target, const T &src) {
 /// destructing.
 //TODO: more overloads or cheeky metaprogramming to cover all POD types.
 void copy_construct_in_place(char *target, const char *src, size_t sz) {
+  if (0 == sz) {
+    return;
+  }
   memcpy(target, src, sz);
 }
 
 void copy_construct_in_place(unsigned char *target, const unsigned char *src,
                               size_t sz) {
+  if (0 == sz) {
+    return;
+  }
   memcpy(target, src, sz);
 }
 
